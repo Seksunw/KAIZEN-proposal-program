@@ -6,11 +6,11 @@
 import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
   getAttachmentSignedUrl, getMasterData,
-} from '../api.js?v=20260911z6';
-import { t, getLang } from '../i18n.js?v=20260911z6';
-import { navigate } from '../router.js?v=20260911z6';
-import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z6';
-import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z6';
+} from '../api.js?v=20260911z7';
+import { t, getLang } from '../i18n.js?v=20260911z7';
+import { navigate } from '../router.js?v=20260911z7';
+import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z7';
+import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z7';
 
 export async function render(container, params, session) {
   document.title = `ให้คะแนน KAIZEN · ${t('appName')}`;
@@ -23,8 +23,8 @@ export async function render(container, params, session) {
     period = kaizen.PeriodId ? await getPeriodById(kaizen.PeriodId) : null;
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }
@@ -69,7 +69,7 @@ export async function render(container, params, session) {
     score = await getOrCreateMyScore({ periodId: kaizen.PeriodId, kaizenId: kaizen.Id, committeeUserId: session.user.id });
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
     })}</div>`;
     return;
   }

@@ -2,11 +2,11 @@
 import {
   getPeriodsPage, createPeriod, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
   getQuarterlyAwards, createQuarterlyAward, deleteQuarterlyAward,
-} from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { navigate } from '../router.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z6';
-import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z6';
+} from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { navigate } from '../router.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z7';
+import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z7';
 
 const PAGE_SIZE = 20;
 
@@ -20,8 +20,8 @@ export async function render(container) {
     [profiles, quarterlyAwards] = await Promise.all([getAllProfiles(), getQuarterlyAwards()]);
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }
@@ -61,8 +61,8 @@ export async function render(container) {
     await loadPeriodsPage(0, true);
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

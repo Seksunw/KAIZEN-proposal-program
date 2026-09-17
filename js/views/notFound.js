@@ -1,6 +1,6 @@
 // js/views/notFound.js — MIGRATION.md ข้อ 15
-import { t } from '../i18n.js?v=20260911z6';
-import { escapeHtml, pageHeader, stateCard } from '../ui.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z7';
+import { escapeHtml, pageHeader, stateCard } from '../ui.js?v=20260911z7';
 
 export async function render(container) {
   document.title = `${t('notfound_title')} · ${t('appName')}`;

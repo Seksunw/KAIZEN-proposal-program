@@ -10,17 +10,20 @@ import {
   getKaizenById, createKaizen, updateKaizen, submitKaizen,
   getOpenPeriod, getPeriodById, getMasterData, uploadAttachment, deleteAttachment, getAttachmentSignedUrl,
   getAvatarSignedUrl, getKaizenEditGrants,
-} from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { navigate } from '../router.js?v=20260911z6';
-import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString, masterLabel, thaiDateTime } from '../ui.js?v=20260911z6';
+} from '../api.js?v=20260911z7';
+import { t, tf, getLang } from '../i18n.js?v=20260911z7';
+import { navigate } from '../router.js?v=20260911z7';
+import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString, masterLabel, thaiDateTime } from '../ui.js?v=20260911z7';
 import {
   CATEGORIES, CATEGORY_LABELS, IMPACTS, IMPACT_LABELS,
   SUPPORT_NEEDED, SUPPORT_NEEDED_LABELS, ATTACHMENT_PHASES, ATTACHMENT_PHASE_LABELS,
-} from '../constants.js?v=20260911z6';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z6';
+} from '../constants.js?v=20260911z7';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
 
-const STEP_TITLES = ['ผู้เสนอ', 'ปัญหา', 'แนวทาง', 'แผนงาน', 'รูปภาพ', 'ทบทวน'];
+// ★ i18n audit Round 13 (full project translation) — เดิมเป็น array ข้อความไทยดิบ เปลี่ยนเป็น
+// เก็บ "คีย์" แทน เรียก t() ตอน render จริงถึงจะได้ค่าตามภาษาปัจจุบันเสมอ (ไม่ cache ค่าดิบไว้ตรงนี้
+// ตั้งแต่ module load เพราะตอนนั้นภาษายังไม่ initLang() เสร็จ)
+const STEP_TITLE_KEYS = ['kzform_step1', 'kzform_step2', 'kzform_step3', 'kzform_step4', 'kzform_step5', 'kzform_step6'];
 const PROBLEM_MIN_LEN = 50;
 const COST_BASIS_MIN_LEN = 30;
 
@@ -35,6 +38,13 @@ const WRITABLE_FIELDS = [
 
 function escapeAttr(s) {
   return escapeHtml(s).replace(/"/g, '&quot;');
+}
+
+// ★ CATEGORY_LABELS/IMPACT_LABELS/SUPPORT_NEEDED_LABELS/ATTACHMENT_PHASE_LABELS (constants.js)
+// มี .th/.en ครบทุกตัวอยู่แล้ว แต่ทั้งไฟล์นี้เดิมอ่านแค่ .th ตรงๆ ทุกจุด (i18n audit Round 12/13)
+// helper เล็กๆ นี้เลือกภาษาปัจจุบันแทน — ใช้กับ label object แบบ {th,en} เท่านั้น
+function L(labelObj) {
+  return labelObj[getLang() === 'en' ? 'en' : 'th'];
 }
 
 function buildPatch(draft) {
@@ -63,7 +73,7 @@ function buildPatch(draft) {
 
 export async function render(container, params, session) {
   const isEdit = Boolean(params.id);
-  document.title = `${isEdit ? 'แก้ไข' : 'เสนอ'} KAIZEN · ${t('appName')}`;
+  document.title = `${t(isEdit ? 'kzform_h1_edit' : 'kzform_h1_new')} · ${t('appName')}`;
   // ★ ผู้ใช้ขอ (2026-09-16) ให้ admin กดข้ามขั้นตอนในฟอร์มนี้ได้อิสระ ไม่ต้องกรอกครบทีละขั้น —
   // ปลดล็อกแค่การ "นำทาง" (คลิก tab ข้ามไปมา) เท่านั้น ไม่แตะ stepIssues()/allBlockingIssues()
   // ที่บล็อกปุ่ม "ไปขั้นถัดไป"/"ยืนยันส่งโครงการ" เลย — ส่งโครงการไม่ครบไม่ได้เหมือนเดิมทุก role
@@ -137,9 +147,9 @@ export async function render(container, params, session) {
       if (existing.OwnerId !== session.user.id && !isAdmin) {
         container.innerHTML = `<div class="page-body">${stateCard({
           kind: 'forbidden',
-          title: 'ไม่มีสิทธิ์แก้ไขโครงการนี้',
-          body: 'โครงการนี้ไม่ใช่ของคุณ — แก้ไขได้เฉพาะเจ้าของโครงการเท่านั้น',
-          actions: `<a href="#/kaizen/${params.id}"><button type="button" class="secondary">กลับไปหน้ารายละเอียด</button></a>`,
+          title: t('kzform_no_edit_permission_title'),
+          body: t('kzform_no_edit_permission_body'),
+          actions: `<a href="#/kaizen/${params.id}"><button type="button" class="secondary">${t('kzform_back_to_detail')}</button></a>`,
         })}</div>`;
         return;
       }
@@ -156,9 +166,9 @@ export async function render(container, params, session) {
           if (!active) {
             container.innerHTML = `<div class="page-body">${stateCard({
               kind: 'forbidden',
-              title: 'แก้ไขโครงการนี้ไม่ได้ในตอนนี้',
-              body: 'รอบประเมินของโครงการนี้ปิดไปแล้ว และยังไม่มีสิทธิ์แก้ไขชั่วคราวจากผู้ดูแลระบบ — กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์แก้ไขชั่วคราว',
-              actions: `<a href="#/kaizen/${params.id}"><button type="button" class="secondary">กลับไปหน้ารายละเอียด</button></a>`,
+              title: t('kzform_locked_title'),
+              body: t('kzform_locked_body'),
+              actions: `<a href="#/kaizen/${params.id}"><button type="button" class="secondary">${t('kzform_back_to_detail')}</button></a>`,
             })}</div>`;
             return;
           }
@@ -181,7 +191,7 @@ export async function render(container, params, session) {
       }
     } catch (err) {
       container.innerHTML = `<div class="page-body"><div class="state-card is-error"><div class="state-main">
-        <div class="state-title">โหลดข้อมูลไม่สำเร็จ</div>
+        <div class="state-title">${t('error_load_failed')}</div>
         <p class="state-body">${escapeHtml(translateError(err.message) || err.message || t('common_error_generic'))}</p>
       </div></div></div>`;
       return;
@@ -223,30 +233,30 @@ export async function render(container, params, session) {
     const issues = [];
     if (step === 1) {
       if (d.ProjectType === 'group' && d.TeamMembers.length === 0) {
-        issues.push('ถ้าเป็นโครงการกลุ่มต้องมีสมาชิกอย่างน้อย 1 คน');
+        issues.push(t('kzform_val_group_needs_member'));
       }
     }
     if (step === 2) {
-      if (d.Title.trim().length < 5) issues.push('ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร');
-      if (d.Categories.length === 0) issues.push('กรุณาเลือกหมวดปัญหาอย่างน้อย 1 หมวด');
+      if (d.Title.trim().length < 5) issues.push(t('kzform_val_title_min'));
+      if (d.Categories.length === 0) issues.push(t('kzform_val_category_required'));
       if (d.ProblemDescription.trim().length < PROBLEM_MIN_LEN) {
-        issues.push(`อธิบายปัญหาต้องมีอย่างน้อย ${PROBLEM_MIN_LEN} ตัวอักษร (ตอนนี้ ${d.ProblemDescription.trim().length}/${PROBLEM_MIN_LEN})`);
+        issues.push(tf('kzform_val_problem_min', { min: PROBLEM_MIN_LEN, current: d.ProblemDescription.trim().length }));
       }
     }
     if (step === 3) {
       if (!d.ImprovementApproach || d.ImprovementApproach.trim().length === 0) {
-        issues.push('กรุณากรอกแนวทางการปรับปรุง');
+        issues.push(t('kzform_val_approach_required'));
       }
       if (Number(d.CostSavingPerMonth) > 0 && (!d.CostSavingBasis || d.CostSavingBasis.trim().length < COST_BASIS_MIN_LEN)) {
-        issues.push(`ถ้ามี Cost saving/เดือน ต้องระบุหลักฐาน/ที่มาอย่างน้อย ${COST_BASIS_MIN_LEN} ตัวอักษร`);
+        issues.push(tf('kzform_val_cost_basis_min', { min: COST_BASIS_MIN_LEN }));
       }
     }
     if (step === 4) {
       if (d.StartDate && d.CompletionDate && d.CompletionDate < d.StartDate) {
-        issues.push('วันที่เสร็จต้องไม่ก่อนวันที่เริ่ม');
+        issues.push(t('kzform_val_completion_before_start'));
       }
-      if (d.IsCompleted && !d.CompletionDate) issues.push('กรุณาระบุวันที่เสร็จ');
-      if (!d.IsCompleted && !d.NextFollowUpDate) issues.push('ถ้ายังไม่เสร็จ ต้องระบุวันติดตามครั้งถัดไป');
+      if (d.IsCompleted && !d.CompletionDate) issues.push(t('kzform_val_completion_date_required'));
+      if (!d.IsCompleted && !d.NextFollowUpDate) issues.push(t('kzform_val_followup_required'));
       // ★ ไม่เช็คเรื่องรูป "หลังทำ" ที่ขั้นนี้ — ตั้งใจปล่อยให้เลือก "เสร็จแล้ว" แล้วไปขั้น 5 เพื่อ
       // อัปโหลดรูปได้เสมอ (รูปอัปโหลดได้ที่ขั้น 5 ซึ่งอยู่ "หลัง" ขั้นนี้ ถ้าบล็อกไว้ตรงนี้จะกลาย
       // เป็นไปขั้น 5 ไม่ได้เลย วนตันไม่มีทางออก) — buildPatch()/persist() เป็นคนกันไม่ให้ยิง
@@ -255,15 +265,15 @@ export async function render(container, params, session) {
     }
     if (step === 5) {
       const hasBefore = (d.KaizenAttachments ?? []).some((a) => a.Phase === 'before');
-      if (!hasBefore) issues.push('ต้องมีรูป "ก่อนทำ" อย่างน้อย 1 รูป');
+      if (!hasBefore) issues.push(t('kzform_val_before_photo_required'));
       const hasAfter = (d.KaizenAttachments ?? []).some((a) => a.Phase === 'after');
       if (d.IsCompleted && !hasAfter) {
-        issues.push('เลือกไว้ว่า "เสร็จแล้ว" ที่ขั้น 4 — ต้องมีรูป "หลังทำ" อย่างน้อย 1 รูปก่อนถึงจะไปต่อได้ หรือย้อนกลับไปเลือก "ยังดำเนินการอยู่" แทนได้');
+        issues.push(t('kzform_val_after_photo_required'));
       }
     }
     if (step === 6) {
-      if (!d.ConfirmedByName || d.ConfirmedByName.trim().length === 0) issues.push('กรุณากรอกชื่อผู้ยืนยัน');
-      if (!state.certify) issues.push('กรุณายืนยันความถูกต้องของข้อมูล');
+      if (!d.ConfirmedByName || d.ConfirmedByName.trim().length === 0) issues.push(t('kzform_val_confirmed_by_required'));
+      if (!state.certify) issues.push(t('kzform_val_certify_required'));
     }
     return issues;
   }
@@ -403,13 +413,13 @@ export async function render(container, params, session) {
   // ★ การ์ดใหญ่เต็มความกว้าง โชว์ทีละขั้น (ผู้ใช้ส่งภาพตัวอย่างยืนยัน 2026-09-16 — ไม่ใช่แถบ
   // chip เล็กเห็นพร้อมกันหลายอันแบบรอบแรกที่ทำ) เลื่อนเปลี่ยนขั้นด้วย scroll-snap ทีละใบ
   function renderStepRail() {
-    return STEP_TITLES.map((title, i) => {
+    return STEP_TITLE_KEYS.map((titleKey, i) => {
       const n = i + 1;
       const isCurrent = n === state.step;
       const isDone = n <= state.maxStepReached && !isCurrent;
       const cls = isCurrent ? 'is-current' : (isDone ? 'is-done' : '');
       const clickable = n <= state.maxStepReached;
-      const statusText = isDone ? 'กรอกแล้ว' : (isCurrent ? 'กำลังทำขั้นนี้' : 'ยังไม่ได้เริ่ม');
+      const statusText = isDone ? t('kzform_status_done') : (isCurrent ? t('kzform_status_current') : t('kzform_status_todo'));
       // ★ ผู้ใช้ขอเอาเลขลำดับออก (2026-09-16) — เหลือแค่เครื่องหมายถูกตอนกรอกแล้ว ไม่มีอะไรโชว์
       // ตอนยังไม่ถึง/กำลังทำ (ชื่อขั้น + "ขั้น N จาก 6" ใน eyebrow ข้างบนบอกลำดับอยู่แล้ว)
       // ★ ไอคอนถูกวางเรียงข้าง title แนวนอน (ไม่ใช่ซ้อนบน) — ถ้าซ้อนบนแยกบรรทัดจะทำให้การ์ด
@@ -422,7 +432,7 @@ export async function render(container, params, session) {
       return `
         <li class="step-slide ${cls}">
           <button type="button" class="step-slide-card" data-step="${n}" ${clickable ? '' : 'disabled'}>
-            <span class="step-slide-title">${icon}${escapeHtml(title)}</span>
+            <span class="step-slide-title">${icon}${escapeHtml(t(titleKey))}</span>
             <span class="step-slide-status">${statusText}</span>
           </button>
         </li>
@@ -434,10 +444,10 @@ export async function render(container, params, session) {
   // data-step เดียวกับ tab ด้านบน เลยได้ wiring คลิกฟรีจาก querySelectorAll('[data-step]')
   // ที่มีอยู่แล้วใน renderStep() ไม่ต้องเพิ่ม event listener ใหม่
   function renderStepDots() {
-    return STEP_TITLES.map((_, i) => {
+    return STEP_TITLE_KEYS.map((_, i) => {
       const n = i + 1;
       const clickable = n <= state.maxStepReached;
-      return `<button type="button" class="step-carousel-dot ${n === state.step ? 'is-active' : ''}" data-step="${n}" aria-label="ไปขั้น ${n}" ${clickable ? '' : 'disabled'}></button>`;
+      return `<button type="button" class="step-carousel-dot ${n === state.step ? 'is-active' : ''}" data-step="${n}" aria-label="${escapeAttr(tf('kzform_aria_goto_step', { n }))}" ${clickable ? '' : 'disabled'}></button>`;
     }).join('');
   }
 
@@ -454,29 +464,29 @@ export async function render(container, params, session) {
   }
 
   async function renderStep() {
-    const periodLabel = state.openPeriod ? `เข้ารอบ ${escapeHtml(state.openPeriod.Code)}` : '';
+    const periodLabel = state.openPeriod ? tf('kzform_period_code', { code: escapeHtml(state.openPeriod.Code) }) : '';
 
     container.innerHTML = `
       <header class="page-header">
         <div class="page-header-main">
-          <div class="eyebrow">ขั้น ${state.step} จาก 6 · ${escapeHtml(STEP_TITLES[state.step - 1])}${periodLabel ? ` · ${periodLabel}` : ''}</div>
-          <h1>${isEdit ? 'แก้ไข KAIZEN' : 'เสนอ KAIZEN ใหม่'}</h1>
+          <div class="eyebrow">${tf('kzform_step_of_6', { n: state.step })} · ${escapeHtml(t(STEP_TITLE_KEYS[state.step - 1]))}${periodLabel ? ` · ${periodLabel}` : ''}</div>
+          <h1>${t(isEdit ? 'kzform_h1_edit' : 'kzform_h1_new')}</h1>
         </div>
-        ${state.draft.Id ? '<div class="page-header-actions"><span class="autosave">บันทึกร่างล่าสุดแล้ว</span></div>' : ''}
+        ${state.draft.Id ? `<div class="page-header-actions"><span class="autosave">${t('kzform_autosave')}</span></div>` : ''}
       </header>
       <div class="page-body is-narrow">
         <div class="step-carousel">
-          <button type="button" class="step-carousel-arrow" id="step-prev" aria-label="ขั้นก่อนหน้า" ${state.step <= 1 || state.saving ? 'disabled' : ''}>
+          <button type="button" class="step-carousel-arrow" id="step-prev" aria-label="${escapeAttr(t('kzform_aria_prev_step'))}" ${state.step <= 1 || state.saving ? 'disabled' : ''}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <ol class="wizard steps" id="step-track">${renderStepRail()}</ol>
-          <button type="button" class="step-carousel-arrow" id="step-next" aria-label="ขั้นถัดไป" ${state.step >= 6 || state.saving ? 'disabled' : ''}>
+          <button type="button" class="step-carousel-arrow" id="step-next" aria-label="${escapeAttr(t('kzform_aria_next_step'))}" ${state.step >= 6 || state.saving ? 'disabled' : ''}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
         <div class="step-carousel-dots">${renderStepDots()}</div>
-        ${(!isEdit || state.draft.Status === 'need_revision') && !state.openPeriod ? '<div class="warning" style="margin-top:var(--sp-4)">ไม่มีรอบประเมินที่เปิดอยู่ตอนนี้ — บันทึกร่างได้ แต่ยังส่งไม่ได้จนกว่าจะมีรอบเปิด</div>' : ''}
-        ${state.activeEditGrant ? `<div class="warning" style="margin-top:var(--sp-4)">ผู้ดูแลระบบให้สิทธิ์แก้ไขชั่วคราวสำหรับโครงการนี้ (รอบปิดไปแล้ว) ถึง ${escapeHtml(thaiDateTime(state.activeEditGrant.ExpiresAt))} — เหตุผล: ${escapeHtml(state.activeEditGrant.Reason)}</div>` : ''}
+        ${(!isEdit || state.draft.Status === 'need_revision') && !state.openPeriod ? `<div class="warning" style="margin-top:var(--sp-4)">${t('kzform_no_open_period_warning')}</div>` : ''}
+        ${state.activeEditGrant ? `<div class="warning" style="margin-top:var(--sp-4)">${tf('kzform_edit_grant_banner', { expires: escapeHtml(thaiDateTime(state.activeEditGrant.ExpiresAt)), reason: escapeHtml(state.activeEditGrant.Reason) })}</div>` : ''}
         <div id="step-body" style="margin-top:var(--sp-5)"></div>
         <div id="form-error" style="margin-top:var(--sp-4)"></div>
         <!-- ★ ผู้ใช้ขอย้ายความสามารถ "ย้อนกลับ"/"ไปขั้นถัดไป" ขึ้นไปที่ลูกศร/ปัดการ์ดบนแถบขั้นตอน
@@ -487,7 +497,7 @@ export async function render(container, params, session) {
              draft.Id เลยไม่โชว่แถบนี้ กันแถบว่างเปล่าค้างอยู่ล่างจอ -->
         ${state.draft.Id ? `
           <div class="wizard-actions">
-            <button type="button" id="btn-save-draft" class="ghost" ${state.saving ? 'disabled' : ''}>เก็บร่างไว้ก่อน</button>
+            <button type="button" id="btn-save-draft" class="ghost" ${state.saving ? 'disabled' : ''}>${t('kzform_save_draft')}</button>
             <span class="spacer"></span>
           </div>
         ` : ''}
@@ -588,29 +598,29 @@ export async function render(container, params, session) {
         <div class="avatar"${session.profile.AvatarPath ? ` data-avatar-path="${escapeAttr(session.profile.AvatarPath)}"` : ''}>${escapeHtml(initials(session.profile.FullName))}</div>
         <div style="min-width:0;overflow-wrap:anywhere">
           <div style="font-weight:600;font-size:14.5px">${escapeHtml(session.profile.FullName)}</div>
-          <div class="muted mono" style="font-size:12.5px">รหัสพนักงาน ${escapeHtml(session.profile.EmployeeId)}</div>
+          <div class="muted mono" style="font-size:12.5px">${escapeHtml(tf('kzform_employee_id', { id: session.profile.EmployeeId }))}</div>
         </div>
       </div>
       <div class="field-row">
-        <label>แผนก<select id="f-department">${deptOptions}</select></label>
-        <label>โรงงาน<select id="f-plant">${plantOptions}</select></label>
+        <label>${t('kzform_department')}<select id="f-department">${deptOptions}</select></label>
+        <label>${t('kzform_plant')}<select id="f-plant">${plantOptions}</select></label>
       </div>
       <div style="margin-top:var(--sp-5)">
-        <label class="field-label">ประเภทโครงการ</label>
+        <label class="field-label">${t('kzform_project_type')}</label>
         <div class="pick-set">
           <button type="button" class="pick ${d.ProjectType === 'individual' ? 'is-on' : ''}" data-pick-type="individual">
-            <div class="pick-title">รายบุคคล</div><div class="pick-sub">เสนอคนเดียว</div>
+            <div class="pick-title">${t('kzform_individual')}</div><div class="pick-sub">${t('kzform_individual_sub')}</div>
           </button>
           <button type="button" class="pick ${d.ProjectType === 'group' ? 'is-on' : ''}" data-pick-type="group">
-            <div class="pick-title">กลุ่ม</div><div class="pick-sub">มีสมาชิกร่วมทีม</div>
+            <div class="pick-title">${t('kzform_group')}</div><div class="pick-sub">${t('kzform_group_sub')}</div>
           </button>
         </div>
       </div>
       <div id="team-members-block" style="margin-top:var(--sp-5)" ${d.ProjectType === 'group' ? '' : 'hidden'}>
-        <label class="field-label">สมาชิกทีม</label>
-        <p class="field-hint">กรอกรหัสพนักงานทีละคน — ห้ามยัดหลายรหัสในช่องเดียว</p>
+        <label class="field-label">${t('kzform_team_members')}</label>
+        <p class="field-hint">${t('kzform_team_members_hint')}</p>
         <div id="team-members-list"></div>
-        <button type="button" id="btn-add-member" class="secondary is-sm">+ เพิ่มสมาชิก</button>
+        <button type="button" id="btn-add-member" class="secondary is-sm">${t('kzform_add_member')}</button>
       </div>
     `;
 
@@ -627,9 +637,9 @@ export async function render(container, params, session) {
       const listEl = document.getElementById('team-members-list');
       listEl.innerHTML = d.TeamMembers.map((m, i) => `
         <div class="member-row">
-          <input type="text" placeholder="รหัสพนักงาน" value="${escapeAttr(m.EmployeeId)}" data-i="${i}" data-f="EmployeeId" />
-          <input type="text" placeholder="ชื่อ-นามสกุล" value="${escapeAttr(m.FullName)}" data-i="${i}" data-f="FullName" />
-          <button type="button" class="icon-btn" data-remove="${i}" aria-label="ลบ">
+          <input type="text" placeholder="${escapeAttr(t('kzform_employee_id_placeholder'))}" value="${escapeAttr(m.EmployeeId)}" data-i="${i}" data-f="EmployeeId" />
+          <input type="text" placeholder="${escapeAttr(t('kzform_full_name_placeholder'))}" value="${escapeAttr(m.FullName)}" data-i="${i}" data-f="FullName" />
+          <button type="button" class="icon-btn" data-remove="${i}" aria-label="${escapeAttr(t('kzform_aria_delete'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
           </button>
         </div>
@@ -665,17 +675,17 @@ export async function render(container, params, session) {
         <div class="char-count ${ok ? 'is-ok' : ''}">
           <div class="bar"><i style="width:${Math.min(100, (len / PROBLEM_MIN_LEN) * 100)}%"></i></div>
           <span class="n">${len}/${PROBLEM_MIN_LEN}</span>
-          <span class="msg">${ok ? 'ครบตามเกณฑ์แล้ว' : `เขียนเพิ่มอีก ${remaining} ตัวอักษรจึงจะไปขั้นถัดไปได้`}</span>
+          <span class="msg">${ok ? t('kzform_char_ok') : tf('kzform_char_remaining', { n: remaining })}</span>
         </div>
       `;
     }
 
     el.innerHTML = `
-      <label><span>ชื่อโครงการ (TH) <span class="req">*</span></span>
-        <input type="text" id="f-title" value="${escapeAttr(d.Title)}" placeholder="เช่น ลดเวลาเปลี่ยนม้วนฟิล์มเครื่องบรรจุ #3" />
+      <label><span>${t('kzform_title_th_label')} <span class="req">*</span></span>
+        <input type="text" id="f-title" value="${escapeAttr(d.Title)}" placeholder="${escapeAttr(t('kzform_title_placeholder'))}" />
       </label>
       <fieldset style="margin-top:var(--sp-5)">
-        <legend>หมวดปัญหา <span class="req">*</span></legend>
+        <legend>${t('kzform_categories_legend')} <span class="req">*</span></legend>
         <!-- ★ ผู้ใช้ขอเปลี่ยนจาก chip เป็น toggle switch แยกทีละแถว ห่อด้วย .card (2026-09-16
              อ้างอิง Uiverse.io by namecho) — ใช้แบบเดียวกันกับ "ระดับผลกระทบ" (ล่างนี้)/
              "สิ่งที่ต้องการสนับสนุน" (renderStep3) ตามคำขอ แต่ยังไม่แตะ .chip กลางที่ใช้ร่วมกับ
@@ -684,7 +694,7 @@ export async function render(container, params, session) {
           <div class="toggle-list" id="cat-chips">
             ${CATEGORIES.map((c) => `
               <label class="toggle-row">
-                <span class="toggle-row-label">${escapeHtml(CATEGORY_LABELS[c].th)}</span>
+                <span class="toggle-row-label">${escapeHtml(L(CATEGORY_LABELS[c]))}</span>
                 <span class="switch">
                   <input type="checkbox" data-value="${c}" ${d.Categories.includes(c) ? 'checked' : ''} />
                   <span class="slider"></span>
@@ -694,20 +704,20 @@ export async function render(container, params, session) {
           </div>
         </div>
       </fieldset>
-      <label id="cat-other-wrap" style="margin-top:var(--sp-5)" ${d.Categories.includes('other') ? '' : 'hidden'}>ระบุหมวดอื่น ๆ
+      <label id="cat-other-wrap" style="margin-top:var(--sp-5)" ${d.Categories.includes('other') ? '' : 'hidden'}>${t('kzform_category_other_label')}
         <input type="text" id="f-category-other" value="${escapeAttr(d.CategoryOther ?? '')}" />
       </label>
-      <label style="margin-top:var(--sp-5)"><span>อธิบายปัญหา (ที่ไหน/อย่างไร/เมื่อไร) <span class="req">*</span></span>
+      <label style="margin-top:var(--sp-5)"><span>${t('kzform_problem_desc_label')} <span class="req">*</span></span>
         <textarea id="f-problem" rows="4">${escapeHtml(d.ProblemDescription)}</textarea>
       </label>
       <div id="cc-problem-wrap">${charCountHtml()}</div>
       <fieldset style="margin-top:var(--sp-5)">
-        <legend>ระดับผลกระทบ</legend>
+        <legend>${t('kzform_impacts_legend')}</legend>
         <div class="card">
           <div class="toggle-list" id="impact-chips">
             ${IMPACTS.map((c) => `
               <label class="toggle-row">
-                <span class="toggle-row-label">${escapeHtml(IMPACT_LABELS[c].th)}</span>
+                <span class="toggle-row-label">${escapeHtml(L(IMPACT_LABELS[c]))}</span>
                 <span class="switch">
                   <input type="checkbox" data-value="${c}" ${d.Impacts.includes(c) ? 'checked' : ''} />
                   <span class="slider"></span>
@@ -760,19 +770,19 @@ export async function render(container, params, session) {
       const max = band.Extra?.max;
       const range = max != null
         ? `${min.toLocaleString('th-TH')}–${max.toLocaleString('th-TH')}`
-        : `มากกว่า ${min.toLocaleString('th-TH')}`;
-      return `<p class="field-hint" style="color:var(--primary)">เข้าเกณฑ์ Cost saving rank ${band.Extra?.rank} · ช่วง ${range} บาท</p>`;
+        : tf('kzform_more_than', { min: min.toLocaleString('th-TH') });
+      return `<p class="field-hint" style="color:var(--primary)">${tf('kzform_cost_hint', { rank: band.Extra?.rank, range })}</p>`;
     }
 
     el.innerHTML = `
-      <label><span>แนวทางการปรับปรุง <span class="req">*</span></span><textarea id="f-approach" rows="4">${escapeHtml(d.ImprovementApproach)}</textarea></label>
+      <label><span>${t('kzform_approach_label')} <span class="req">*</span></span><textarea id="f-approach" rows="4">${escapeHtml(d.ImprovementApproach)}</textarea></label>
       <fieldset style="margin-top:var(--sp-5)">
-        <legend>สิ่งที่ต้องการสนับสนุน</legend>
+        <legend>${t('kzform_support_legend')}</legend>
         <div class="card">
           <div class="toggle-list" id="support-chips">
             ${SUPPORT_NEEDED.map((c) => `
               <label class="toggle-row">
-                <span class="toggle-row-label">${escapeHtml(SUPPORT_NEEDED_LABELS[c].th)}</span>
+                <span class="toggle-row-label">${escapeHtml(L(SUPPORT_NEEDED_LABELS[c]))}</span>
                 <span class="switch">
                   <input type="checkbox" data-value="${c}" ${d.SupportNeeded.includes(c) ? 'checked' : ''} />
                   <span class="slider"></span>
@@ -782,13 +792,13 @@ export async function render(container, params, session) {
           </div>
         </div>
       </fieldset>
-      <label id="support-other-wrap" style="margin-top:var(--sp-5)" ${d.SupportNeeded.includes('other') ? '' : 'hidden'}>ระบุอื่น ๆ
+      <label id="support-other-wrap" style="margin-top:var(--sp-5)" ${d.SupportNeeded.includes('other') ? '' : 'hidden'}>${t('kzform_support_other_label')}
         <input type="text" id="f-support-other" value="${escapeAttr(d.SupportOther ?? '')}" />
       </label>
-      <label style="margin-top:var(--sp-5)">งบประมาณ<select id="f-budget-band"><option value=""></option>${bandOptions}</select></label>
-      <label style="margin-top:var(--sp-5)">Cost saving / เดือน (บาท)<input type="number" min="0" step="1" id="f-cost-saving" value="${d.CostSavingPerMonth ?? ''}" /></label>
+      <label style="margin-top:var(--sp-5)">${t('kzform_budget_label')}<select id="f-budget-band"><option value=""></option>${bandOptions}</select></label>
+      <label style="margin-top:var(--sp-5)">${t('kzform_cost_saving_label')}<input type="number" min="0" step="1" id="f-cost-saving" value="${d.CostSavingPerMonth ?? ''}" /></label>
       <div id="cost-hint-wrap">${costHintHtml()}</div>
-      <label style="margin-top:var(--sp-5)">หลักฐาน/ที่มาของ Cost saving<textarea id="f-cost-basis" rows="3">${escapeHtml(d.CostSavingBasis ?? '')}</textarea></label>
+      <label style="margin-top:var(--sp-5)">${t('kzform_cost_basis_label')}<textarea id="f-cost-basis" rows="3">${escapeHtml(d.CostSavingBasis ?? '')}</textarea></label>
     `;
 
     document.getElementById('f-approach').addEventListener('input', (e) => { d.ImprovementApproach = e.target.value; });
@@ -821,30 +831,30 @@ export async function render(container, params, session) {
       // เองถูกนับว่า "ผ่านมาแล้ว" ตั้งแต่เช้ามืดของวันนั้นเอง (Spec.md §4.8 backlog Low #2)
       const days = daysBetweenDateStrings(todayInSystemTz(), d.NextFollowUpDate);
       if (days <= 0) return '';
-      return `<div class="warning" style="margin-top:8px">วันที่นี้ผ่านมาแล้ว ${days} วัน — ระบบไม่บล็อก แต่ตรวจสอบว่าใช่วันที่ตั้งใจไหม</div>`;
+      return `<div class="warning" style="margin-top:8px">${tf('kzform_followup_overdue', { n: days })}</div>`;
     }
 
     el.innerHTML = `
       <div style="margin-bottom:var(--sp-5)">
-        <label class="field-label">สถานะดำเนินการ</label>
+        <label class="field-label">${t('kzform_review_status')}</label>
         <div class="pick-set">
           <button type="button" class="pick ${!d.IsCompleted ? 'is-on' : ''}" data-pick-completed="false">
-            <div class="pick-title">ยังดำเนินการอยู่</div>
+            <div class="pick-title">${t('kzform_status_in_progress')}</div>
           </button>
           <button type="button" class="pick ${d.IsCompleted ? 'is-on' : ''}" data-pick-completed="true">
-            <div class="pick-title">ทำเสร็จแล้ว</div>
+            <div class="pick-title">${t('kzform_status_completed')}</div>
           </button>
         </div>
       </div>
       <div class="field-row">
-        <label>วันที่เริ่ม<input type="date" id="f-start" value="${d.StartDate ?? ''}" /></label>
-        <label><span>วันที่เสร็จ${d.IsCompleted ? ' <span class="req">*</span>' : ''}</span><input type="date" id="f-completion" value="${d.CompletionDate ?? ''}" /></label>
+        <label>${t('kzform_start_date')}<input type="date" id="f-start" value="${d.StartDate ?? ''}" /></label>
+        <label><span>${t('kzform_completion_date')}${d.IsCompleted ? ' <span class="req">*</span>' : ''}</span><input type="date" id="f-completion" value="${d.CompletionDate ?? ''}" /></label>
       </div>
       <div id="followup-block" style="margin-top:var(--sp-5)" ${d.IsCompleted ? 'hidden' : ''}>
-        <label><span>วันติดตามครั้งถัดไป <span class="req">*</span></span><input type="date" id="f-followup" value="${d.NextFollowUpDate ?? ''}" /></label>
+        <label><span>${t('kzform_next_followup')} <span class="req">*</span></span><input type="date" id="f-followup" value="${d.NextFollowUpDate ?? ''}" /></label>
         <div class="hstack" style="margin-top:var(--sp-2)">
-          <button type="button" class="secondary is-sm" data-followup-offset="14">+2 สัปดาห์</button>
-          <button type="button" class="secondary is-sm" data-followup-offset="30">+1 เดือน</button>
+          <button type="button" class="secondary is-sm" data-followup-offset="14">${t('kzform_plus_2_weeks')}</button>
+          <button type="button" class="secondary is-sm" data-followup-offset="30">${t('kzform_plus_1_month')}</button>
         </div>
         <div id="followup-warning-wrap">${followUpWarningHtml()}</div>
       </div>
@@ -882,16 +892,16 @@ export async function render(container, params, session) {
   async function renderStep5(el) {
     const d = state.draft;
     if (!d.Id) {
-      el.innerHTML = '<p class="muted">กรุณากรอกข้อมูลขั้นก่อนหน้าให้ครบก่อน (ระบบบันทึกร่างอัตโนมัติตอนกด "ถัดไป")</p>';
+      el.innerHTML = `<p class="muted">${t('kzform_fill_prev_steps')}</p>`;
       return;
     }
 
     el.innerHTML = `
-      <div class="note">ระบบจะย่อขนาดรูปและลบตำแหน่ง GPS ให้อัตโนมัติก่อนอัปโหลด</div>
+      <div class="note">${t('kzform_photo_hint')}</div>
       ${ATTACHMENT_PHASES.map((phase) => `
         <div class="attach-phase" style="margin-top:var(--sp-5)">
-          <h3 style="margin-bottom:var(--sp-2)">${ATTACHMENT_PHASE_LABELS[phase].th}${phase === 'before' ? ' <span class="req">* ต้องมีอย่างน้อย 1 รูป</span>' : ''}</h3>
-          ${phase === 'after' ? '<p class="field-hint">ถ่ายมุมเดียวกับรูป "ก่อนทำ" เพื่อเทียบกันง่าย</p>' : ''}
+          <h3 style="margin-bottom:var(--sp-2)">${escapeHtml(L(ATTACHMENT_PHASE_LABELS[phase]))}${phase === 'before' ? ` <span class="req">${t('kzform_before_required')}</span>` : ''}</h3>
+          ${phase === 'after' ? `<p class="field-hint">${t('kzform_after_hint')}</p>` : ''}
           <div class="attach-grid" id="attach-grid-${phase}"><p class="muted">${t('common_loading')}</p></div>
         </div>
       `).join('')}
@@ -903,7 +913,7 @@ export async function render(container, params, session) {
       const dropzoneHtml = `
         <label class="dropzone" for="attach-input-${phase}" data-drop="${phase}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-          เพิ่มรูป
+          ${t('kzform_add_photo')}
         </label>
         <input type="file" accept="image/*" id="attach-input-${phase}" style="display:none" />
       `;
@@ -911,7 +921,7 @@ export async function render(container, params, session) {
       grid.innerHTML = items.map((a) => `
         <div class="attach-item" data-id="${a.Id}">
           <img alt="${escapeAttr(a.FileName)}" />
-          <button type="button" class="icon-btn" data-del="${a.Id}" aria-label="ลบ">
+          <button type="button" class="icon-btn" data-del="${a.Id}" aria-label="${escapeAttr(t('kzform_aria_delete'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
           </button>
         </div>
@@ -954,13 +964,13 @@ export async function render(container, params, session) {
           // เดิมข้อความไม่บอกสาเหตุ/ทางแก้ ผู้ใช้มือถือกดถ่ายแล้วแนบไม่ติดโดยไม่รู้ว่าทำไม
           // (2026-09-15)
           state.error = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name || '')
-            ? ['ไฟล์นี้เป็นรูปแบบ HEIC/HEIF ซึ่งระบบยังไม่รองรับ — ไปที่ตั้งค่า > กล้อง > รูปแบบ แล้วเลือก "ความเข้ากันได้สูงสุด" (Most Compatible) ในโทรศัพท์ แล้วถ่ายใหม่ หรือเลือกรูปเดิมที่เป็น JPEG/PNG แทน']
-            : ['ไฟล์ต้องเป็นรูปภาพประเภท JPEG, PNG, WEBP หรือ GIF เท่านั้น'];
+            ? [t('kzform_heic_error')]
+            : [t('kzform_invalid_image_type')];
           await renderStep();
           return;
         }
         if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-          state.error = [`ไฟล์ต้องไม่เกิน ${MAX_UPLOAD_MB}MB`];
+          state.error = [tf('kzform_file_too_large', { mb: MAX_UPLOAD_MB })];
           await renderStep();
           return;
         }
@@ -999,32 +1009,32 @@ export async function render(container, params, session) {
     const isDraftStatus = !d.Status || d.Status === 'draft' || d.Status === 'need_revision';
     const submitIssues = allBlockingIssues().concat(stepIssues(6));
     const rows = [
-      { label: 'ชื่อโครงการ', value: d.Title || '—', step: 2, ok: d.Title.trim().length >= 5 },
+      { label: t('kzform_review_title'), value: d.Title || '—', step: 2, ok: d.Title.trim().length >= 5 },
       {
-        label: 'แผนก / โรงงาน',
+        label: t('kzform_review_dept_plant'),
         value: `${escapeHtml(masterLabel(state.departments, d.Department))} / ${escapeHtml(masterLabel(state.plants, d.Plant))}`,
         step: 1,
         ok: true,
       },
-      { label: 'ประเภทโครงการ', value: d.ProjectType === 'group' ? 'กลุ่ม' : 'รายบุคคล', step: 1, ok: true },
-      { label: 'หมวดปัญหา', value: d.Categories.map((c) => CATEGORY_LABELS[c]?.th ?? c).join(', ') || '—', step: 2, ok: d.Categories.length > 0 },
-      { label: 'อธิบายปัญหา', value: `${d.ProblemDescription.trim().length} ตัวอักษร`, step: 2, ok: d.ProblemDescription.trim().length >= PROBLEM_MIN_LEN },
-      { label: 'แนวทางการปรับปรุง', value: d.ImprovementApproach ? `${d.ImprovementApproach.trim().length} ตัวอักษร` : '—', step: 3, ok: Boolean(d.ImprovementApproach) },
+      { label: t('kzform_review_project_type'), value: d.ProjectType === 'group' ? t('kzform_group') : t('kzform_individual'), step: 1, ok: true },
+      { label: t('kzform_review_categories'), value: d.Categories.map((c) => (CATEGORY_LABELS[c] ? L(CATEGORY_LABELS[c]) : c)).join(', ') || '—', step: 2, ok: d.Categories.length > 0 },
+      { label: t('kzform_review_problem_desc'), value: tf('kzform_chars_count', { n: d.ProblemDescription.trim().length }), step: 2, ok: d.ProblemDescription.trim().length >= PROBLEM_MIN_LEN },
+      { label: t('kzform_review_approach'), value: d.ImprovementApproach ? tf('kzform_chars_count', { n: d.ImprovementApproach.trim().length }) : '—', step: 3, ok: Boolean(d.ImprovementApproach) },
       {
-        label: 'Cost saving/เดือน',
-        value: Number(d.CostSavingPerMonth) > 0 ? `${Number(d.CostSavingPerMonth).toLocaleString('th-TH')} บาท` : 'ไม่มี',
+        label: t('kzform_review_cost_saving'),
+        value: Number(d.CostSavingPerMonth) > 0 ? `${Number(d.CostSavingPerMonth).toLocaleString('th-TH')} ${t('kzform_baht')}` : t('kzform_none'),
         step: 3,
         ok: !(Number(d.CostSavingPerMonth) > 0) || (d.CostSavingBasis ?? '').trim().length >= COST_BASIS_MIN_LEN,
       },
       {
-        label: 'สถานะดำเนินการ',
-        value: d.IsCompleted ? `เสร็จแล้ว (${d.CompletionDate || '—'})` : `ยังดำเนินการ (ติดตาม ${d.NextFollowUpDate || '—'})`,
+        label: t('kzform_review_status'),
+        value: d.IsCompleted ? tf('kzform_completed_on', { date: d.CompletionDate || '—' }) : tf('kzform_in_progress_followup', { date: d.NextFollowUpDate || '—' }),
         step: 4,
         ok: d.IsCompleted ? Boolean(d.CompletionDate) : Boolean(d.NextFollowUpDate),
       },
       {
-        label: 'รูปภาพ',
-        value: `${(d.KaizenAttachments ?? []).length} ไฟล์`,
+        label: t('kzform_review_photos'),
+        value: tf('kzform_files_count', { n: (d.KaizenAttachments ?? []).length }),
         step: 5,
         ok: (d.KaizenAttachments ?? []).some((a) => a.Phase === 'before'),
       },
@@ -1035,25 +1045,25 @@ export async function render(container, params, session) {
         ${rows.map((r) => `
           <div class="muted" style="font-size:13px;padding-top:2px">${escapeHtml(r.label)}</div>
           <div style="font-size:14px;${r.ok ? '' : 'color:var(--danger);font-weight:700'}">${r.value}</div>
-          <button type="button" class="secondary is-sm" data-goto="${r.step}">แก้</button>
+          <button type="button" class="secondary is-sm" data-goto="${r.step}">${t('kzform_edit_btn')}</button>
         `).join('')}
       </div>
       <hr style="margin:var(--sp-5) 0" />
-      <label><span>ชื่อผู้ยืนยัน (ผู้ดำเนินโครงการ) <span class="req">*</span></span>
+      <label><span>${t('kzform_confirmed_by_label')} <span class="req">*</span></span>
         <input type="text" id="f-confirmed-by" value="${escapeAttr(d.ConfirmedByName ?? '')}" />
       </label>
       <label class="inline" style="margin-top:var(--sp-2)">
         <input type="checkbox" id="f-certify" ${state.certify ? 'checked' : ''} />
-        ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นถูกต้อง
+        ${t('kzform_certify_label')}
       </label>
-      <p class="field-hint" style="margin-top:var(--sp-3)">กด "ยืนยันส่งโครงการ" แล้วจะส่งเข้าคิวให้กรรมการให้คะแนนทันที และแก้ไขชื่อ/ปัญหา/แนวทางไม่ได้อีก (ยังอัปเดตความคืบหน้า/ทำเครื่องหมายเสร็จได้ต่อที่หน้ารายละเอียดโครงการ)</p>
+      <p class="field-hint" style="margin-top:var(--sp-3)">${t('kzform_submit_hint')}</p>
       <!-- ★ ผู้ใช้ขอ (2026-09-16) ให้ปุ่ม "ยืนยันส่งโครงการ" ต่อจากข้อความอธิบายด้านบนนี้เลย
            (ไม่ใช่แถบปุ่มลอยล่างจอแบบเดิม) — อยู่ในเนื้อหาปกติ เลื่อนตามหน้าไปด้วยเหมือนเนื้อหาอื่น
            ทุกอย่าง ไม่ fixed/sticky ปุ่มเต็มความกว้างแบบเดียวกับ "Create account" หน้า welcome
            (.btn-block) — ★ ลองห่อด้วย .card ไปก่อน แต่ผู้ใช้ขอเอากรอบขาวออก (2026-09-16 รอบ 2)
            เหลือแค่ปุ่มลอยเปล่าๆ ไม่มีกล่องห่อ -->
       <div style="margin-top:var(--sp-4)">
-        ${isDraftStatus ? `<button type="button" id="btn-submit" class="btn-block" ${state.saving || submitIssues.length > 0 ? 'disabled' : ''}>${state.saving ? t('common_loading') : (submitIssues.length > 0 ? `ยืนยันส่งโครงการ — ยังขาด ${submitIssues.length} อย่าง` : 'ยืนยันส่งโครงการ')}</button>` : `<p class="muted" style="margin:0">โครงการนี้ถูกส่งไปแล้ว (สถานะปัจจุบัน ${statusBadge(state.draft.Status)})</p>`}
+        ${isDraftStatus ? `<button type="button" id="btn-submit" class="btn-block" ${state.saving || submitIssues.length > 0 ? 'disabled' : ''}>${state.saving ? t('common_loading') : (submitIssues.length > 0 ? tf('kzform_submit_btn_missing', { n: submitIssues.length }) : t('kzform_submit_btn'))}</button>` : `<p class="muted" style="margin:0">${tf('kzform_already_submitted', { status: statusBadge(state.draft.Status) })}</p>`}
       </div>
     `;
     document.getElementById('f-confirmed-by').addEventListener('input', (e) => { d.ConfirmedByName = e.target.value; });

@@ -1,8 +1,8 @@
 // js/views/adminMaster.js — filter-chip แทน select, ฟิลด์ Extra ตามชนิดแทน JSON ดิบ (MIGRATION.md ข้อ 13)
-import { getAllMasterData, createMasterDataRow, updateMasterDataRow } from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard } from '../ui.js?v=20260911z6';
-import { MASTER_DATA_TYPES } from '../constants.js?v=20260911z6';
+import { getAllMasterData, createMasterDataRow, updateMasterDataRow } from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard } from '../ui.js?v=20260911z7';
+import { MASTER_DATA_TYPES } from '../constants.js?v=20260911z7';
 
 const TYPE_LABELS = {
   department: 'แผนก',
@@ -61,8 +61,8 @@ export async function render(container) {
     MASTER_DATA_TYPES.forEach((tp, i) => { rowsByType[tp] = lists[i]; });
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

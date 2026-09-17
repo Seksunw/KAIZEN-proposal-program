@@ -1,7 +1,7 @@
 // js/views/reviewQueue.js — คิวตรวจให้คะแนน (MIGRATION.md ข้อ 7)
-import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z6';
+import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z7';
 
 const FILTERS = [
   { key: 'todo', label: 'ยังไม่ให้คะแนน' },
@@ -24,8 +24,8 @@ export async function render(container, params, session) {
     openPeriod = await getOpenPeriod();
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }
@@ -73,8 +73,8 @@ export async function render(container, params, session) {
     ]);
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

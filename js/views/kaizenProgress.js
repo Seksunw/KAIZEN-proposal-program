@@ -5,11 +5,11 @@
 //   เรื่องนี้จริงผ่าน can_track_progress()/guard_kaizen_field_lock() ใน schema.sql (ไม่ใช่แค่ UI)
 // หมายเหตุ: ไม่มี trigger ฝั่ง DB sync progress_pct/next_follow_up_date/status อัตโนมัติ
 // ใน MVP — ต้องอัปเดต kaizen_projects เองที่นี่คู่กับการ insert kaizen_progress_updates
-import { getKaizenById, updateKaizen, addProgressUpdate, uploadAttachment } from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { navigate } from '../router.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, stateCard, statusBadge, thaiDate, todayInSystemTz } from '../ui.js?v=20260911z6';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z6';
+import { getKaizenById, updateKaizen, addProgressUpdate, uploadAttachment } from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { navigate } from '../router.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, stateCard, statusBadge, thaiDate, todayInSystemTz } from '../ui.js?v=20260911z7';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
 
 const COST_BASIS_MIN_LEN = 30;
 const TRACKABLE_STATUSES = ['submitted', 'in_progress', 'pending_review', 'scored', 'approved'];
@@ -25,9 +25,9 @@ export async function render(container, params, session) {
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
       kind: 'error',
-      title: 'โหลดข้อมูลไม่สำเร็จ',
+      title: t('error_load_failed'),
       body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

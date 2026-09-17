@@ -1,7 +1,7 @@
 // js/views/kaizenList.js — รายการ KAIZEN ของฉัน (MIGRATION.md ข้อ 3)
-import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z6';
+import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z7';
 
 const PAGE_SIZE = 20;
 
@@ -55,9 +55,9 @@ export async function render(container, params, session) {
   } catch (err) {
     container.innerHTML = pageHeader({ title: t('nav_kaizen') }) + `<div class="page-body">${stateCard({
       kind: 'error',
-      title: 'โหลดข้อมูลไม่สำเร็จ',
+      title: t('error_load_failed'),
       body: escapeHtml(translateError(err.message) || err.message || 'สัญญาณในไลน์ผลิตไม่นิ่งเป็นสาเหตุที่พบบ่อย'),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

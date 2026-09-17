@@ -1,8 +1,8 @@
 // js/views/adminAudit.js — เขียนเป็นประโยค จัดกลุ่มตามวัน (MIGRATION.md ข้อ 14)
-import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z6';
-import { t, getLang } from '../i18n.js?v=20260911z6';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z6';
-import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z6';
+import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z7';
+import { t, getLang } from '../i18n.js?v=20260911z7';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z7';
+import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z7';
 
 const ACTION_GROUPS = {
   submit_kaizen: 'ส่งงาน',
@@ -58,8 +58,8 @@ export async function render(container) {
     [logs, profiles, periods] = await Promise.all([getAuditLog(), getAllProfiles(), getPeriods()]);
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
-      kind: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      kind: 'error', title: t('error_load_failed'), body: escapeHtml(translateError(err.message) || err.message || t('common_error_generic')),
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

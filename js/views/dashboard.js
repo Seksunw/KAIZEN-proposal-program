@@ -1,8 +1,8 @@
 // js/views/dashboard.js — ตาม design handoff README.md §3: period banner + task-list + 2 คอลัมน์
 // (แทน .stat-grid เดิมทั้งหมด — MIGRATION.md ข้อ 2)
-import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z6';
-import { t } from '../i18n.js?v=20260911z6';
-import { thaiDate } from '../ui.js?v=20260911z6';
+import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z7';
+import { thaiDate } from '../ui.js?v=20260911z7';
 
 function escapeHtml(s) {
   const div = document.createElement('div');
@@ -57,9 +57,9 @@ export async function render(container, params, session) {
       <div class="page-body">
         <div class="state-card is-error">
           <div class="state-main">
-            <div class="state-title">โหลดข้อมูลไม่สำเร็จ</div>
-            <p class="state-body">${escapeHtml(err.message || 'สัญญาณในไลน์ผลิตไม่นิ่งเป็นสาเหตุที่พบบ่อย ข้อมูลที่กรอกไว้ไม่หาย')}</p>
-            <div class="state-actions"><button type="button" onclick="location.reload()">โหลดใหม่</button></div>
+            <div class="state-title">${t('error_load_failed')}</div>
+            <p class="state-body">${escapeHtml(err.message || t('dashboard_load_error_hint'))}</p>
+            <div class="state-actions"><button type="button" onclick="location.reload()">${t('state_retry')}</button></div>
           </div>
         </div>
       </div>

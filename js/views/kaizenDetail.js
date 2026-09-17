@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z6';
-import { t, getLang } from '../i18n.js?v=20260911z6';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z6';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z6';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z7';
+import { t, getLang } from '../i18n.js?v=20260911z7';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z7';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z7';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;
@@ -14,9 +14,9 @@ export async function render(container, params, session) {
   } catch (err) {
     container.innerHTML = `<div class="page-body">${stateCard({
       kind: 'error',
-      title: 'โหลดข้อมูลไม่สำเร็จ',
+      title: t('error_load_failed'),
       body: escapeHtml(err.message || 'สัญญาณในไลน์ผลิตไม่นิ่งเป็นสาเหตุที่พบบ่อย'),
-      actions: '<button type="button" onclick="location.reload()">โหลดใหม่</button>',
+      actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
   }

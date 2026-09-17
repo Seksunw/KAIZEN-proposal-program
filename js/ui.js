@@ -1,7 +1,7 @@
 // js/ui.js — helper กลางที่ view เรียกใช้ร่วมกัน (MIGRATION.md ข้อ 0c)
 // escapeHtml ย้ายมาจากที่เคยซ้ำอยู่หลายไฟล์ — view อื่นควร import จากที่นี่แทนการประกาศเอง
-import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z6';
-import { getLang, setLang } from './i18n.js?v=20260911z6';
+import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z7';
+import { getLang, setLang } from './i18n.js?v=20260911z7';
 
 const ALL_STATUS_LABELS = { ...PERIOD_STATUS_LABELS, ...KAIZEN_STATUS_LABELS };
 const ROLE_LABELS = {
