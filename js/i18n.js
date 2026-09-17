@@ -537,6 +537,13 @@ const DICT = {
     login_brand_line: 'ระบบเสนอและประเมินโครงการ KAIZEN สำหรับพนักงาน Suntory Wellness',
     login_sub: 'เข้าสู่ระบบด้วยอีเมลที่ Admin เปิดใช้งานให้',
     login_pending_activation_hint: 'สมัครแล้วต้องรอผู้ดูแลระบบเปิดใช้งานบัญชีก่อนจึงจะเข้าสู่ระบบได้',
+
+    // ---- forbidden.js ----
+    forbidden_needed_roles_label: 'ต้องมีสิทธิ์:',
+    forbidden_your_roles_label: 'สิทธิ์ที่คุณมีตอนนี้:',
+    forbidden_none: 'ไม่มี',
+    forbidden_contact_admin: 'ถ้าควรมีสิทธิ์นี้ แจ้งผู้ดูแลระบบพร้อมรหัสพนักงาน {id}',
+    forbidden_back_to_dashboard: 'กลับไปแดชบอร์ด',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1075,6 +1082,13 @@ const DICT = {
     login_brand_line: 'The system for submitting and evaluating KAIZEN projects, for Suntory Wellness employees',
     login_sub: 'Sign in with the email an admin activated for you',
     login_pending_activation_hint: "After registering, an admin needs to activate your account before you can sign in",
+
+    // ---- forbidden.js ----
+    forbidden_needed_roles_label: 'Requires:',
+    forbidden_your_roles_label: 'Your current roles:',
+    forbidden_none: 'None',
+    forbidden_contact_admin: 'If you should have this access, contact an admin with your employee ID {id}',
+    forbidden_back_to_dashboard: 'Back to dashboard',
   },
 };
 

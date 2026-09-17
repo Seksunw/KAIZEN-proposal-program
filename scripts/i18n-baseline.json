@@ -7,7 +7,7 @@
   "js/views/adminPeriods.js": 0,
   "js/views/adminUsers.js": 1,
   "js/views/dashboard.js": 3,
-  "js/views/forbidden.js": 4,
+  "js/views/forbidden.js": 0,
   "js/views/forgotPassword.js": 1,
   "js/views/kaizenDetail.js": 4,
   "js/views/kaizenFeed.js": 2,
