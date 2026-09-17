@@ -6,11 +6,11 @@
 import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
   getAttachmentSignedUrl, getMasterData,
-} from '../api.js?v=20260911z5';
-import { t, getLang } from '../i18n.js?v=20260911z5';
-import { navigate } from '../router.js?v=20260911z5';
-import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox } from '../ui.js?v=20260911z5';
-import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z5';
+} from '../api.js?v=20260911z6';
+import { t, getLang } from '../i18n.js?v=20260911z6';
+import { navigate } from '../router.js?v=20260911z6';
+import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z6';
+import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z6';
 
 export async function render(container, params, session) {
   document.title = `ให้คะแนน KAIZEN · ${t('appName')}`;
@@ -87,7 +87,7 @@ export async function render(container, params, session) {
       getMasterData('budget_band'),
     ]);
   } catch { /* master_data โหลดไม่ได้ — ใช้ code ดิบแทน ไม่บล็อกหน้า */ }
-  const labelOf = (list, code) => list.find((m) => m.Code === code)?.LabelTh ?? code;
+  const labelOf = (list, code) => masterLabel(list, code);
 
   const attachments = kaizen.KaizenAttachments ?? [];
   const beforePhoto = attachments.find((a) => a.Phase === 'before') ?? null;

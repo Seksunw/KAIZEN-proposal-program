@@ -1,9 +1,9 @@
 // js/views/profile.js — โปรไฟล์ของฉัน: รูป/ชื่อ/role, สถิติโครงการ, ข้อมูลบัญชี
-import { getMyKaizenList, getPeriods, getResults, getMasterData, uploadAvatar, updateProfile, getAvatarSignedUrl, signOut } from '../api.js?v=20260911z5';
-import { t, getLang, setLang } from '../i18n.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, hydrateAvatars, resizeImage } from '../ui.js?v=20260911z5';
-import { navigate } from '../router.js?v=20260911z5';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z5';
+import { getMyKaizenList, getPeriods, getResults, getMasterData, uploadAvatar, updateProfile, getAvatarSignedUrl, signOut } from '../api.js?v=20260911z6';
+import { t, getLang, setLang } from '../i18n.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, hydrateAvatars, resizeImage, masterLabel } from '../ui.js?v=20260911z6';
+import { navigate } from '../router.js?v=20260911z6';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z6';
 
 export async function render(container, params, session) {
   document.title = `โปรไฟล์ · ${t('appName')}`;
@@ -24,8 +24,8 @@ export async function render(container, params, session) {
     ]);
   } catch { /* สถิติ/label พัง ไม่บล็อกทั้งหน้า — เหลือ fallback เป็น code ดิบ */ }
 
-  const deptLabel = (code) => departments.find((d) => d.Code === code)?.LabelTh ?? code;
-  const plantLabel = (code) => plants.find((p) => p.Code === code)?.LabelTh ?? code;
+  const deptLabel = (code) => masterLabel(departments, code);
+  const plantLabel = (code) => masterLabel(plants, code);
 
   try {
     const periods = await getPeriods();

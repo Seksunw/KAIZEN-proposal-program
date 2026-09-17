@@ -1,8 +1,8 @@
 // js/views/adminAudit.js — เขียนเป็นประโยค จัดกลุ่มตามวัน (MIGRATION.md ข้อ 14)
-import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z5';
-import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z5';
+import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z6';
+import { t, getLang } from '../i18n.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z6';
+import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z6';
 
 const ACTION_GROUPS = {
   submit_kaizen: 'ส่งงาน',
@@ -31,14 +31,20 @@ function sentenceFor(e) {
   }
 }
 
+// ★ locale เดิม hardcode 'th-TH' ตายตัว ไม่เช็คภาษาที่ตั้งไว้เลย (i18n audit Round 12) —
+// เพิ่มสลับ locale ตาม getLang() เหมือน thaiDate()/thaiDateTime() ใน ui.js, และ "วันนี้"/"เมื่อวาน"
+// ไปเป็นคีย์ i18n แทน literal ตรงๆ
 function dayLabel(dateStr) {
+  const lang = getLang();
+  const locale = lang === 'en' ? 'en-GB' : 'th-TH';
+  const fmt = (d) => d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   const d = new Date(dateStr);
   const today = new Date();
   const yest = new Date(today); yest.setDate(yest.getDate() - 1);
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
-  if (sameDay(d, today)) return `วันนี้ · ${d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-  if (sameDay(d, yest)) return `เมื่อวาน · ${d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (sameDay(d, today)) return `${t('audit_today')} · ${fmt(d)}`;
+  if (sameDay(d, yest)) return `${t('audit_yesterday')} · ${fmt(d)}`;
+  return fmt(d);
 }
 
 export async function render(container) {

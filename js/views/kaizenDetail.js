@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z5';
-import { t, getLang } from '../i18n.js?v=20260911z5';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox } from '../ui.js?v=20260911z5';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z5';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z6';
+import { t, getLang } from '../i18n.js?v=20260911z6';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z6';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z6';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;
@@ -46,7 +46,7 @@ export async function render(container, params, session) {
       getMasterData('budget_band'),
     ]);
   } catch { /* ใช้ code ดิบแทนถ้าโหลด master_data ไม่ได้ */ }
-  const labelOf = (list, code) => list.find((m) => m.Code === code)?.LabelTh ?? code;
+  const labelOf = (list, code) => masterLabel(list, code);
 
   // ★ ผู้ใช้ยืนยันชัดเจน (2026-09-15): แม้รอบจะประกาศผลแล้ว (v_kaizen_results เปิดให้ทุกคนอ่านได้
   // ตามกฎเดิมของระบบ) ก็ไม่ให้คนที่ไม่ใช่เจ้าของ/admin เห็นคะแนนผ่านหน้านี้อยู่ดี — การประกาศผล

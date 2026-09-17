@@ -10,15 +10,15 @@ import {
   getKaizenById, createKaizen, updateKaizen, submitKaizen,
   getOpenPeriod, getPeriodById, getMasterData, uploadAttachment, deleteAttachment, getAttachmentSignedUrl,
   getAvatarSignedUrl, getKaizenEditGrants,
-} from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { navigate } from '../router.js?v=20260911z5';
-import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString } from '../ui.js?v=20260911z5';
+} from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { navigate } from '../router.js?v=20260911z6';
+import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString, masterLabel, thaiDateTime } from '../ui.js?v=20260911z6';
 import {
   CATEGORIES, CATEGORY_LABELS, IMPACTS, IMPACT_LABELS,
   SUPPORT_NEEDED, SUPPORT_NEEDED_LABELS, ATTACHMENT_PHASES, ATTACHMENT_PHASE_LABELS,
-} from '../constants.js?v=20260911z5';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z5';
+} from '../constants.js?v=20260911z6';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z6';
 
 const STEP_TITLES = ['ผู้เสนอ', 'ปัญหา', 'แนวทาง', 'แผนงาน', 'รูปภาพ', 'ทบทวน'];
 const PROBLEM_MIN_LEN = 50;
@@ -476,7 +476,7 @@ export async function render(container, params, session) {
         </div>
         <div class="step-carousel-dots">${renderStepDots()}</div>
         ${(!isEdit || state.draft.Status === 'need_revision') && !state.openPeriod ? '<div class="warning" style="margin-top:var(--sp-4)">ไม่มีรอบประเมินที่เปิดอยู่ตอนนี้ — บันทึกร่างได้ แต่ยังส่งไม่ได้จนกว่าจะมีรอบเปิด</div>' : ''}
-        ${state.activeEditGrant ? `<div class="warning" style="margin-top:var(--sp-4)">ผู้ดูแลระบบให้สิทธิ์แก้ไขชั่วคราวสำหรับโครงการนี้ (รอบปิดไปแล้ว) ถึง ${escapeHtml(new Date(state.activeEditGrant.ExpiresAt).toLocaleString('th-TH'))} — เหตุผล: ${escapeHtml(state.activeEditGrant.Reason)}</div>` : ''}
+        ${state.activeEditGrant ? `<div class="warning" style="margin-top:var(--sp-4)">ผู้ดูแลระบบให้สิทธิ์แก้ไขชั่วคราวสำหรับโครงการนี้ (รอบปิดไปแล้ว) ถึง ${escapeHtml(thaiDateTime(state.activeEditGrant.ExpiresAt))} — เหตุผล: ${escapeHtml(state.activeEditGrant.Reason)}</div>` : ''}
         <div id="step-body" style="margin-top:var(--sp-5)"></div>
         <div id="form-error" style="margin-top:var(--sp-4)"></div>
         <!-- ★ ผู้ใช้ขอย้ายความสามารถ "ย้อนกลับ"/"ไปขั้นถัดไป" ขึ้นไปที่ลูกศร/ปัดการ์ดบนแถบขั้นตอน
@@ -577,10 +577,10 @@ export async function render(container, params, session) {
   function renderStep1(el) {
     const d = state.draft;
     const deptOptions = state.departments
-      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.Department ? 'selected' : ''}>${escapeHtml(m.LabelTh)}</option>`)
+      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.Department ? 'selected' : ''}>${escapeHtml(masterLabel(state.departments, m.Code))}</option>`)
       .join('');
     const plantOptions = state.plants
-      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.Plant ? 'selected' : ''}>${escapeHtml(m.LabelTh)}</option>`)
+      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.Plant ? 'selected' : ''}>${escapeHtml(masterLabel(state.plants, m.Code))}</option>`)
       .join('');
 
     el.innerHTML = `
@@ -750,7 +750,7 @@ export async function render(container, params, session) {
   function renderStep3(el) {
     const d = state.draft;
     const bandOptions = state.budgetBands
-      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.BudgetBand ? 'selected' : ''}>${escapeHtml(m.LabelTh)}</option>`)
+      .map((m) => `<option value="${escapeAttr(m.Code)}" ${m.Code === d.BudgetBand ? 'selected' : ''}>${escapeHtml(masterLabel(state.budgetBands, m.Code))}</option>`)
       .join('');
 
     function costHintHtml() {
@@ -1002,7 +1002,7 @@ export async function render(container, params, session) {
       { label: 'ชื่อโครงการ', value: d.Title || '—', step: 2, ok: d.Title.trim().length >= 5 },
       {
         label: 'แผนก / โรงงาน',
-        value: `${escapeHtml(state.departments.find((m) => m.Code === d.Department)?.LabelTh ?? d.Department)} / ${escapeHtml(state.plants.find((m) => m.Code === d.Plant)?.LabelTh ?? d.Plant)}`,
+        value: `${escapeHtml(masterLabel(state.departments, d.Department))} / ${escapeHtml(masterLabel(state.plants, d.Plant))}`,
         step: 1,
         ok: true,
       },

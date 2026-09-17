@@ -2,11 +2,11 @@
 import {
   getPeriodsPage, createPeriod, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
   getQuarterlyAwards, createQuarterlyAward, deleteQuarterlyAward,
-} from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { navigate } from '../router.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z5';
-import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z5';
+} from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { navigate } from '../router.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z6';
+import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z6';
 
 const PAGE_SIZE = 20;
 

@@ -1,7 +1,8 @@
 // js/views/dashboard.js — ตาม design handoff README.md §3: period banner + task-list + 2 คอลัมน์
 // (แทน .stat-grid เดิมทั้งหมด — MIGRATION.md ข้อ 2)
-import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
+import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { thaiDate } from '../ui.js?v=20260911z6';
 
 function escapeHtml(s) {
   const div = document.createElement('div');
@@ -168,7 +169,7 @@ export async function render(container, params, session) {
             <h1>${escapeHtml(openPeriod.NameTh)} <span class="mono" style="font-size:15px;font-weight:400;color:var(--muted-2)">${escapeHtml(openPeriod.Code)}</span></h1>
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:var(--sp-3)">
               <span class="metric is-lg" style="color:${daysLeft >= 0 ? 'var(--warning)' : 'var(--danger)'}">${daysLeft >= 0 ? daysLeft : 0}</span>
-              <span class="muted" style="font-size:13.5px">${daysLeft >= 0 ? `วันก่อนปิดรับ · ${deadline.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'ปิดรับแล้ว'}</span>
+              <span class="muted" style="font-size:13.5px">${daysLeft >= 0 ? `วันก่อนปิดรับ · ${thaiDate(deadline)}` : 'ปิดรับแล้ว'}</span>
             </div>
             <div class="bar"><i class="is-warning" style="width:${elapsed}%"></i></div>
           </div>

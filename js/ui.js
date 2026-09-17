@@ -1,10 +1,13 @@
 // js/ui.js — helper กลางที่ view เรียกใช้ร่วมกัน (MIGRATION.md ข้อ 0c)
 // escapeHtml ย้ายมาจากที่เคยซ้ำอยู่หลายไฟล์ — view อื่นควร import จากที่นี่แทนการประกาศเอง
-import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z5';
-import { getLang, setLang } from './i18n.js?v=20260911z5';
+import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z6';
+import { getLang, setLang } from './i18n.js?v=20260911z6';
 
 const ALL_STATUS_LABELS = { ...PERIOD_STATUS_LABELS, ...KAIZEN_STATUS_LABELS };
-const ROLE_LABELS = { employee: 'พนักงาน', committee: 'กรรมการ', admin: 'ผู้ดูแลระบบ' };
+const ROLE_LABELS = {
+  th: { employee: 'พนักงาน', committee: 'กรรมการ', admin: 'ผู้ดูแลระบบ' },
+  en: { employee: 'Employee', committee: 'Committee', admin: 'Admin' },
+};
 
 export function escapeHtml(s) {
   const div = document.createElement('div');
@@ -21,56 +24,62 @@ export function escapeAttr(s) {
 
 // ★ trigger/RPC ใน schema.sql โยน error message เป็นภาษาอังกฤษดิบเสมอ (raise exception '...')
 // — เดิม view ทุกไฟล์โชว์ err.message ตรงๆ กลางแอปภาษาไทย (Spec.md §4.8 finding M7) แม็ปข้อความ
-// ที่ผู้ใช้จริงเจอบ่อยเป็นภาษาไทยที่นี่ที่เดียว ข้อความที่ไม่รู้จัก (เช่น network error ทั่วไป) ให้
-// คืน null เพื่อ fallback ไปที่ err.message เดิมหรือ common_error_generic ตามที่ผู้เรียกกำหนด
+// ที่ผู้ใช้จริงเจอบ่อยเป็นข้อความอ่านง่ายที่นี่ที่เดียว ข้อความที่ไม่รู้จัก (เช่น network error ทั่วไป)
+// ให้คืน null เพื่อ fallback ไปที่ err.message เดิมหรือ common_error_generic ตามที่ผู้เรียกกำหนด
+// ★ ผู้ใช้ขอ (2026-09-17, i18n audit Round 12) ให้ทำสองภาษา — เดิมคืนภาษาไทยเสมอไม่ว่า
+// getLang() จะเป็นอะไร แต่ละรายการเป็น [pattern, thReplacement, enReplacement] แทน
+// tuple 2 ช่องเดิม — replacement เป็น string หรือ function(m) ก็ได้เหมือนเดิม
 const ERROR_MESSAGE_MAP = [
-  [/^Submission deadline has passed$/, 'หมดเขตส่งผลงานของรอบนี้แล้ว'],
-  [/^Submission requires an open evaluation period$/, 'ต้องมีรอบประเมินที่เปิดอยู่จึงจะส่งได้'],
-  [/^At least one BEFORE photo is required$/, 'ต้องมีรูป "ก่อนทำ" อย่างน้อย 1 รูป'],
-  [/^At least one AFTER photo is required$/, 'ต้องมีรูป "หลังทำ" อย่างน้อย 1 รูป'],
-  [/^At least one AFTER photo is required to mark a project completed$/, 'ต้องมีรูป "หลังทำ" อย่างน้อย 1 รูปก่อนทำเครื่องหมายว่าเสร็จ'],
-  [/^Required fields are incomplete$/, 'กรอกข้อมูลที่จำเป็นไม่ครบ'],
-  [/^completion_date is required$/, 'ต้องระบุวันที่เสร็จ'],
-  [/^cost_saving_basis is required when cost_saving_per_month > 0$/, 'ต้องระบุหลักฐาน Cost saving เมื่อมีตัวเลข Cost saving/เดือน'],
-  [/^period_id is required to submit$/, 'ต้องเลือกรอบก่อนถึงจะส่งได้'],
-  [/^Only a draft project can be submitted$/, 'ส่งได้เฉพาะโครงการที่ยังเป็นร่างเท่านั้น'],
-  [/^Only the owner may submit this project$/, 'เฉพาะเจ้าของโครงการเท่านั้นที่ส่งได้'],
-  [/^KAIZEN project not found$/, 'ไม่พบโครงการนี้'],
-  [/^Cannot edit KAIZEN content once it is in the committee review queue$/, 'แก้ไขเนื้อหาโครงการไม่ได้แล้ว เพราะเข้าคิวกรรมการไปแล้ว'],
-  [/^Score not found$/, 'ไม่พบใบคะแนนนี้'],
-  [/^You may only submit your own score$/, 'ส่งได้เฉพาะคะแนนของตัวเองเท่านั้น'],
-  [/^Score is locked$/, 'คะแนนนี้ถูกล็อกแล้ว (รอบปิดแล้ว) แก้ไขไม่ได้อีก'],
-  [/^Score already submitted$/, 'ส่งคะแนนนี้ไปแล้ว'],
-  [/^Period is not accepting scores$/, 'รอบนี้ไม่รับคะแนนแล้ว'],
-  [/^Missing scores for: (.+)$/, (m) => `ให้คะแนนไม่ครบเกณฑ์: ${m[1]}`],
-  [/^All committee members for this period must submit their scores first$/, 'ต้องรอกรรมการทุกคนในรอบนี้ให้คะแนนให้ครบก่อน'],
-  [/^Only admin can set status (.+)$/, (m) => `เฉพาะ admin เท่านั้นที่ตั้งสถานะ "${m[1]}" ได้`],
-  [/^Illegal transition (\S+) -> (\S+)$/, (m) => `เปลี่ยนสถานะจาก "${m[1]}" เป็น "${m[2]}" ไม่ได้`],
-  [/^Cannot close: (\d+) project\(s\) still pending committee review$/, (m) => `ปิดรอบไม่ได้ — ยังมี ${m[1]} โครงการที่รอกรรมการให้คะแนนอยู่`],
-  [/^Only an open or scoring period can be closed$/, 'ปิดได้เฉพาะรอบที่เปิดอยู่เท่านั้น'],
-  [/^Only a closed period can be published$/, 'ประกาศผลได้เฉพาะรอบที่ปิดแล้วเท่านั้น'],
-  [/^committee_weights must sum to 100 \(got (.+)\)$/, (m) => `น้ำหนักกรรมการต้องรวมเป็น 100% (ตอนนี้รวม ${m[1]}%)`],
-  [/^At least one committee member with a weight is required$/, 'ต้องมีกรรมการอย่างน้อย 1 คนก่อนเปิดรอบ'],
-  [/^Another period is already open$/, 'มีอีกรอบที่เปิดอยู่แล้ว — ปิดรอบนั้นก่อน'],
-  [/^Only a draft period can be opened$/, 'เปิดได้เฉพาะรอบที่เป็นร่างเท่านั้น'],
-  [/^Period not found$/, 'ไม่พบรอบประเมินนี้'],
-  [/^File must be one of: image\/jpeg, image\/png, image\/webp, image\/gif$/, 'ไฟล์ต้องเป็นรูปภาพประเภท JPEG, PNG, WEBP หรือ GIF เท่านั้น'],
-  [/violates check constraint "kaizen_attachments_mime_type_allowed"/, 'ไฟล์ต้องเป็นรูปภาพประเภท JPEG, PNG, WEBP หรือ GIF เท่านั้น'],
-  [/^Only admin can grant a temporary edit window$/, 'เฉพาะ admin เท่านั้นที่ให้สิทธิ์แก้ไขชั่วคราวได้'],
-  [/^Edit window must be between 1 and 168 hours$/, 'ระยะเวลาสิทธิ์แก้ไขต้องอยู่ระหว่าง 1-168 ชั่วโมง (สูงสุด 7 วัน)'],
-  [/^A reason is required to grant a temporary edit window$/, 'กรุณาระบุเหตุผลก่อนให้สิทธิ์แก้ไขชั่วคราว'],
-  [/^A temporary edit window can only be granted while status is need_revision$/, 'ให้สิทธิ์แก้ไขชั่วคราวได้เฉพาะโครงการที่สถานะ "ต้องแก้ไข" เท่านั้น'],
-  [/^This project is already editable normally — no edit window needed$/, 'โครงการนี้แก้ไขได้ตามปกติอยู่แล้ว ไม่จำเป็นต้องให้สิทธิ์ชั่วคราว'],
-  [/^This project already has an active edit window$/, 'โครงการนี้มีสิทธิ์แก้ไขชั่วคราวที่ยังไม่หมดอายุอยู่แล้ว'],
-  [/^Only admin can revoke a temporary edit window$/, 'เฉพาะ admin เท่านั้นที่เพิกถอนสิทธิ์แก้ไขชั่วคราวได้'],
-  [/^Edit grant not found or already revoked$/, 'ไม่พบสิทธิ์แก้ไขนี้ หรือถูกเพิกถอนไปแล้ว'],
+  [/^Submission deadline has passed$/, 'หมดเขตส่งผลงานของรอบนี้แล้ว', 'The submission deadline for this period has passed'],
+  [/^Submission requires an open evaluation period$/, 'ต้องมีรอบประเมินที่เปิดอยู่จึงจะส่งได้', 'An open evaluation period is required to submit'],
+  [/^At least one BEFORE photo is required$/, 'ต้องมีรูป "ก่อนทำ" อย่างน้อย 1 รูป', 'At least one "Before" photo is required'],
+  [/^At least one AFTER photo is required$/, 'ต้องมีรูป "หลังทำ" อย่างน้อย 1 รูป', 'At least one "After" photo is required'],
+  [/^At least one AFTER photo is required to mark a project completed$/, 'ต้องมีรูป "หลังทำ" อย่างน้อย 1 รูปก่อนทำเครื่องหมายว่าเสร็จ', 'At least one "After" photo is required before marking this complete'],
+  [/^Required fields are incomplete$/, 'กรอกข้อมูลที่จำเป็นไม่ครบ', 'Required fields are incomplete'],
+  [/^completion_date is required$/, 'ต้องระบุวันที่เสร็จ', 'A completion date is required'],
+  [/^cost_saving_basis is required when cost_saving_per_month > 0$/, 'ต้องระบุหลักฐาน Cost saving เมื่อมีตัวเลข Cost saving/เดือน', 'Cost-saving evidence is required when a monthly cost-saving amount is entered'],
+  [/^period_id is required to submit$/, 'ต้องเลือกรอบก่อนถึงจะส่งได้', 'A period must be selected before submitting'],
+  [/^Only a draft project can be submitted$/, 'ส่งได้เฉพาะโครงการที่ยังเป็นร่างเท่านั้น', 'Only a draft project can be submitted'],
+  [/^Only the owner may submit this project$/, 'เฉพาะเจ้าของโครงการเท่านั้นที่ส่งได้', 'Only the project owner can submit it'],
+  [/^KAIZEN project not found$/, 'ไม่พบโครงการนี้', 'This project was not found'],
+  [/^Cannot edit KAIZEN content once it is in the committee review queue$/, 'แก้ไขเนื้อหาโครงการไม่ได้แล้ว เพราะเข้าคิวกรรมการไปแล้ว', "This project's content can no longer be edited — it's already in the committee review queue"],
+  [/^Score not found$/, 'ไม่พบใบคะแนนนี้', 'This score was not found'],
+  [/^You may only submit your own score$/, 'ส่งได้เฉพาะคะแนนของตัวเองเท่านั้น', 'You may only submit your own score'],
+  [/^Score is locked$/, 'คะแนนนี้ถูกล็อกแล้ว (รอบปิดแล้ว) แก้ไขไม่ได้อีก', 'This score is locked (the period has closed) and can no longer be edited'],
+  [/^Score already submitted$/, 'ส่งคะแนนนี้ไปแล้ว', 'This score has already been submitted'],
+  [/^Period is not accepting scores$/, 'รอบนี้ไม่รับคะแนนแล้ว', 'This period is no longer accepting scores'],
+  [/^Missing scores for: (.+)$/, (m) => `ให้คะแนนไม่ครบเกณฑ์: ${m[1]}`, (m) => `Missing scores for: ${m[1]}`],
+  [/^All committee members for this period must submit their scores first$/, 'ต้องรอกรรมการทุกคนในรอบนี้ให้คะแนนให้ครบก่อน', 'All committee members for this period must submit their scores first'],
+  [/^Only admin can set status (.+)$/, (m) => `เฉพาะ admin เท่านั้นที่ตั้งสถานะ "${m[1]}" ได้`, (m) => `Only an admin can set the status to "${m[1]}"`],
+  [/^Illegal transition (\S+) -> (\S+)$/, (m) => `เปลี่ยนสถานะจาก "${m[1]}" เป็น "${m[2]}" ไม่ได้`, (m) => `Cannot change status from "${m[1]}" to "${m[2]}"`],
+  [/^Cannot close: (\d+) project\(s\) still pending committee review$/, (m) => `ปิดรอบไม่ได้ — ยังมี ${m[1]} โครงการที่รอกรรมการให้คะแนนอยู่`, (m) => `Cannot close this period — ${m[1]} project(s) are still pending committee review`],
+  [/^Only an open or scoring period can be closed$/, 'ปิดได้เฉพาะรอบที่เปิดอยู่เท่านั้น', 'Only an open or scoring period can be closed'],
+  [/^Only a closed period can be published$/, 'ประกาศผลได้เฉพาะรอบที่ปิดแล้วเท่านั้น', 'Only a closed period can be published'],
+  [/^committee_weights must sum to 100 \(got (.+)\)$/, (m) => `น้ำหนักกรรมการต้องรวมเป็น 100% (ตอนนี้รวม ${m[1]}%)`, (m) => `Committee weights must sum to 100% (currently ${m[1]}%)`],
+  [/^At least one committee member with a weight is required$/, 'ต้องมีกรรมการอย่างน้อย 1 คนก่อนเปิดรอบ', 'At least one committee member with a weight is required before opening the period'],
+  [/^Another period is already open$/, 'มีอีกรอบที่เปิดอยู่แล้ว — ปิดรอบนั้นก่อน', 'Another period is already open — close it first'],
+  [/^Only a draft period can be opened$/, 'เปิดได้เฉพาะรอบที่เป็นร่างเท่านั้น', 'Only a draft period can be opened'],
+  [/^Period not found$/, 'ไม่พบรอบประเมินนี้', 'This evaluation period was not found'],
+  [/^File must be one of: image\/jpeg, image\/png, image\/webp, image\/gif$/, 'ไฟล์ต้องเป็นรูปภาพประเภท JPEG, PNG, WEBP หรือ GIF เท่านั้น', 'The file must be a JPEG, PNG, WEBP, or GIF image'],
+  [/violates check constraint "kaizen_attachments_mime_type_allowed"/, 'ไฟล์ต้องเป็นรูปภาพประเภท JPEG, PNG, WEBP หรือ GIF เท่านั้น', 'The file must be a JPEG, PNG, WEBP, or GIF image'],
+  [/^Only admin can grant a temporary edit window$/, 'เฉพาะ admin เท่านั้นที่ให้สิทธิ์แก้ไขชั่วคราวได้', 'Only an admin can grant a temporary edit window'],
+  [/^Edit window must be between 1 and 168 hours$/, 'ระยะเวลาสิทธิ์แก้ไขต้องอยู่ระหว่าง 1-168 ชั่วโมง (สูงสุด 7 วัน)', 'The edit window must be between 1 and 168 hours (7 days max)'],
+  [/^A reason is required to grant a temporary edit window$/, 'กรุณาระบุเหตุผลก่อนให้สิทธิ์แก้ไขชั่วคราว', 'Please provide a reason before granting a temporary edit window'],
+  [/^A temporary edit window can only be granted while status is need_revision$/, 'ให้สิทธิ์แก้ไขชั่วคราวได้เฉพาะโครงการที่สถานะ "ต้องแก้ไข" เท่านั้น', 'A temporary edit window can only be granted while the status is "Needs revision"'],
+  [/^This project is already editable normally — no edit window needed$/, 'โครงการนี้แก้ไขได้ตามปกติอยู่แล้ว ไม่จำเป็นต้องให้สิทธิ์ชั่วคราว', 'This project is already editable normally — no edit window is needed'],
+  [/^This project already has an active edit window$/, 'โครงการนี้มีสิทธิ์แก้ไขชั่วคราวที่ยังไม่หมดอายุอยู่แล้ว', 'This project already has an active edit window'],
+  [/^Only admin can revoke a temporary edit window$/, 'เฉพาะ admin เท่านั้นที่เพิกถอนสิทธิ์แก้ไขชั่วคราวได้', 'Only an admin can revoke a temporary edit window'],
+  [/^Edit grant not found or already revoked$/, 'ไม่พบสิทธิ์แก้ไขนี้ หรือถูกเพิกถอนไปแล้ว', 'This edit grant was not found, or has already been revoked'],
 ];
 
-export function translateError(message) {
+export function translateError(message, lang = getLang()) {
   if (!message) return null;
-  for (const [pattern, replacement] of ERROR_MESSAGE_MAP) {
+  for (const [pattern, th, en] of ERROR_MESSAGE_MAP) {
     const m = message.match(pattern);
-    if (m) return typeof replacement === 'function' ? replacement(m) : replacement;
+    if (m) {
+      const replacement = lang === 'en' ? en : th;
+      return typeof replacement === 'function' ? replacement(m) : replacement;
+    }
   }
   return null;
 }
@@ -140,7 +149,10 @@ export function emptyState({ title, body, action } = {}) {
   `;
 }
 
-export function statusBadge(status, lang = 'th') {
+// ★ default เดิม lang='th' ตายตัว ทำให้ 5 ใน 6 จุดที่เรียกไม่ได้ส่ง lang เข้ามาแล้วโชว์ไทยเสมอ
+// แม้ตั้งค่า EN ไว้ (i18n audit Round 12) — เปลี่ยน default เป็น getLang() แทน ผู้เรียกเดิมที่ไม่ได้
+// ส่ง lang จะได้ภาษาปัจจุบันอัตโนมัติโดยไม่ต้องแก้ call site ทีละจุด
+export function statusBadge(status, lang = getLang()) {
   const label = ALL_STATUS_LABELS[status]?.[lang] ?? status;
   return `<span class="badge" data-status="${status}">${escapeHtml(label)}</span>`;
 }
@@ -153,15 +165,22 @@ export function statusDot(status) {
 // format ตาม timezone ของเครื่อง/เบราว์เซอร์ผู้ใช้ (ผิดถ้ามีคนเปิดเครื่องนอกไทย ค่า date-only
 // อย่าง PeriodStart/PeriodEnd ก็ถูกตีความเป็นเที่ยงคืน UTC มาก่อนแล้วด้วย — ระบุ timeZone ตรงนี้
 // ให้ผลลัพธ์คงที่ไม่ว่าเครื่องผู้ใช้จะตั้งเขตเวลาอะไรไว้ (Spec.md §4.8 backlog Low #2)
-export function thaiDate(iso) {
+// ★ ชื่อฟังก์ชันยังเป็น "thai"Date ตามเดิม (ไม่เปลี่ยนชื่อ กัน call site ทั้งแอปต้องแก้) แต่ locale
+// ที่ใช้จริงตอนนี้ขึ้นกับภาษา — เดิม hardcode 'th-TH' ตายตัว ซึ่งผูกปฏิทินพุทธศักราช+เดือนย่อไทยไว้
+// อัตโนมัติ (ยืนยันด้วย Intl.DateTimeFormat จริง) แม้ตั้งค่าเป็น EN ก็ยังเห็นปี พ.ศ./เดือนไทยอยู่ดี
+// (i18n audit Round 12) — เพิ่ม lang = getLang() แล้วสลับเป็น 'en-GB' (ปฏิทินสากล เรียง วัน-เดือน-ปี
+// แบบเดียวกับ th-TH ไม่สลับเป็น เดือน-วัน-ปี แบบ en-US ให้งง) เมื่อภาษาเป็น EN
+export function thaiDate(iso, lang = getLang()) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: SYSTEM_TIMEZONE });
+  const locale = lang === 'en' ? 'en-GB' : 'th-TH';
+  return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: SYSTEM_TIMEZONE });
 }
 
-export function thaiDateTime(iso) {
+export function thaiDateTime(iso, lang = getLang()) {
   if (!iso) return '—';
+  const locale = lang === 'en' ? 'en-GB' : 'th-TH';
   const d = new Date(iso);
-  return `${thaiDate(iso)} ${d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: SYSTEM_TIMEZONE })}`;
+  return `${thaiDate(iso, lang)} ${d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', timeZone: SYSTEM_TIMEZONE })}`;
 }
 
 // วันที่ปัจจุบัน "YYYY-MM-DD" ตาม SYSTEM_TIMEZONE (ไม่ใช่ timezone เครื่องผู้ใช้) — ใช้เทียบกับ
@@ -199,8 +218,18 @@ export function parseDatetimeLocalInSystemTz(value) {
   return new Date(`${value}:00+07:00`).toISOString();
 }
 
-export function roleLabel(role) {
-  return ROLE_LABELS[role] ?? role;
+export function roleLabel(role, lang = getLang()) {
+  return ROLE_LABELS[lang]?.[role] ?? ROLE_LABELS.th[role] ?? role;
+}
+
+// ★ ใหม่ (i18n audit Round 12) — ชื่อแผนก/โรงงาน/งบประมาณ ฯลฯ ใน master_data มีคอลัมน์ label_en
+// เก็บคำแปลอังกฤษไว้จริงอยู่แล้ว (แอดมินกรอกได้ในหน้า adminMaster.js) แต่ไม่เคยถูกใช้แสดงผลเลย —
+// ทุกจุดที่โชว์ label ให้ผู้ใช้ทั่วไปเห็นเรียก .LabelTh ตรงๆ เสมอ helper นี้แทนที่ pattern
+// `(code) => list.find(x => x.Code === code)?.LabelTh ?? code` ที่เคยประกาศซ้ำในหลายไฟล์
+export function masterLabel(list, code, lang = getLang()) {
+  const row = list?.find((r) => r.Code === code);
+  if (!row) return code;
+  return (lang === 'en' ? row.LabelEn : row.LabelTh) || row.LabelTh || code;
 }
 
 // รายชื่อ 7 เกณฑ์ — ใช้ในหน้า login/register กดแต่ละอันเพื่อเปิด popup ดู rubric 5 ระดับเต็ม

@@ -1,9 +1,9 @@
 // js/views/register.js — split layout เดียวกับ login.js (README.md ข้อ 2)
-import { signUp, getMasterData, uploadAvatar, updateProfile } from '../api.js?v=20260911z5';
-import { t, getLang } from '../i18n.js?v=20260911z5';
-import { navigate } from '../router.js?v=20260911z5';
-import { escapeHtml, translateError, criteriaTags, wireCriteriaTags, resizeImage } from '../ui.js?v=20260911z5';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z5';
+import { signUp, getMasterData, uploadAvatar, updateProfile } from '../api.js?v=20260911z6';
+import { t, getLang } from '../i18n.js?v=20260911z6';
+import { navigate } from '../router.js?v=20260911z6';
+import { escapeHtml, translateError, criteriaTags, wireCriteriaTags, resizeImage, masterLabel } from '../ui.js?v=20260911z6';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z6';
 
 const PASSWORD_MIN_LEN = 8;
 
@@ -21,7 +21,7 @@ export async function render(container) {
     // master_data อาจยังไม่ seed — ปล่อยเป็น select ว่างไปก่อน ไม่บล็อกการสมัคร
   }
 
-  const options = (list) => list.map((m) => `<option value="${m.Code}">${escapeHtml(m.LabelTh)}</option>`).join('');
+  const options = (list) => list.map((m) => `<option value="${m.Code}">${escapeHtml(masterLabel(list, m.Code))}</option>`).join('');
 
   container.innerHTML = `
     <div class="auth-shell">

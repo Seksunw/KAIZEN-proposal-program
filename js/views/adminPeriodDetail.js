@@ -4,10 +4,10 @@ import {
   getPeriodById, updatePeriod, openPeriod, closePeriod, publishPeriod,
   getCommitteeCandidates, getKaizenByPeriod, getKaizenByPeriodPage, updateKaizen, getMasterData, getAllProfiles, supabase,
   getKaizenEditGrants, grantKaizenEditWindow, revokeKaizenEditGrant,
-} from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime } from '../ui.js?v=20260911z5';
-import { PERIOD_STATUSES, PERIOD_STATUS_LABELS, SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z5';
+} from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z6';
+import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z6';
 
 export async function render(container, params) {
   document.title = `รอบการประเมิน · ${t('appName')}`;
@@ -96,7 +96,7 @@ export async function render(container, params) {
   function candidateInfo(id) {
     const c = candidates.find((x) => x.Id === id);
     if (!c) return { name: id, role: '' };
-    const roleLabel = committeeRoles.find((r) => r.Code === c.CommitteeRole)?.LabelTh ?? '';
+    const roleLabel = c.CommitteeRole ? masterLabel(committeeRoles, c.CommitteeRole) : '';
     return { name: `${c.FullName} (${c.EmployeeId})`, role: roleLabel };
   }
 
@@ -114,8 +114,8 @@ export async function render(container, params) {
 
     // ★ สรุปการส่งโครงการต่อรอบ (2026-09-08) — "ส่งแล้ว" คือทุกสถานะยกเว้น draft (ร่างที่ยังไม่กดส่ง)
     const submitted = kaizenList.filter((k) => k.Status !== 'draft');
-    const plantLabel = (code) => plants.find((p) => p.Code === code)?.LabelTh ?? code;
-    const deptLabel = (code) => departments.find((d) => d.Code === code)?.LabelTh ?? code ?? '—';
+    const plantLabel = (code) => masterLabel(plants, code);
+    const deptLabel = (code) => (code ? masterLabel(departments, code) : '—');
     // ★ รายชื่อผู้มีสิทธิ์รับเงินรางวัลส่งโครงการ (2026-09-11 — Spec.md §3 B15) — ทุกคนที่ส่งแล้ว
     //   ในรอบนี้ ไม่ต้องรอคะแนน จ่ายเงินจริงทำนอกระบบ (HR/บัญชี) หน้านี้แค่โชว์รายชื่อให้ดูเฉยๆ
     const profileById = new Map(profiles.map((p) => [p.Id, p]));
@@ -148,7 +148,7 @@ export async function render(container, params) {
 
     const closeChecklist = [
       { ok: weightSum === 100, title: 'น้ำหนักกรรมการรวม 100%', sub: `ตอนนี้ ${weightSum}%`, blocking: true },
-      { ok: deadlinePassed, title: 'พ้นกำหนดปิดรับ', sub: `${deadlinePassed ? 'ปิดรับไปแล้วเมื่อ' : 'จะปิดรับ'} ${thaiDateTime(period.SubmissionDeadline)} (${SYSTEM_TIMEZONE_LABEL})`, blocking: false },
+      { ok: deadlinePassed, title: 'พ้นกำหนดปิดรับ', sub: `${deadlinePassed ? 'ปิดรับไปแล้วเมื่อ' : 'จะปิดรับ'} ${thaiDateTime(period.SubmissionDeadline)} (${t('system_timezone_label')})`, blocking: false },
       { ok: missingScores === 0, title: 'กรรมการส่งคะแนนครบทุกใบ', sub: missingScores === 0 ? `ครบแล้ว (${submittedScoresCount} ใบ)` : `ยังขาด ${missingScores} ใบ`, blocking: true },
     ];
     const canClose = closeChecklist.every((c) => !c.blocking || c.ok);
@@ -250,7 +250,7 @@ export async function render(container, params) {
       ${pageHeader({
         eyebrow: escapeHtml(period.Code),
         title: escapeHtml(period.NameTh),
-        sub: `${thaiDate(period.PeriodStart)} – ${thaiDate(period.PeriodEnd)} · deadline ${thaiDateTime(period.SubmissionDeadline)} (${SYSTEM_TIMEZONE_LABEL})`,
+        sub: `${thaiDate(period.PeriodStart)} – ${thaiDate(period.PeriodEnd)} · deadline ${thaiDateTime(period.SubmissionDeadline)} (${t('system_timezone_label')})`,
       })}
       <div class="page-body">
         <div class="stepper">

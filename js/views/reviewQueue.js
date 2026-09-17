@@ -1,7 +1,7 @@
 // js/views/reviewQueue.js — คิวตรวจให้คะแนน (MIGRATION.md ข้อ 7)
-import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate } from '../ui.js?v=20260911z5';
+import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z6';
 
 const FILTERS = [
   { key: 'todo', label: 'ยังไม่ให้คะแนน' },
@@ -84,7 +84,7 @@ export async function render(container, params, session) {
   // periodKaizen อาจมีโครงการของตัวเอง (ถ้า account นี้เป็น employee ด้วย) ปนมาด้วยผ่าน
   // k_read_own — กรองด้วยสถานะที่กรรมการให้คะแนนได้เท่านั้น ไม่ใช่กรองด้วยเจ้าของ
   const totalScorable = periodKaizen.filter((k) => COMMITTEE_VISIBLE_STATUSES.includes(k.Status)).length;
-  const roleLabelTh = committeeRoles.find((r) => r.Code === session.profile?.CommitteeRole)?.LabelTh;
+  const committeeRoleLabel = session.profile?.CommitteeRole ? masterLabel(committeeRoles, session.profile.CommitteeRole) : null;
 
   function scoreState(kaizenId) {
     const score = scoreByKaizen.get(kaizenId);
@@ -153,7 +153,7 @@ export async function render(container, params, session) {
           <div class="task-main">
             <div class="task-tags">
               <span class="code">${escapeHtml(k.Code ?? '—')}</span>
-              <span class="muted" style="font-size:12.5px">${escapeHtml(departments.find((m) => m.Code === k.Department)?.LabelTh ?? k.Department)} · ส่ง ${k.SubmittedAt ? thaiDate(k.SubmittedAt) : '—'}</span>
+              <span class="muted" style="font-size:12.5px">${escapeHtml(masterLabel(departments, k.Department))} · ส่ง ${k.SubmittedAt ? thaiDate(k.SubmittedAt) : '—'}</span>
             </div>
             <div class="task-title">${escapeHtml(k.Title)}</div>
             <div class="task-meta">${metaBits.join(' · ')}</div>
@@ -168,7 +168,7 @@ export async function render(container, params, session) {
         eyebrow: `รอบ ${openPeriod.Code}`,
         title: escapeHtml(openPeriod.NameTh),
         sub: [
-          weightPct !== null ? `${roleLabelTh ? escapeHtml(roleLabelTh) + ' · ' : ''}น้ำหนักคะแนนของคุณ ${weightPct}%` : '',
+          weightPct !== null ? `${committeeRoleLabel ? escapeHtml(committeeRoleLabel) + ' · ' : ''}น้ำหนักคะแนนของคุณ ${weightPct}%` : '',
           `ให้คะแนนแล้ว ${submittedCount}/${totalScorable}`,
           `ปิดรับ ${thaiDate(openPeriod.SubmissionDeadline)}`,
         ].filter(Boolean).join(' · '),

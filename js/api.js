@@ -1,5 +1,5 @@
 // js/api.js — ทุก call ไป Supabase + snake_case⇄PascalCase ผ่านที่นี่เท่านั้น (§5.2)
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z5';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z6';
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

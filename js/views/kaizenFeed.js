@@ -3,10 +3,10 @@
 // (ตกลงกับผู้ใช้ไว้ชัดเจน คะแนนยังดูได้ที่ dashboard.js "ผลรอบที่ประกาศแล้ว" ตามเดิม) เปิดด้วย
 // RLS ใหม่ k_read_feed/ka_read_feed/profiles_read_feed (ดู migration_2026-09-15_kaizen-feed.sql)
 // — ไม่แตะ kaizen_progress_updates/committee_scores เลย (ยังเป็นข้อมูลภายในเหมือนเดิม)
-import { getFeedPage, getPeriods, getMasterData, getAttachmentSignedUrl, getAvatarSignedUrl, getLikesForKaizenIds, likeKaizen, unlikeKaizen } from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { getQuery, navigate } from '../router.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, initials, openLightbox, hydrateAvatars } from '../ui.js?v=20260911z5';
+import { getFeedPage, getPeriods, getMasterData, getAttachmentSignedUrl, getAvatarSignedUrl, getLikesForKaizenIds, likeKaizen, unlikeKaizen } from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { getQuery, navigate } from '../router.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, initials, openLightbox, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z6';
 
 const PAGE_SIZE = 10;
 
@@ -32,7 +32,7 @@ export async function render(container, params, session) {
     ]);
   } catch { /* ตัวกรองรอบ/label โรงงานพัง ไม่บล็อกทั้งหน้า — ใช้ code ดิบ/ไม่มีตัวกรองแทน */ }
 
-  const labelOf = (list, code) => list.find((m) => m.Code === code)?.LabelTh ?? code;
+  const labelOf = (list, code) => masterLabel(list, code);
   const periodByCode = new Map(periods.map((p) => [p.Code, p]));
   const initialPeriod = periodByCode.get(getQuery().get('period'));
 

@@ -1,8 +1,8 @@
 // js/views/adminUsers.js — รออนุมัติแยกขึ้นบน + ตาราง 5 คอลัมน์ (MIGRATION.md ข้อ 12)
-import { getAllProfiles, getProfilesPage, updateProfile, getMasterData, getAvatarSignedUrl } from '../api.js?v=20260911z5';
-import { t } from '../i18n.js?v=20260911z5';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, thaiDate, hydrateAvatars } from '../ui.js?v=20260911z5';
-import { ROLES } from '../constants.js?v=20260911z5';
+import { getAllProfiles, getProfilesPage, updateProfile, getMasterData, getAvatarSignedUrl } from '../api.js?v=20260911z6';
+import { t } from '../i18n.js?v=20260911z6';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, thaiDate, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z6';
+import { ROLES } from '../constants.js?v=20260911z6';
 
 const PAGE_SIZE = 20;
 
@@ -37,7 +37,7 @@ export async function render(container, params, session) {
     return;
   }
 
-  const deptLabel = (code) => departments.find((d) => d.Code === code)?.LabelTh ?? code;
+  const deptLabel = (code) => masterLabel(departments, code);
   const state = {
     dirtyRows: new Set(), savingId: null, errorById: {}, filter: 'all', search: '',
     rows: [], total: 0, hasMore: false, page: 0, loading: true, loadingMore: false,
@@ -178,8 +178,8 @@ export async function render(container, params, session) {
               <span class="au-row-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
             </div>
           </td>
-          <td><select class="f-department">${departments.map((d) => `<option value="${d.Code}" ${d.Code === p.Department ? 'selected' : ''}>${escapeHtml(d.LabelTh)}</option>`).join('')}</select></td>
-          <td><select class="f-plant">${plants.map((pl) => `<option value="${pl.Code}" ${pl.Code === p.Plant ? 'selected' : ''}>${escapeHtml(pl.LabelTh)}</option>`).join('')}</select></td>
+          <td><select class="f-department">${departments.map((d) => `<option value="${d.Code}" ${d.Code === p.Department ? 'selected' : ''}>${escapeHtml(masterLabel(departments, d.Code))}</option>`).join('')}</select></td>
+          <td><select class="f-plant">${plants.map((pl) => `<option value="${pl.Code}" ${pl.Code === p.Plant ? 'selected' : ''}>${escapeHtml(masterLabel(plants, pl.Code))}</option>`).join('')}</select></td>
           <td>
             <div class="chip-set" style="gap:var(--sp-2)">
               ${ROLES.map((r) => {
@@ -192,7 +192,7 @@ export async function render(container, params, session) {
             </div>
             <select class="f-committee-role" style="margin-top:var(--sp-2)">
               <option value="">— ไม่ใช่กรรมการ —</option>
-              ${committeeRoles.map((r) => `<option value="${r.Code}" ${r.Code === p.CommitteeRole ? 'selected' : ''}>${escapeHtml(r.LabelTh)}</option>`).join('')}
+              ${committeeRoles.map((r) => `<option value="${r.Code}" ${r.Code === p.CommitteeRole ? 'selected' : ''}>${escapeHtml(masterLabel(committeeRoles, r.Code))}</option>`).join('')}
             </select>
             ${state.errorById[p.Id] ? `<div class="error" style="margin-top:var(--sp-2)">${escapeHtml(state.errorById[p.Id])}</div>` : ''}
           </td>
