@@ -485,6 +485,23 @@ const DICT = {
     au_deactivate_btn: 'ปิดใช้งาน',
     au_confirm_deactivate: 'ปิดใช้งานบัญชี "{name}"? ผู้ใช้นี้จะเข้าระบบไม่ได้จนกว่าจะเปิดใช้งานใหม่',
     au_err_need_one_role: 'ต้องมีอย่างน้อย 1 role',
+
+    // ---- adminAudit.js ----
+    aa_group_submit: 'ส่งงาน',
+    aa_group_score: 'คะแนน',
+    aa_group_period: 'รอบการประเมิน',
+    aa_group_decision: 'การตัดสิน',
+    aa_sentence_submit_kaizen: '{who} ส่งโครงการ {what}',
+    aa_sentence_submit_score: '{who} ส่งคะแนนให้ {what}',
+    aa_sentence_period_open: '{who} เปิดรอบการประเมิน {what}',
+    aa_sentence_period_close: '{who} ปิดรอบการประเมิน {what}',
+    aa_sentence_period_publish: '{who} ประกาศผลรอบ {what}',
+    aa_sentence_status_change: '{who} เปลี่ยนสถานะ {what} เป็น <strong>{label}</strong>',
+    aa_sentence_default: '{who} ทำรายการ <span class="mono">{action}</span> กับ {what}',
+    aa_deleted_user: 'ผู้ใช้ที่ถูกลบ',
+    aa_deleted_project: 'โครงการที่ถูกลบ',
+    aa_deleted_period: 'รอบที่ถูกลบ',
+    aa_project_generic: 'โครงการ',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -971,6 +988,23 @@ const DICT = {
     au_deactivate_btn: 'Deactivate',
     au_confirm_deactivate: 'Deactivate account "{name}"? This user won\'t be able to sign in until reactivated',
     au_err_need_one_role: 'At least 1 role is required',
+
+    // ---- adminAudit.js ----
+    aa_group_submit: 'Submissions',
+    aa_group_score: 'Scoring',
+    aa_group_period: 'Evaluation period',
+    aa_group_decision: 'Decisions',
+    aa_sentence_submit_kaizen: '{who} submitted project {what}',
+    aa_sentence_submit_score: '{who} submitted a score for {what}',
+    aa_sentence_period_open: '{who} opened evaluation period {what}',
+    aa_sentence_period_close: '{who} closed evaluation period {what}',
+    aa_sentence_period_publish: '{who} published results for {what}',
+    aa_sentence_status_change: '{who} changed the status of {what} to <strong>{label}</strong>',
+    aa_sentence_default: '{who} performed <span class="mono">{action}</span> on {what}',
+    aa_deleted_user: 'Deleted user',
+    aa_deleted_project: 'Deleted project',
+    aa_deleted_period: 'Deleted period',
+    aa_project_generic: 'Project',
   },
 };
 

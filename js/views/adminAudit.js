@@ -1,33 +1,41 @@
 // js/views/adminAudit.js — เขียนเป็นประโยค จัดกลุ่มตามวัน (MIGRATION.md ข้อ 14)
 import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z7';
-import { t, getLang } from '../i18n.js?v=20260911z7';
+import { t, tf, getLang } from '../i18n.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z7';
 import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z7';
 
+function L(labelObj) { return labelObj[getLang() === 'en' ? 'en' : 'th']; }
+
 const ACTION_GROUPS = {
-  submit_kaizen: 'ส่งงาน',
-  submit_score: 'คะแนน',
-  period_open: 'รอบการประเมิน',
-  period_close: 'รอบการประเมิน',
-  period_publish: 'รอบการประเมิน',
-  status_change: 'การตัดสิน',
+  submit_kaizen: 'submit',
+  submit_score: 'score',
+  period_open: 'period',
+  period_close: 'period',
+  period_publish: 'period',
+  status_change: 'decision',
+};
+const GROUP_LABEL_KEYS = {
+  submit: 'aa_group_submit',
+  score: 'aa_group_score',
+  period: 'aa_group_period',
+  decision: 'aa_group_decision',
 };
 
 function sentenceFor(e) {
   const who = `<strong>${escapeHtml(e.actorName)}</strong>`;
   const what = `<strong>${escapeHtml(e.entityLabel)}</strong>`;
   switch (e.Action) {
-    case 'submit_kaizen': return `${who} ส่งโครงการ ${what}`;
-    case 'submit_score': return `${who} ส่งคะแนนให้ ${what}`;
-    case 'period_open': return `${who} เปิดรอบการประเมิน ${what}`;
-    case 'period_close': return `${who} ปิดรอบการประเมิน ${what}`;
-    case 'period_publish': return `${who} ประกาศผลรอบ ${what}`;
+    case 'submit_kaizen': return tf('aa_sentence_submit_kaizen', { who, what });
+    case 'submit_score': return tf('aa_sentence_submit_score', { who, what });
+    case 'period_open': return tf('aa_sentence_period_open', { who, what });
+    case 'period_close': return tf('aa_sentence_period_close', { who, what });
+    case 'period_publish': return tf('aa_sentence_period_publish', { who, what });
     case 'status_change': {
       const newStatus = e.After?.Status;
-      const label = KAIZEN_STATUS_LABELS[newStatus]?.th ?? newStatus;
-      return `${who} เปลี่ยนสถานะ ${what} เป็น <strong>${escapeHtml(label ?? '—')}</strong>`;
+      const label = KAIZEN_STATUS_LABELS[newStatus] ? L(KAIZEN_STATUS_LABELS[newStatus]) : newStatus;
+      return tf('aa_sentence_status_change', { who, what, label: escapeHtml(label ?? '—') });
     }
-    default: return `${who} ทำรายการ <span class="mono">${escapeHtml(e.Action)}</span> กับ ${what}`; // fallback กัน action ที่ยังไม่ได้เขียนประโยค
+    default: return tf('aa_sentence_default', { who, what, action: escapeHtml(e.Action) }); // fallback กัน action ที่ยังไม่ได้เขียนประโยค
   }
 }
 
@@ -64,7 +72,7 @@ export async function render(container) {
     return;
   }
 
-  const nameOf = (id) => profiles.find((p) => p.Id === id)?.FullName ?? 'ผู้ใช้ที่ถูกลบ';
+  const nameOf = (id) => profiles.find((p) => p.Id === id)?.FullName ?? t('aa_deleted_user');
   const avatarPathOf = (id) => profiles.find((p) => p.Id === id)?.AvatarPath ?? null;
   const periodById = new Map(periods.map((p) => [p.Id, p]));
 
@@ -85,13 +93,13 @@ export async function render(container) {
     let entityLabel = l.EntityId ?? '—';
     if (l.EntityType === 'kaizen_projects') {
       const k = kaizenById.get(l.EntityId);
-      entityLabel = k ? (k.Code ?? k.Title) : 'โครงการที่ถูกลบ';
+      entityLabel = k ? (k.Code ?? k.Title) : t('aa_deleted_project');
     } else if (l.EntityType === 'evaluation_periods') {
       const p = periodById.get(l.EntityId);
-      entityLabel = p ? p.NameTh : 'รอบที่ถูกลบ';
+      entityLabel = p ? p.NameTh : t('aa_deleted_period');
     } else if (l.EntityType === 'committee_scores') {
       const k = kaizenById.get(l.After?.KaizenId);
-      entityLabel = k ? (k.Code ?? k.Title) : 'โครงการ';
+      entityLabel = k ? (k.Code ?? k.Title) : t('aa_project_generic');
     }
     return { ...l, actorName: nameOf(l.ActorId), actorAvatarPath: avatarPathOf(l.ActorId), entityLabel };
   });
@@ -119,7 +127,7 @@ export async function render(container) {
             <div class="row-main">
               <div class="row-title" style="font-weight:400">${sentenceFor(e)}</div>
             </div>
-            <div class="row-end mono muted" style="font-size:12.5px">${new Date(e.CreatedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="row-end mono muted" style="font-size:12.5px">${new Date(e.CreatedAt).toLocaleTimeString(getLang() === 'en' ? 'en-GB' : 'th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         `).join('')}
       </div>
@@ -129,8 +137,8 @@ export async function render(container) {
       ${pageHeader({ title: t('nav_admin_audit') })}
       <div class="page-body">
         <div class="filter-bar" style="margin-bottom:16px">
-          <button type="button" class="filter-chip ${state.group === 'all' ? 'is-on' : ''}" data-group="all">ทั้งหมด ${enriched.length}</button>
-          ${groups.map((g) => `<button type="button" class="filter-chip ${state.group === g ? 'is-on' : ''}" data-group="${g}">${escapeHtml(g)} ${enriched.filter((e) => ACTION_GROUPS[e.Action] === g).length}</button>`).join('')}
+          <button type="button" class="filter-chip ${state.group === 'all' ? 'is-on' : ''}" data-group="all">${t('kzlist_filter_all')} ${enriched.length}</button>
+          ${groups.map((g) => `<button type="button" class="filter-chip ${state.group === g ? 'is-on' : ''}" data-group="${g}">${escapeHtml(t(GROUP_LABEL_KEYS[g]))} ${enriched.filter((e) => ACTION_GROUPS[e.Action] === g).length}</button>`).join('')}
         </div>
         ${filtered.length === 0 ? emptyState({ title: t('empty_audit') }) : sections}
       </div>
