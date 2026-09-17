@@ -3,7 +3,7 @@ import {
   getPeriodsPage, createPeriod, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
   getQuarterlyAwards, createQuarterlyAward, deleteQuarterlyAward,
 } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf } from '../i18n.js?v=20260911z7';
 import { navigate } from '../router.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z7';
 import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z7';
@@ -80,16 +80,16 @@ export async function render(container) {
         <td>${statusBadge(p.Status)}</td>
         <td>${thaiDate(p.PeriodStart)} – ${thaiDate(p.PeriodEnd)}</td>
         <td class="is-num">${state.counts.has(p.Id) ? state.counts.get(p.Id) : '—'}</td>
-        <td>${p.Status === 'draft' ? `<button type="button" class="secondary is-sm" data-delete="${p.Id}" ${state.deletingId === p.Id ? 'disabled' : ''}>${state.deletingId === p.Id ? t('common_loading') : 'ลบ'}</button>` : ''}</td>
+        <td>${p.Status === 'draft' ? `<button type="button" class="secondary is-sm" data-delete="${p.Id}" ${state.deletingId === p.Id ? 'disabled' : ''}>${state.deletingId === p.Id ? t('common_loading') : t('kzform_aria_delete')}</button>` : ''}</td>
       </tr>
     `;
     }).join('');
 
     const top3Html = state.compareTop3 ? `
-      ${state.compareTop3.length === 0 ? `<p class="muted" style="margin-top:var(--sp-4)">ไม่มีโครงการที่มีสิทธิ์ติดอันดับในรอบที่เลือก (โครงการยังไม่เสร็จไม่นับ)</p>` : `
+      ${state.compareTop3.length === 0 ? `<p class="muted" style="margin-top:var(--sp-4)">${t('ap_no_eligible_top3')}</p>` : `
         <div class="panel is-scroll" style="margin-top:var(--sp-4)">
           <table class="data-table">
-            <thead><tr><th>อันดับ</th><th>ชื่อ-นามสกุล</th><th>โครงการ</th><th>รอบ</th><th class="is-num">คะแนน / 100</th></tr></thead>
+            <thead><tr><th>${t('ap_col_rank')}</th><th>${t('apd_col_fullname')}</th><th>${t('ap_col_project')}</th><th>${t('ap_col_period')}</th><th class="is-num">${t('ap_col_score_100')}</th></tr></thead>
             <tbody>
               ${state.compareTop3.map((r, i) => `
                 <tr>
@@ -104,24 +104,24 @@ export async function render(container) {
           </table>
         </div>
         <div class="hstack" style="margin-top:var(--sp-4)">
-          <input type="text" id="f-publish-label" class="field-narrow" placeholder="ชื่อประกาศ เช่น ไตรมาส 4/2569" value="${escapeHtml(state.publishLabel)}" />
-          <button type="button" id="btn-publish-award" ${state.publishing ? 'disabled' : ''}>${state.publishing ? t('common_loading') : 'ประกาศผลรางวัลนี้ (ขึ้น banner บน dashboard ทุกคน)'}</button>
+          <input type="text" id="f-publish-label" class="field-narrow" placeholder="${escapeHtml(t('ap_award_label_placeholder'))}" value="${escapeHtml(state.publishLabel)}" />
+          <button type="button" id="btn-publish-award" ${state.publishing ? 'disabled' : ''}>${state.publishing ? t('common_loading') : t('ap_publish_award_btn')}</button>
         </div>
         <div id="publish-error"></div>
       `}
     ` : '';
 
     const awardsHtml = quarterlyAwards.length > 0 ? `
-      <div class="section-head" style="margin-top:var(--sp-6)"><h2>ประวัติรางวัลที่ประกาศแล้ว</h2></div>
+      <div class="section-head" style="margin-top:var(--sp-6)"><h2>${t('ap_awards_history_heading')}</h2></div>
       <div class="row-list">
         ${quarterlyAwards.map((a) => `
           <div class="row-item">
             <div class="row-main">
               <div class="row-title">${escapeHtml(a.Label)}</div>
-              <div class="row-sub">ประกาศเมื่อ ${thaiDate(a.PublishedAt)} · ${a.Winners.length} อันดับ</div>
+              <div class="row-sub">${escapeHtml(tf('ap_award_meta', { date: thaiDate(a.PublishedAt), n: a.Winners.length }))}</div>
             </div>
             <div class="row-end">
-              <button type="button" class="secondary is-sm" data-delete-award="${a.Id}" ${state.deletingAwardId === a.Id ? 'disabled' : ''}>${state.deletingAwardId === a.Id ? t('common_loading') : 'ลบประกาศ'}</button>
+              <button type="button" class="secondary is-sm" data-delete-award="${a.Id}" ${state.deletingAwardId === a.Id ? 'disabled' : ''}>${state.deletingAwardId === a.Id ? t('common_loading') : t('ap_delete_award_btn')}</button>
             </div>
           </div>
         `).join('')}
@@ -131,38 +131,38 @@ export async function render(container) {
     container.innerHTML = `
       ${pageHeader({ title: t('nav_admin_periods') })}
       <div class="page-body">
-        <div class="section-head"><h2>รอบทั้งหมด</h2><span class="section-note">${state.periodsTotal} รอบ</span></div>
+        <div class="section-head"><h2>${t('ap_all_periods_heading')}</h2><span class="section-note">${escapeHtml(tf('ap_periods_count', { n: state.periodsTotal }))}</span></div>
         ${state.periodsTotal === 0 ? emptyState({ title: t('empty_periods') }) : `
           <div class="panel is-scroll periods-table">
             <table class="data-table">
-              <thead><tr><th></th><th>รหัส</th><th>ชื่อรอบ</th><th>สถานะ</th><th>ช่วงเวลา</th><th class="is-num">โครงการ</th><th></th></tr></thead>
+              <thead><tr><th></th><th>${t('ap_col_code')}</th><th>${t('ap_col_period_name')}</th><th>${t('apd_col_status')}</th><th>${t('ap_col_date_range')}</th><th class="is-num">${t('ap_col_project_count')}</th><th></th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
-          ${state.periodsHasMore ? `<div style="text-align:center;margin-top:var(--sp-4)"><button type="button" class="secondary" id="btn-load-more-periods" ${state.loadingMorePeriods ? 'disabled' : ''}>${state.loadingMorePeriods ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${state.periodsTotal - state.periods.length})`}</button></div>` : ''}
+          ${state.periodsHasMore ? `<div style="text-align:center;margin-top:var(--sp-4)"><button type="button" class="secondary" id="btn-load-more-periods" ${state.loadingMorePeriods ? 'disabled' : ''}>${state.loadingMorePeriods ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: state.periodsTotal - state.periods.length }))}</button></div>` : ''}
         `}
 
-        <div class="section-head" style="margin-top:var(--sp-6)"><h2>เปรียบเทียบ Top 3 ข้ามรอบ (รางวัลใหญ่)</h2></div>
-        <p class="field-hint">ติ๊กเลือกรอบที่ประกาศผล/ปิดแล้วจากตารางด้านบน (เช่น 3 รอบของไตรมาสเดียวกัน) แล้วกดเปรียบเทียบ — รวมคะแนนทุกโครงการจากรอบที่เลือก เรียงคะแนนสูงสุด 3 อันดับ นับเฉพาะโครงการที่เสร็จแล้วเท่านั้น (รอบเก่าก่อน 2026-09-11 ยังไม่มีการกรองนี้)</p>
+        <div class="section-head" style="margin-top:var(--sp-6)"><h2>${t('ap_compare_heading')}</h2></div>
+        <p class="field-hint">${t('ap_compare_hint')}</p>
         <div id="compare-error"></div>
-        <button type="button" id="btn-compare" style="margin-top:var(--sp-4)" ${state.comparing ? 'disabled' : ''}>${state.comparing ? t('common_loading') : `เปรียบเทียบ (${state.selectedForCompare.size} รอบที่เลือก)`}</button>
+        <button type="button" id="btn-compare" style="margin-top:var(--sp-4)" ${state.comparing ? 'disabled' : ''}>${state.comparing ? t('common_loading') : escapeHtml(tf('ap_compare_btn', { n: state.selectedForCompare.size }))}</button>
         ${top3Html}
         ${awardsHtml}
 
         <div style="max-width:480px;margin-top:var(--sp-6)">
-          <div class="section-head"><h2>สร้างรอบใหม่</h2></div>
-          <p class="field-hint">รอบใหม่เริ่มที่สถานะร่างเสมอ — ตั้งน้ำหนักกรรมการแล้วค่อยเปิดรอบทีหลังได้</p>
-          <label style="margin-top:var(--sp-5)">รหัสรอบ (เช่น 2026-11)
+          <div class="section-head"><h2>${t('ap_create_heading')}</h2></div>
+          <p class="field-hint">${t('ap_create_hint')}</p>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_code_label')}
             <input type="text" id="f-code" />
-            <span class="field-hint">ใช้ตั้งรหัสโครงการ เช่น KZN-202611-0001</span>
+            <span class="field-hint">${t('ap_field_code_hint')}</span>
           </label>
-          <label style="margin-top:var(--sp-5)">ชื่อรอบ (TH)<input type="text" id="f-name-th" /></label>
-          <label style="margin-top:var(--sp-5)">ชื่อรอบ (EN)<input type="text" id="f-name-en" /></label>
-          <label style="margin-top:var(--sp-5)">วันเริ่มรอบ<input type="date" id="f-start" /></label>
-          <label style="margin-top:var(--sp-5)">วันสิ้นสุดรอบ<input type="date" id="f-end" /></label>
-          <label style="margin-top:var(--sp-5)">Deadline ส่งผลงาน (${escapeHtml(SYSTEM_TIMEZONE_LABEL)})<input type="datetime-local" id="f-deadline" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_name_th_label')}<input type="text" id="f-name-th" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_name_en_label')}<input type="text" id="f-name-en" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_start_label')}<input type="date" id="f-start" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_end_label')}<input type="date" id="f-end" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_deadline_short_label')} (${escapeHtml(SYSTEM_TIMEZONE_LABEL)})<input type="datetime-local" id="f-deadline" /></label>
           <div id="create-error"></div>
-          <button type="button" id="btn-create" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : 'สร้างรอบเป็นร่าง'}</button>
+          <button type="button" id="btn-create" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('ap_create_btn')}</button>
         </div>
       </div>
     `;
@@ -205,7 +205,7 @@ export async function render(container) {
 
   async function onCompare() {
     const ids = [...state.selectedForCompare];
-    if (ids.length === 0) { state.compareError = 'เลือกอย่างน้อย 1 รอบก่อน'; renderPage(); return; }
+    if (ids.length === 0) { state.compareError = t('ap_err_select_at_least_one'); renderPage(); return; }
 
     state.comparing = true; state.compareError = ''; state.compareTop3 = null; renderPage();
     try {
@@ -243,8 +243,8 @@ export async function render(container) {
   }
 
   async function onPublishAward() {
-    if (!state.publishLabel.trim()) { state.publishError = 'กรุณาตั้งชื่อประกาศ เช่น "ไตรมาส 4/2569"'; renderPage(); return; }
-    if (!confirm(`ประกาศผลรางวัลนี้? จะขึ้น banner บน dashboard ให้ทุกคนเห็นทันที`)) return;
+    if (!state.publishLabel.trim()) { state.publishError = t('ap_err_award_label_required'); renderPage(); return; }
+    if (!confirm(t('ap_confirm_publish_award'))) return;
 
     state.publishing = true; state.publishError = ''; renderPage();
     try {
@@ -276,7 +276,7 @@ export async function render(container) {
   }
 
   async function onDeleteAward(id) {
-    if (!confirm('ลบประกาศรางวัลนี้ทิ้ง? banner บน dashboard จะหายไปทันที')) return;
+    if (!confirm(t('ap_confirm_delete_award'))) return;
     state.deletingAwardId = id; renderPage();
     try {
       await deleteQuarterlyAward(id);
@@ -290,7 +290,7 @@ export async function render(container) {
   }
 
   async function onDelete(id) {
-    if (!confirm('ลบรอบร่างนี้ทิ้งถาวร? กู้คืนไม่ได้')) return;
+    if (!confirm(t('ap_confirm_delete_period'))) return;
     state.deletingId = id; renderPage();
     try {
       await deletePeriod(id);
@@ -313,25 +313,25 @@ export async function render(container) {
     const deadline = document.getElementById('f-deadline').value;
 
     const missing = [];
-    if (!code) missing.push('รหัสรอบ');
-    if (!nameTh) missing.push('ชื่อรอบ (TH)');
-    if (!periodStart) missing.push('วันเริ่มรอบ');
-    if (!periodEnd) missing.push('วันสิ้นสุดรอบ');
-    if (!deadline) missing.push('Deadline ส่งผลงาน');
+    if (!code) missing.push(t('ap_field_code_label'));
+    if (!nameTh) missing.push(t('ap_field_name_th_label'));
+    if (!periodStart) missing.push(t('ap_field_start_label'));
+    if (!periodEnd) missing.push(t('ap_field_end_label'));
+    if (!deadline) missing.push(t('ap_field_deadline_short_label'));
     if (missing.length > 0) {
-      state.error = { msg: `กรุณากรอกให้ครบ: ${missing.join(', ')}` };
+      state.error = { msg: tf('ap_err_fill_required', { fields: missing.join(', ') }) };
       renderPage();
       return;
     }
     // ★ เดิมไม่เช็คลำดับวันที่เลย (Spec.md §4.8 finding M14) — กันสร้างรอบที่วันสิ้นสุดมาก่อน
     // วันเริ่ม หรือ deadline มาก่อนวันเริ่มรอบ ซึ่งดูผิดปกติแต่ผ่านได้แบบไม่มีคำเตือนใดๆ
     if (periodEnd < periodStart) {
-      state.error = { msg: 'วันสิ้นสุดรอบต้องไม่ก่อนวันเริ่มรอบ' };
+      state.error = { msg: t('ap_err_end_before_start') };
       renderPage();
       return;
     }
     if (deadline.slice(0, 10) < periodStart) {
-      state.error = { msg: 'Deadline ส่งผลงานต้องไม่ก่อนวันเริ่มรอบ' };
+      state.error = { msg: t('ap_err_deadline_before_start') };
       renderPage();
       return;
     }
