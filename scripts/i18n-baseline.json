@@ -2,7 +2,7 @@
   "js/app.js": 5,
   "js/ui.js": 45,
   "js/views/adminAudit.js": 19,
-  "js/views/adminMaster.js": 20,
+  "js/views/adminMaster.js": 0,
   "js/views/adminPeriodDetail.js": 4,
   "js/views/adminPeriods.js": 0,
   "js/views/adminUsers.js": 20,

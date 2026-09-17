@@ -1,16 +1,12 @@
 // js/views/adminMaster.js — filter-chip แทน select, ฟิลด์ Extra ตามชนิดแทน JSON ดิบ (MIGRATION.md ข้อ 13)
 import { getAllMasterData, createMasterDataRow, updateMasterDataRow } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf } from '../i18n.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard } from '../ui.js?v=20260911z7';
 import { MASTER_DATA_TYPES } from '../constants.js?v=20260911z7';
 
-const TYPE_LABELS = {
-  department: 'แผนก',
-  plant: 'โรงงาน',
-  committee_role: 'ตำแหน่งกรรมการ',
-  budget_band: 'ช่วงงบประมาณ',
-  cost_saving_band: 'ช่วง Cost saving',
-};
+function typeLabel(tp) {
+  return t(`am_type_${tp}`);
+}
 
 // ★ ห้ามใช้ class="field-label" ครอบ label ที่มี input อยู่ข้างใน — field-label ตั้งใจ
 //   ใช้เป็นแค่หัวข้อเฉยๆ (display:block) ที่อื่นในแอปทั้งหมด ไม่เคยห่อ input ตรงๆ ถ้าเอามาห่อ
@@ -19,18 +15,18 @@ const TYPE_LABELS = {
 //   Min/Max/Rank ดูเพี้ยน) ใช้ label เฉยๆ + class ใหม่ .extra-fields คุม layout แทน
 function extraFieldsHtml(type, extra) {
   if (type === 'committee_role') {
-    return `<label style="margin:0;max-width:160px">น้ำหนักเริ่มต้น (%)<input type="number" min="0" max="100" class="x-weight is-num" value="${extra?.default_weight_pct ?? ''}" /></label>`;
+    return `<label style="margin:0;max-width:160px">${t('am_default_weight_label')}<input type="number" min="0" max="100" class="x-weight is-num" value="${extra?.default_weight_pct ?? ''}" /></label>`;
   }
   if (type === 'budget_band' || type === 'cost_saving_band') {
     return `
       <div class="extra-fields">
         <label style="margin:0">Min<input type="number" min="0" class="x-min is-num" value="${extra?.min ?? 0}" /></label>
-        <label style="margin:0">Max (ว่าง=ไม่จำกัด)<input type="number" min="0" class="x-max is-num" value="${extra?.max ?? ''}" /></label>
+        <label style="margin:0">${t('am_max_unlimited_label')}<input type="number" min="0" class="x-max is-num" value="${extra?.max ?? ''}" /></label>
         ${type === 'cost_saving_band' ? `<label style="margin:0">Rank<input type="number" min="1" max="5" class="x-rank is-num" value="${extra?.rank ?? ''}" /></label>` : ''}
       </div>
     `;
   }
-  return '<span class="muted" style="font-size:12.5px">— ไม่มี —</span>';
+  return `<span class="muted" style="font-size:12.5px">${t('am_none_label')}</span>`;
 }
 
 function readExtraFields(type, scope) {
@@ -73,7 +69,7 @@ export async function render(container) {
 
   function renderPage() {
     const rows = rowsByType[state.type];
-    const chips = MASTER_DATA_TYPES.map((tp) => `<button type="button" class="filter-chip ${state.type === tp ? 'is-on' : ''}" data-type="${tp}">${TYPE_LABELS[tp]} ${rowsByType[tp].length}</button>`).join('');
+    const chips = MASTER_DATA_TYPES.map((tp) => `<button type="button" class="filter-chip ${state.type === tp ? 'is-on' : ''}" data-type="${tp}">${escapeHtml(typeLabel(tp))} ${rowsByType[tp].length}</button>`).join('');
 
     const rowsHtml = rows.map((r) => `
       <tr data-row="${r.Id}" ${state.dirtyRows.has(r.Id) ? 'class="is-dirty"' : ''}>
@@ -90,30 +86,30 @@ export async function render(container) {
       ${pageHeader({ title: t('nav_admin_master') })}
       <div class="page-body">
         <div class="filter-bar" style="margin-bottom:16px">${chips}</div>
-        ${state.type === 'committee_role' ? '<div class="note" style="margin-bottom:var(--sp-4)">น้ำหนักที่นี่เป็น <strong>ค่าเริ่มต้น</strong>เท่านั้น — น้ำหนักจริงตั้งแยกต่อรอบที่ <a href="#/admin/periods">หน้ารอบการประเมิน</a></div>' : ''}
+        ${state.type === 'committee_role' ? `<div class="note" style="margin-bottom:var(--sp-4)">${tf('am_committee_weight_note', { link: `<a href="#/admin/periods">${escapeHtml(t('am_periods_page_link'))}</a>` })}</div>` : ''}
         <div id="master-error"></div>
         <div class="panel is-scroll">
           <table class="data-table">
-            <thead><tr><th>Code</th><th>ชื่อ TH</th><th>ชื่อ EN</th><th>ลำดับ</th><th>ค่าเพิ่มเติม</th><th>Active</th></tr></thead>
+            <thead><tr><th>Code</th><th>${t('am_col_label_th')}</th><th>${t('am_col_label_en')}</th><th>${t('am_col_sort_order')}</th><th>${t('am_col_extra')}</th><th>Active</th></tr></thead>
             <tbody>${rowsHtml}</tbody>
           </table>
         </div>
         <div class="hstack" style="margin-top:var(--sp-5)">
-          <button type="button" id="btn-save-all" ${state.dirtyRows.size === 0 || state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : 'บันทึกการเปลี่ยนแปลง'}</button>
-          <span class="muted" id="dirty-count" style="font-size:12.8px" ${state.dirtyRows.size === 0 ? 'hidden' : ''}>แก้ไขแล้วยังไม่บันทึก ${state.dirtyRows.size} รายการ</span>
+          <button type="button" id="btn-save-all" ${state.dirtyRows.size === 0 || state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('am_save_changes_btn')}</button>
+          <span class="muted" id="dirty-count" style="font-size:12.8px" ${state.dirtyRows.size === 0 ? 'hidden' : ''}>${escapeHtml(tf('am_dirty_count', { n: state.dirtyRows.size }))}</span>
         </div>
 
-        <div class="section-head"><h2>เพิ่มรายการใหม่ (${TYPE_LABELS[state.type]})</h2></div>
+        <div class="section-head"><h2>${escapeHtml(tf('am_add_new_heading', { type: typeLabel(state.type) }))}</h2></div>
         <div class="field-row">
           <label>Code<input type="text" id="new-code" /></label>
-          <label>ชื่อ TH<input type="text" id="new-label-th" /></label>
-          <label>ชื่อ EN<input type="text" id="new-label-en" /></label>
-          <label>ลำดับ<input type="number" id="new-sort" value="0" class="is-num" /></label>
+          <label>${t('am_col_label_th')}<input type="text" id="new-label-th" /></label>
+          <label>${t('am_col_label_en')}<input type="text" id="new-label-en" /></label>
+          <label>${t('am_col_sort_order')}<input type="number" id="new-sort" value="0" class="is-num" /></label>
         </div>
-        ${state.type !== 'department' && state.type !== 'plant' ? '<label class="field-label" style="margin-top:var(--sp-4)">ค่าเพิ่มเติม</label>' : ''}
+        ${state.type !== 'department' && state.type !== 'plant' ? `<label class="field-label" style="margin-top:var(--sp-4)">${t('am_col_extra')}</label>` : ''}
         <div id="new-extra-wrap">${extraFieldsHtml(state.type, {})}</div>
         <div id="new-error" style="margin-top:var(--sp-2)"></div>
-        <button type="button" id="btn-add-row" style="margin-top:var(--sp-5)">+ เพิ่ม</button>
+        <button type="button" id="btn-add-row" style="margin-top:var(--sp-5)">${t('apd_add_btn')}</button>
       </div>
     `;
 
@@ -141,7 +137,7 @@ export async function render(container) {
     btn.disabled = state.saving;
     const countEl = document.getElementById('dirty-count');
     countEl.hidden = false;
-    countEl.textContent = `แก้ไขแล้วยังไม่บันทึก ${state.dirtyRows.size} รายการ`;
+    countEl.textContent = tf('am_dirty_count', { n: state.dirtyRows.size });
   }
 
   async function onSaveAll() {
@@ -189,7 +185,7 @@ export async function render(container) {
     errorEl.innerHTML = '';
 
     if (!code || !labelTh || !labelEn) {
-      errorEl.innerHTML = '<div class="error">กรุณากรอก Code / ชื่อ TH / ชื่อ EN ให้ครบ</div>';
+      errorEl.innerHTML = `<div class="error">${escapeHtml(t('am_err_fill_required'))}</div>`;
       return;
     }
 
