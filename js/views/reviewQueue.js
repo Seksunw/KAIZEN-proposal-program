@@ -1,12 +1,12 @@
 // js/views/reviewQueue.js — คิวตรวจให้คะแนน (MIGRATION.md ข้อ 7)
 import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf } from '../i18n.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z7';
 
 const FILTERS = [
-  { key: 'todo', label: 'ยังไม่ให้คะแนน' },
-  { key: 'draft', label: 'ร่างค้าง' },
-  { key: 'done', label: 'ส่งแล้ว' },
+  { key: 'todo', labelKey: 'rq_filter_todo' },
+  { key: 'draft', labelKey: 'dashboard_task_draft_badge' },
+  { key: 'done', labelKey: 'rq_filter_done' },
 ];
 
 // สถานะที่กรรมการ "เห็นได้" ตาม k_read_committee ใน schema.sql — ใช้เป็นตัวหารที่ถูกต้อง
@@ -48,11 +48,11 @@ export async function render(container, params, session) {
   const weightPct = openPeriod.CommitteeWeights?.[session.user.id] ?? null;
   if (weightPct === null) {
     container.innerHTML = `
-      ${pageHeader({ eyebrow: `รอบ ${openPeriod.Code}`, title: escapeHtml(openPeriod.NameTh) })}
+      ${pageHeader({ eyebrow: tf('rq_period_eyebrow', { code: escapeHtml(openPeriod.Code) }), title: escapeHtml(openPeriod.NameTh) })}
       <div class="page-body">${stateCard({
         kind: 'warning',
-        title: 'คุณไม่ได้เป็นกรรมการของรอบนี้',
-        body: 'Admin ยังไม่ได้กำหนดให้คุณเป็นกรรมการของรอบประเมินนี้ — ติดต่อ Admin ถ้าควรได้รับสิทธิ์ให้คะแนนในรอบนี้',
+        title: t('rq_not_committee_title'),
+        body: t('rq_not_committee_body'),
       })}</div>
     `;
     return;
@@ -107,14 +107,14 @@ export async function render(container, params, session) {
     filtered.sort((a, b) => priority[a.state] - priority[b.state]);
 
     const chips = [
-      `<button type="button" class="filter-chip ${state.filter === 'all' ? 'is-on' : ''}" data-filter="all">ทั้งหมด ${rowsWithState.length}</button>`,
-      ...FILTERS.map((f) => `<button type="button" class="filter-chip ${state.filter === f.key ? 'is-on' : ''}" data-filter="${f.key}">${f.label} ${counts[f.key]}</button>`),
+      `<button type="button" class="filter-chip ${state.filter === 'all' ? 'is-on' : ''}" data-filter="all">${t('kzlist_filter_all')} ${rowsWithState.length}</button>`,
+      ...FILTERS.map((f) => `<button type="button" class="filter-chip ${state.filter === f.key ? 'is-on' : ''}" data-filter="${f.key}">${t(f.labelKey)} ${counts[f.key]}</button>`),
     ].join('');
 
     const cards = filtered.map(({ k, state: st }) => {
       const photoCount = (k.KaizenAttachments ?? []).length;
-      const metaBits = [`${photoCount} รูป`];
-      if (!k.IsCompleted) metaBits.push('ยังไม่เสร็จ — อยู่ระหว่างดำเนินการ');
+      const metaBits = [tf('rq_photo_count', { n: photoCount })];
+      if (!k.IsCompleted) metaBits.push(t('rq_in_progress_tag'));
       if (k.CostSavingRank) metaBits.push(`Cost-saving rank ${k.CostSavingRank}`);
 
       const isOwn = k.OwnerId === session.user.id;
@@ -123,27 +123,27 @@ export async function render(container, params, session) {
       if (isOwn) {
         actionHtml = `
           <div style="text-align:right">
-            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">โครงการของคุณเอง</div>
-            <button type="button" class="secondary" disabled title="ให้คะแนนโครงการของตัวเองไม่ได้">ให้คะแนนไม่ได้</button>
+            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">${t('rq_own_project')}</div>
+            <button type="button" class="secondary" disabled title="${escapeHtml(t('rq_cannot_score_title'))}">${t('rq_cannot_score_btn')}</button>
           </div>
         `;
       } else if (st === 'todo') {
-        actionHtml = `<a href="#/review/${k.Id}"><button type="button">ให้คะแนน 7 เกณฑ์</button></a>`;
+        actionHtml = `<a href="#/review/${k.Id}"><button type="button">${t('rq_score_btn')}</button></a>`;
       } else if (st === 'draft') {
         const score = scoreByKaizen.get(k.Id);
         const doneCount = Object.keys(score?.Items ?? {}).length;
         actionHtml = `
           <div style="text-align:right">
-            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">ร่างคะแนนค้างไว้ ${doneCount} จาก 7 เกณฑ์</div>
-            <a href="#/review/${k.Id}"><button type="button" class="secondary" style="background:var(--primary-soft);border-color:var(--primary-line);color:var(--primary)">ให้คะแนนต่อ</button></a>
+            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">${escapeHtml(tf('rq_draft_remaining', { n: doneCount }))}</div>
+            <a href="#/review/${k.Id}"><button type="button" class="secondary" style="background:var(--primary-soft);border-color:var(--primary-line);color:var(--primary)">${t('rq_continue_scoring_btn')}</button></a>
           </div>
         `;
       } else {
         const score = scoreByKaizen.get(k.Id);
         actionHtml = `
           <div style="text-align:right">
-            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">ให้ไว้ ${score?.RawSum ?? 0}/35</div>
-            <a href="#/review/${k.Id}"><button type="button" class="secondary">ดูคะแนนที่ให้ไว้</button></a>
+            <div class="muted" style="font-size:12.5px;margin-bottom:var(--sp-2)">${escapeHtml(tf('rq_given_score', { n: score?.RawSum ?? 0 }))}</div>
+            <a href="#/review/${k.Id}"><button type="button" class="secondary">${t('rq_view_score_btn')}</button></a>
           </div>
         `;
       }
@@ -153,7 +153,7 @@ export async function render(container, params, session) {
           <div class="task-main">
             <div class="task-tags">
               <span class="code">${escapeHtml(k.Code ?? '—')}</span>
-              <span class="muted" style="font-size:12.5px">${escapeHtml(masterLabel(departments, k.Department))} · ส่ง ${k.SubmittedAt ? thaiDate(k.SubmittedAt) : '—'}</span>
+              <span class="muted" style="font-size:12.5px">${escapeHtml(masterLabel(departments, k.Department))} · ${k.SubmittedAt ? escapeHtml(tf('rq_submitted_date', { date: thaiDate(k.SubmittedAt) })) : '—'}</span>
             </div>
             <div class="task-title">${escapeHtml(k.Title)}</div>
             <div class="task-meta">${metaBits.join(' · ')}</div>
@@ -165,12 +165,12 @@ export async function render(container, params, session) {
 
     container.innerHTML = `
       ${pageHeader({
-        eyebrow: `รอบ ${openPeriod.Code}`,
+        eyebrow: tf('rq_period_eyebrow', { code: escapeHtml(openPeriod.Code) }),
         title: escapeHtml(openPeriod.NameTh),
         sub: [
-          weightPct !== null ? `${committeeRoleLabel ? escapeHtml(committeeRoleLabel) + ' · ' : ''}น้ำหนักคะแนนของคุณ ${weightPct}%` : '',
-          `ให้คะแนนแล้ว ${submittedCount}/${totalScorable}`,
-          `ปิดรับ ${thaiDate(openPeriod.SubmissionDeadline)}`,
+          weightPct !== null ? `${committeeRoleLabel ? escapeHtml(committeeRoleLabel) + ' · ' : ''}${escapeHtml(tf('rq_weight_label', { pct: weightPct }))}` : '',
+          escapeHtml(tf('rq_scored_of', { done: submittedCount, total: totalScorable })),
+          escapeHtml(tf('rq_deadline', { date: thaiDate(openPeriod.SubmissionDeadline) })),
         ].filter(Boolean).join(' · '),
       })}
       <div class="page-body">
@@ -179,7 +179,7 @@ export async function render(container, params, session) {
         ${rowsWithState.length === 0
           ? emptyState({ title: t('empty_review_queue') })
           : filtered.length === 0
-            ? emptyState({ title: 'ไม่มีโครงการในตัวกรองนี้' })
+            ? emptyState({ title: t('kzlist_empty_filtered') })
             : `<div class="task-list">${cards}</div>`}
       </div>
     `;
