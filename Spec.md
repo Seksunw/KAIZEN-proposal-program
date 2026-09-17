@@ -828,6 +828,30 @@ delete from evaluation_periods where code in ('C3TEST-01', 'H3TEST-01', 'H1H2TES
 
 ---
 
+### Round 13 — เลือกแนวทางแก้ i18n: เสนอ 3 วิธีเทียบกัน, ทำวิธีที่ 2 (แก้ฟังก์ชันกลาง + guard script) (2026-09-17)
+
+**ก่อนแก้ ผู้ใช้ขอให้เสนอทางเลือกเทียบกันก่อน ไม่ให้ตัดสินใจแก้เองทันที** — เสนอ 3 วิธี: (1) ไล่แปลทีละหน้าแบบค่อยเป็นค่อยไปโดยใช้กลไกเดิม (2) เหมือนข้อ 1 บวกสคริปต์กันข้อความไทย hardcode หลุดซ้ำ (3) จำกัดขอบเขตแค่แก้ฟังก์ชันกลางตอนนี้ เลื่อนงานแปลรายหน้าเป็น backlog แยก — เทียบกันด้วยเกณฑ์ 6 ข้อ (แก้ต้นเหตุ/ความเสี่ยง/ขนาดการเปลี่ยนแปลง/ทดสอบ-rollback/ยืดหยุ่นอนาคต/ความคุ้มค่า) แนะนำวิธีที่ 3 ไปก่อน แต่ **ผู้ใช้เลือกวิธีที่ 2**
+
+**ทำจริง (ทั้งหมดเป็นการแก้ชั้น UI/string-rendering เท่านั้น ไม่แตะ API/DB/RLS/routing/auth เลย):**
+- `translateError(message, lang = getLang())` — เดิมคืนไทยเสมอ ไม่มีพารามิเตอร์ภาษา ตอนนี้ `ERROR_MESSAGE_MAP` ทั้ง 39 รายการมี `[pattern, th, en]` ครบ (รวม 2 รายการที่เป็น interpolation function) ใช้ 49 จุดทั่วแอป
+- `roleLabel(role, lang = getLang())` — เพิ่ม `ROLE_LABELS.en`
+- `statusBadge()` — เปลี่ยน default param จาก `lang='th'` เป็น `lang=getLang()` แก้ 5 จุดที่เคยลืมส่ง `lang` โดยไม่ต้องแตะ call site เลยสักจุด
+- `thaiDate()`/`thaiDateTime()` — เพิ่ม `lang = getLang()` สลับ locale `th-TH`↔`en-GB` (เลือก en-GB เพราะเรียง วัน-เดือน-ปี เหมือน th-TH ไม่ใช่ en-US ที่สลับเป็นเดือน-วัน-ปี)
+- **`masterLabel(list, code, lang)` ใหม่** — helper กลางแทน pattern `list.find(...)?.LabelTh ?? code` ที่ประกาศซ้ำใน 8 ไฟล์ (kaizenForm.js ×4, kaizenFeed.js/kaizenDetail.js/reviewScore.js/reviewQueue.js/register.js ×1, adminUsers.js ×3, adminPeriodDetail.js ×3, profile.js ×2) — ตอนนี้เลือก `LabelEn`/`LabelTh` ตามภาษาจริง (ข้อมูล `LabelEn` มีอยู่แล้วในฐานข้อมูลจาก seed.sql ไม่ต้องกรอกเพิ่ม) ทดสอบสดยืนยันแล้วว่า dropdown แผนก/โรงงานในฟอร์มเสนอ KAIZEN โชว์ "Production"/"Plant 1" ฯลฯ ถูกต้องตอนตั้งภาษา EN
+- `SYSTEM_TIMEZONE_LABEL` ย้ายเป็นคีย์ i18n (`system_timezone_label`)
+- `adminAudit.js` `dayLabel()` และ `dashboard.js` deadline date เดิมเรียก `.toLocaleDateString('th-TH', ...)` ตรงๆ ไม่ผ่าน helper กลางเลย แก้ให้สลับ locale ตามภาษาเหมือนกัน (เพิ่มคีย์ `audit_today`/`audit_yesterday` ให้ "วันนี้"/"เมื่อวาน" ด้วย เพราะแก้แค่ locale ของวันที่แต่ทิ้งคำนำหน้าเป็นไทยไว้จะกลายเป็นข้อความปนภาษาแปลกกว่าเดิม)
+- **ตรวจแล้วไม่แก้โดยตั้งใจ**: จุดที่เรียก `.toLocaleString('th-TH')` กับ `Number` (ยอด Cost saving ใน kaizenForm.js/kaizenDetail.js/reviewScore.js) — รันทดสอบจริงยืนยันว่า `th-TH`/`en-US`/`en-GB` ให้ผลลัพธ์ตัวคั่นหลักพันเหมือนกันทุกตัว (`1,234,567` เท่ากันหมด) เปลี่ยน locale ตรงนี้จะไม่มีผลอะไรที่มองเห็นได้เลย ไม่ทำเพื่อกันการแก้ไขที่ไม่มีประโยชน์
+
+**สร้าง `scripts/check-i18n-coverage.mjs` (ใหม่, ไม่มี dependency) — จุดเด่นของวิธีที่ 2:** นับบรรทัดข้อความไทยดิบต่อไฟล์ (`js/views/*.js` + `ui.js`/`app.js`) เทียบกับ baseline ที่บันทึกไว้ (`scripts/i18n-baseline.json`) รันแล้ว exit code 1 ถ้าไฟล์ไหนมีบรรทัดไทยดิบเพิ่มขึ้นจากเดิม (`--update` เพื่อบันทึก baseline ใหม่หลังแปลคืบหน้าจริงหรือหลังตรวจว่าที่เพิ่มขึ้นตั้งใจ) — ออกแบบมาแก้ root cause ที่ Round 12 เจอตรงๆ คือ "มี `t()`/i18n.js อยู่แล้วก็ไม่พอกันคนเขียนโค้ด hardcode ซ้ำ" (หลักฐาน: คีย์ `state_retry` นิยามครบสองภาษาแต่ไม่มีจุดไหนเรียกใช้เลย) ทดสอบ self-test แล้ว: เพิ่มบรรทัดไทย hardcode ทดลองเข้าไฟล์ที่สะอาด → script ตรวจจับได้ถูกต้อง (exit 1), revert แล้ว → ผ่าน (exit 0)
+
+**ทดสอบยืนยัน:** local dev server, ตั้งค่า EN แล้ว reload จริง (ไม่ใช่แค่ SPA navigate — `initLang()` อ่าน `localStorage` แค่ตอน bootstrap ครั้งเดียว) เช็คทั้ง sidebar role box ("Employee"), วันที่ deadline ("25 Sept 2026" แทน "25 ก.ย. 2569"), status badge ("Scored"/"Draft" แทน "ให้คะแนนครบแล้ว"/"ร่าง"), dropdown แผนก/โรงงานในฟอร์ม KAIZEN ("Production"/"Plant 1" ฯลฯ) — ครบทุกจุด แล้วสลับกลับเป็น TH เช็ค regression ว่าพฤติกรรมเดิมยังถูกต้องครบ (ปีพุทธ/เดือนไทยกลับมาถูกต้อง ไม่มีอะไรพัง)
+
+**ยังไม่ทำ (ตามที่ตกลง — เป็น backlog แยกต่อไป):** งานแปลเนื้อหาหลักของหน้าใหญ่ทั้งหมด (kaizenForm.js ยังมี ~116 บรรทัดไทยดิบ, dashboard/kaizenList/review/admin\* ยังเป็นไทยล้วนเหมือนเดิม) — ไม่ได้แตะในรอบนี้ตามขอบเขตวิธีที่ 2 ที่ตกลงกันไว้ (แก้ฟังก์ชันกลางก่อน งานแปลรายหน้าเป็น incremental ทีหลัง)
+
+**ไฟล์ที่เปลี่ยน:** `js/ui.js` (translateError/roleLabel/statusBadge/thaiDate/thaiDateTime/masterLabel ใหม่), `js/i18n.js` (คีย์ใหม่ 3 คีย์: system_timezone_label, audit_today, audit_yesterday), `js/views/adminAudit.js`/`adminPeriodDetail.js`/`adminUsers.js`/`dashboard.js`/`kaizenDetail.js`/`kaizenFeed.js`/`kaizenForm.js`/`profile.js`/`register.js`/`reviewQueue.js`/`reviewScore.js` (ใช้ helper ใหม่แทน `.LabelTh`/locale hardcode เดิม), `scripts/check-i18n-coverage.mjs` + `scripts/i18n-baseline.json` (ใหม่) — bump shared version tag `20260911z5`→`20260911z6` ทุกไฟล์ตามกฎ CLAUDE.md
+
+---
+
 ## 5. Data Contract — interface ระหว่าง component
 
 หลักการ: **DB คือ source of truth ของ shape ข้อมูล** (`snake_case`) ฝั่ง UI ใช้ `PascalCase` เสมอ — ห้ามฝั่งใดฝั่งหนึ่งอ่าน field name ของอีกฝั่งตรง ๆ ทุกการแปลงต้องผ่าน `js/api.js`
