@@ -5,7 +5,7 @@
   "js/views/adminMaster.js": 0,
   "js/views/adminPeriodDetail.js": 4,
   "js/views/adminPeriods.js": 0,
-  "js/views/adminUsers.js": 20,
+  "js/views/adminUsers.js": 1,
   "js/views/dashboard.js": 3,
   "js/views/forbidden.js": 4,
   "js/views/forgotPassword.js": 1,

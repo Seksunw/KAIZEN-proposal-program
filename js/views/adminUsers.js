@@ -1,6 +1,6 @@
 // js/views/adminUsers.js — รออนุมัติแยกขึ้นบน + ตาราง 5 คอลัมน์ (MIGRATION.md ข้อ 12)
 import { getAllProfiles, getProfilesPage, updateProfile, getMasterData, getAvatarSignedUrl } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf } from '../i18n.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, thaiDate, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z7';
 import { ROLES } from '../constants.js?v=20260911z7';
 
@@ -77,10 +77,10 @@ export async function render(container, params, session) {
           <div>
             <div class="task-title">${escapeHtml(p.FullName)}</div>
             <div class="task-meta mono">${escapeHtml(p.EmployeeId)} · ${escapeHtml(p.Email)}</div>
-            <div class="task-meta">${escapeHtml(deptLabel(p.Department))} · สมัคร ${thaiDate(p.CreatedAt)}</div>
+            <div class="task-meta">${escapeHtml(deptLabel(p.Department))} · ${escapeHtml(tf('au_registered_on', { date: thaiDate(p.CreatedAt) }))}</div>
           </div>
         </div>
-        <button type="button" data-activate="${p.Id}" ${state.savingId === p.Id ? 'disabled' : ''}>${state.savingId === p.Id ? t('common_loading') : 'เปิดใช้งานเป็นพนักงาน'}</button>
+        <button type="button" data-activate="${p.Id}" ${state.savingId === p.Id ? 'disabled' : ''}>${state.savingId === p.Id ? t('common_loading') : t('au_activate_btn')}</button>
       </div>
     `).join('');
 
@@ -88,27 +88,27 @@ export async function render(container, params, session) {
       ${pageHeader({ title: t('nav_admin_users') })}
       <div class="page-body">
         ${pending.length > 0 ? `
-          <div class="section-head"><h2>รออนุมัติเข้าใช้งาน</h2><span class="section-note">${pending.length} คน</span></div>
+          <div class="section-head"><h2>${t('au_pending_heading')}</h2><span class="section-note">${escapeHtml(tf('au_people_count', { n: pending.length }))}</span></div>
           <div class="task-list" style="margin-bottom:var(--sp-6)">${pendingCards}</div>
         ` : ''}
 
-        <div class="section-head"><h2>บัญชีที่เปิดใช้งานแล้ว</h2><span class="section-note" id="active-count">${state.total} คน</span></div>
+        <div class="section-head"><h2>${t('au_active_accounts_heading')}</h2><span class="section-note" id="active-count">${escapeHtml(tf('au_people_count', { n: state.total }))}</span></div>
         <div class="hstack" style="margin-bottom:var(--sp-4)">
-          <input type="text" id="f-search" class="field-narrow" placeholder="ค้นหาชื่อ/รหัส/อีเมล" value="${escapeAttr(state.search)}" />
+          <input type="text" id="f-search" class="field-narrow" placeholder="${escapeAttr(t('au_search_placeholder'))}" value="${escapeAttr(state.search)}" />
           <div class="filter-bar">
-            <button type="button" class="filter-chip ${state.filter === 'all' ? 'is-on' : ''}" data-filter="all">ทั้งหมด</button>
-            <button type="button" class="filter-chip ${state.filter === 'committee' ? 'is-on' : ''}" data-filter="committee">กรรมการ</button>
-            <button type="button" class="filter-chip ${state.filter === 'admin' ? 'is-on' : ''}" data-filter="admin">ผู้ดูแลระบบ</button>
-            <button type="button" class="filter-chip ${state.filter === 'employee' ? 'is-on' : ''}" data-filter="employee">พนักงาน</button>
+            <button type="button" class="filter-chip ${state.filter === 'all' ? 'is-on' : ''}" data-filter="all">${t('kzlist_filter_all')}</button>
+            <button type="button" class="filter-chip ${state.filter === 'committee' ? 'is-on' : ''}" data-filter="committee">${escapeHtml(roleLabel('committee'))}</button>
+            <button type="button" class="filter-chip ${state.filter === 'admin' ? 'is-on' : ''}" data-filter="admin">${escapeHtml(roleLabel('admin'))}</button>
+            <button type="button" class="filter-chip ${state.filter === 'employee' ? 'is-on' : ''}" data-filter="employee">${escapeHtml(roleLabel('employee'))}</button>
           </div>
         </div>
         <div class="panel is-scroll">
           <table class="data-table is-wide is-collapsible">
-            <thead><tr><th>พนักงาน</th><th>แผนก</th><th>โรงงาน</th><th>สิทธิ์</th><th></th></tr></thead>
+            <thead><tr><th>${t('au_col_employee')}</th><th>${t('apd_col_department')}</th><th>${t('apd_col_plant')}</th><th>${t('au_col_permissions')}</th><th></th></tr></thead>
             <tbody id="users-tbody"></tbody>
           </table>
         </div>
-        ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${state.total - state.rows.length})`}</button></div>` : ''}
+        ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: state.total - state.rows.length }))}</button></div>` : ''}
       </div>
     `;
 
@@ -121,7 +121,7 @@ export async function render(container, params, session) {
       searchDebounce = setTimeout(async () => {
         await loadPage(0, true);
         renderRows();
-        document.getElementById('active-count').textContent = `${state.total} คน`;
+        document.getElementById('active-count').textContent = tf('au_people_count', { n: state.total });
         renderLoadMoreArea();
       }, 300);
     });
@@ -142,7 +142,7 @@ export async function render(container, params, session) {
     const existing = document.getElementById('btn-load-more')?.parentElement;
     existing?.remove();
     if (state.hasMore) {
-      body.insertAdjacentHTML('beforeend', `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${state.total - state.rows.length})`}</button></div>`);
+      body.insertAdjacentHTML('beforeend', `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: state.total - state.rows.length }))}</button></div>`);
       document.getElementById('btn-load-more')?.addEventListener('click', onLoadMore);
     }
   }
@@ -187,11 +187,11 @@ export async function render(container, params, session) {
                 // แต่ chip นี้ไม่เคยกันเลย ทำให้แก้ role ตัวเองจนไม่เหลือ admin แล้วบันทึกได้ปกติ
                 // ล็อกตัวเองออกจาก #/admin/* ทันที ไม่มีทางกู้คืนในแอป (Spec.md §4.8 finding M9)
                 const isSelfAdminChip = r === 'admin' && p.Id === session.user.id;
-                return `<button type="button" class="chip is-sm ${p.Roles?.includes(r) ? 'is-on' : ''}" data-role-chip="${r}" aria-pressed="${p.Roles?.includes(r)}" ${isSelfAdminChip ? 'disabled title="ถอดสิทธิ์ admin ของตัวเองไม่ได้ — กันล็อกตัวเองออกจากระบบ"' : ''}>${escapeHtml(roleLabel(r))}</button>`;
+                return `<button type="button" class="chip is-sm ${p.Roles?.includes(r) ? 'is-on' : ''}" data-role-chip="${r}" aria-pressed="${p.Roles?.includes(r)}" ${isSelfAdminChip ? `disabled title="${escapeAttr(t('au_cannot_remove_own_admin'))}"` : ''}>${escapeHtml(roleLabel(r))}</button>`;
               }).join('')}
             </div>
             <select class="f-committee-role" style="margin-top:var(--sp-2)">
-              <option value="">— ไม่ใช่กรรมการ —</option>
+              <option value="">${t('au_not_committee_option')}</option>
               ${committeeRoles.map((r) => `<option value="${r.Code}" ${r.Code === p.CommitteeRole ? 'selected' : ''}>${escapeHtml(masterLabel(committeeRoles, r.Code))}</option>`).join('')}
             </select>
             ${state.errorById[p.Id] ? `<div class="error" style="margin-top:var(--sp-2)">${escapeHtml(state.errorById[p.Id])}</div>` : ''}
@@ -201,7 +201,7 @@ export async function render(container, params, session) {
               ? `<button type="button" class="btn-save-user is-sm" data-id="${p.Id}" ${state.savingId === p.Id ? 'disabled' : ''}>${state.savingId === p.Id ? t('common_loading') : t('common_save')}</button>`
               : p.Id === session.user.id
                 ? ''
-                : `<button type="button" class="secondary is-sm" data-deactivate="${p.Id}" ${state.savingId === p.Id ? 'disabled' : ''}>${state.savingId === p.Id ? t('common_loading') : 'ปิดใช้งาน'}</button>`}
+                : `<button type="button" class="secondary is-sm" data-deactivate="${p.Id}" ${state.savingId === p.Id ? 'disabled' : ''}>${state.savingId === p.Id ? t('common_loading') : t('au_deactivate_btn')}</button>`}
           </td>
         </tr>
       `;
@@ -249,7 +249,7 @@ export async function render(container, params, session) {
 
   async function onDeactivate(id) {
     const p = state.rows.find((row) => row.Id === id);
-    if (!confirm(`ปิดใช้งานบัญชี "${p?.FullName ?? ''}"? ผู้ใช้นี้จะเข้าระบบไม่ได้จนกว่าจะเปิดใช้งานใหม่`)) return;
+    if (!confirm(tf('au_confirm_deactivate', { name: p?.FullName ?? '' }))) return;
     state.savingId = id; renderRows();
     try {
       await updateProfile(id, { IsActive: false });
@@ -296,13 +296,13 @@ export async function render(container, params, session) {
     const roles = [...row.querySelectorAll('[data-role-chip].is-on')].map((c) => c.dataset.roleChip);
 
     if (roles.length === 0) {
-      state.errorById[id] = 'ต้องมีอย่างน้อย 1 role';
+      state.errorById[id] = t('au_err_need_one_role');
       renderRows();
       return;
     }
     // ★ กันซ้ำอีกชั้น (chip ตัวเองถูก disable ไว้แล้วด้านบน แต่กันไว้เผื่อ DOM ถูกแก้ทางอื่น)
     if (id === session.user.id && !roles.includes('admin')) {
-      state.errorById[id] = 'ถอดสิทธิ์ admin ของตัวเองไม่ได้ — กันล็อกตัวเองออกจากระบบ';
+      state.errorById[id] = t('au_cannot_remove_own_admin');
       renderRows();
       return;
     }

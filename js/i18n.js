@@ -470,6 +470,21 @@ const DICT = {
     am_dirty_count: 'แก้ไขแล้วยังไม่บันทึก {n} รายการ',
     am_add_new_heading: 'เพิ่มรายการใหม่ ({type})',
     am_err_fill_required: 'กรุณากรอก Code / ชื่อ TH / ชื่อ EN ให้ครบ',
+
+    // ---- adminUsers.js ----
+    au_registered_on: 'สมัคร {date}',
+    au_activate_btn: 'เปิดใช้งานเป็นพนักงาน',
+    au_pending_heading: 'รออนุมัติเข้าใช้งาน',
+    au_people_count: '{n} คน',
+    au_active_accounts_heading: 'บัญชีที่เปิดใช้งานแล้ว',
+    au_search_placeholder: 'ค้นหาชื่อ/รหัส/อีเมล',
+    au_col_employee: 'พนักงาน',
+    au_col_permissions: 'สิทธิ์',
+    au_cannot_remove_own_admin: 'ถอดสิทธิ์ admin ของตัวเองไม่ได้ — กันล็อกตัวเองออกจากระบบ',
+    au_not_committee_option: '— ไม่ใช่กรรมการ —',
+    au_deactivate_btn: 'ปิดใช้งาน',
+    au_confirm_deactivate: 'ปิดใช้งานบัญชี "{name}"? ผู้ใช้นี้จะเข้าระบบไม่ได้จนกว่าจะเปิดใช้งานใหม่',
+    au_err_need_one_role: 'ต้องมีอย่างน้อย 1 role',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -941,6 +956,21 @@ const DICT = {
     am_dirty_count: '{n} unsaved change(s)',
     am_add_new_heading: 'Add new item ({type})',
     am_err_fill_required: 'Please fill in Code / Name (TH) / Name (EN)',
+
+    // ---- adminUsers.js ----
+    au_registered_on: 'Registered {date}',
+    au_activate_btn: 'Activate as employee',
+    au_pending_heading: 'Awaiting approval',
+    au_people_count: '{n} people',
+    au_active_accounts_heading: 'Active accounts',
+    au_search_placeholder: 'Search name/ID/email',
+    au_col_employee: 'Employee',
+    au_col_permissions: 'Permissions',
+    au_cannot_remove_own_admin: "Can't remove your own admin role — this prevents locking yourself out of the system",
+    au_not_committee_option: '— Not a committee member —',
+    au_deactivate_btn: 'Deactivate',
+    au_confirm_deactivate: 'Deactivate account "{name}"? This user won\'t be able to sign in until reactivated',
+    au_err_need_one_role: 'At least 1 role is required',
   },
 };
 
