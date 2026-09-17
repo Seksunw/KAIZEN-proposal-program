@@ -6,7 +6,6 @@ import {
 import { t, tf } from '../i18n.js?v=20260911z8';
 import { navigate } from '../router.js?v=20260911z8';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z8';
-import { SYSTEM_TIMEZONE_LABEL } from '../constants.js?v=20260911z8';
 
 const PAGE_SIZE = 20;
 
@@ -160,7 +159,7 @@ export async function render(container) {
           <label style="margin-top:var(--sp-5)">${t('ap_field_name_en_label')}<input type="text" id="f-name-en" /></label>
           <label style="margin-top:var(--sp-5)">${t('ap_field_start_label')}<input type="date" id="f-start" /></label>
           <label style="margin-top:var(--sp-5)">${t('ap_field_end_label')}<input type="date" id="f-end" /></label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_deadline_short_label')} (${escapeHtml(SYSTEM_TIMEZONE_LABEL)})<input type="datetime-local" id="f-deadline" /></label>
+          <label style="margin-top:var(--sp-5)">${t('ap_field_deadline_short_label')} (${t('system_timezone_label')})<input type="datetime-local" id="f-deadline" /></label>
           <div id="create-error"></div>
           <button type="button" id="btn-create" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('ap_create_btn')}</button>
         </div>
