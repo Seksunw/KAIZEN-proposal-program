@@ -5,12 +5,14 @@ import {
   getCommitteeCandidates, getKaizenByPeriod, getKaizenByPeriodPage, updateKaizen, getMasterData, getAllProfiles, supabase,
   getKaizenEditGrants, grantKaizenEditWindow, revokeKaizenEditGrant,
 } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf, getLang } from '../i18n.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z7';
 import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z7';
 
+function L(labelObj) { return labelObj[getLang() === 'en' ? 'en' : 'th']; }
+
 export async function render(container, params) {
-  document.title = `รอบการประเมิน · ${t('appName')}`;
+  document.title = `${t('apd_page_title')} · ${t('appName')}`;
   container.innerHTML = `<div class="page-body">${skeletonRows(3)}</div>`;
 
   let period;
@@ -147,14 +149,14 @@ export async function render(container, params) {
     });
 
     const closeChecklist = [
-      { ok: weightSum === 100, title: 'น้ำหนักกรรมการรวม 100%', sub: `ตอนนี้ ${weightSum}%`, blocking: true },
-      { ok: deadlinePassed, title: 'พ้นกำหนดปิดรับ', sub: `${deadlinePassed ? 'ปิดรับไปแล้วเมื่อ' : 'จะปิดรับ'} ${thaiDateTime(period.SubmissionDeadline)} (${t('system_timezone_label')})`, blocking: false },
-      { ok: missingScores === 0, title: 'กรรมการส่งคะแนนครบทุกใบ', sub: missingScores === 0 ? `ครบแล้ว (${submittedScoresCount} ใบ)` : `ยังขาด ${missingScores} ใบ`, blocking: true },
+      { ok: weightSum === 100, title: t('apd_check_weight_100_title'), sub: tf('apd_check_weight_100_sub', { pct: weightSum }), blocking: true },
+      { ok: deadlinePassed, title: t('apd_deadline_check_title'), sub: `${deadlinePassed ? t('apd_deadline_passed_label') : t('apd_deadline_upcoming_label')} ${thaiDateTime(period.SubmissionDeadline)} (${t('system_timezone_label')})`, blocking: false },
+      { ok: missingScores === 0, title: t('apd_check_scores_title'), sub: missingScores === 0 ? tf('apd_check_scores_done_sub', { n: submittedScoresCount }) : tf('apd_check_scores_missing_sub', { n: missingScores }), blocking: true },
     ];
     const canClose = closeChecklist.every((c) => !c.blocking || c.ok);
 
     const publishChecklist = [
-      { ok: pendingDecisions === 0, title: 'ตัดสินโครงการที่ให้คะแนนครบแล้วทุกโครงการ', sub: pendingDecisions === 0 ? 'ตัดสินครบแล้ว' : `ค้าง ${pendingDecisions} โครงการ`, blocking: true },
+      { ok: pendingDecisions === 0, title: t('apd_check_decide_title'), sub: pendingDecisions === 0 ? t('apd_check_decide_done_sub') : tf('apd_check_decide_pending_sub', { n: pendingDecisions }), blocking: true },
     ];
     const canPublish = publishChecklist.every((c) => c.ok);
 
@@ -167,7 +169,7 @@ export async function render(container, params) {
             ${info.role ? `<div class="muted" style="font-size:11.5px">${escapeHtml(info.role)}</div>` : ''}
           </div>
           <input type="number" min="0" max="100" data-uid="${uid}" class="weight-input" value="${pct}" style="width:90px" />
-          <button type="button" class="icon-btn" data-remove-weight="${uid}" aria-label="ลบ">
+          <button type="button" class="icon-btn" data-remove-weight="${uid}" aria-label="${escapeHtml(t('kzform_aria_delete'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
           </button>
         </div>
@@ -188,12 +190,12 @@ export async function render(container, params) {
       if (active) {
         return `
           <div class="muted" style="font-size:12px;margin-top:4px">
-            มีสิทธิ์แก้ไขชั่วคราวถึง ${thaiDateTime(active.ExpiresAt)}
-            <button type="button" class="secondary is-sm" data-revoke-grant="${active.Id}" data-revoke-kaizen="${k.Id}" style="margin-left:6px">เพิกถอน</button>
+            ${escapeHtml(tf('apd_grant_active_until', { date: thaiDateTime(active.ExpiresAt) }))}
+            <button type="button" class="secondary is-sm" data-revoke-grant="${active.Id}" data-revoke-kaizen="${k.Id}" style="margin-left:6px">${t('apd_revoke_btn')}</button>
           </div>
         `;
       }
-      return `<button type="button" class="secondary is-sm" data-open-grant="${k.Id}" style="margin-top:4px">ให้สิทธิ์แก้ไขชั่วคราว</button>`;
+      return `<button type="button" class="secondary is-sm" data-open-grant="${k.Id}" style="margin-top:4px">${t('apd_grant_open_btn')}</button>`;
     }
 
     function grantFormRowHtml(k) {
@@ -202,22 +204,22 @@ export async function render(container, params) {
         <tr class="is-attention">
           <td colspan="4">
             <div class="card" style="padding:12px">
-              <div style="font-weight:600;margin-bottom:6px">ให้สิทธิ์แก้ไขชั่วคราว — ${escapeHtml(k.Title)}</div>
-              <p class="field-hint">ใช้เฉพาะกรณีจำเป็นเท่านั้น เจ้าของโครงการจะแก้ไขเนื้อหาได้ตามระยะเวลาที่กำหนด แล้วจะถูกล็อกกลับอัตโนมัติเมื่อหมดเวลา</p>
-              <label><span>เหตุผล <span class="req">*</span></span><textarea id="grant-reason" rows="2" placeholder="เช่น เจ้าของแจ้งว่าแก้ไม่ทันก่อนปิดรอบ ขอเวลาเพิ่มเพื่อแนบรูปหลักฐานให้ครบ">${escapeHtml(grantState.reason)}</textarea></label>
-              <label style="margin-top:8px">ระยะเวลา
+              <div style="font-weight:600;margin-bottom:6px">${escapeHtml(tf('apd_grant_form_heading', { title: k.Title }))}</div>
+              <p class="field-hint">${t('apd_grant_hint')}</p>
+              <label><span>${t('apd_grant_reason_label')} <span class="req">*</span></span><textarea id="grant-reason" rows="2" placeholder="${escapeHtml(t('apd_grant_reason_placeholder'))}">${escapeHtml(grantState.reason)}</textarea></label>
+              <label style="margin-top:8px">${t('apd_grant_duration_label')}
                 <select id="grant-hours">
-                  <option value="1" ${grantState.hours === 1 ? 'selected' : ''}>1 ชั่วโมง</option>
-                  <option value="6" ${grantState.hours === 6 ? 'selected' : ''}>6 ชั่วโมง</option>
-                  <option value="24" ${grantState.hours === 24 ? 'selected' : ''}>24 ชั่วโมง (1 วัน)</option>
-                  <option value="72" ${grantState.hours === 72 ? 'selected' : ''}>72 ชั่วโมง (3 วัน)</option>
-                  <option value="168" ${grantState.hours === 168 ? 'selected' : ''}>168 ชั่วโมง (7 วัน สูงสุด)</option>
+                  <option value="1" ${grantState.hours === 1 ? 'selected' : ''}>${t('apd_grant_hours_1')}</option>
+                  <option value="6" ${grantState.hours === 6 ? 'selected' : ''}>${t('apd_grant_hours_6')}</option>
+                  <option value="24" ${grantState.hours === 24 ? 'selected' : ''}>${t('apd_grant_hours_24')}</option>
+                  <option value="72" ${grantState.hours === 72 ? 'selected' : ''}>${t('apd_grant_hours_72')}</option>
+                  <option value="168" ${grantState.hours === 168 ? 'selected' : ''}>${t('apd_grant_hours_168')}</option>
                 </select>
               </label>
               <div id="grant-error"></div>
               <div class="hstack" style="margin-top:10px">
-                <button type="button" data-confirm-grant="${k.Id}" ${grantState.saving ? 'disabled' : ''}>${grantState.saving ? t('common_loading') : 'ยืนยันให้สิทธิ์'}</button>
-                <button type="button" class="secondary" id="btn-cancel-grant">ยกเลิก</button>
+                <button type="button" data-confirm-grant="${k.Id}" ${grantState.saving ? 'disabled' : ''}>${grantState.saving ? t('common_loading') : t('apd_grant_confirm_btn')}</button>
+                <button type="button" class="secondary" id="btn-cancel-grant">${t('common_cancel')}</button>
               </div>
             </div>
           </td>
@@ -232,14 +234,14 @@ export async function render(container, params) {
         <td>${statusBadge(k.Status)}</td>
         <td>
           ${k.Status === 'scored' ? `
-            <button type="button" data-approve="${k.Id}" class="is-sm">อนุมัติ</button>
-            <button type="button" class="secondary is-sm" data-revise="${k.Id}">ตีกลับให้แก้</button>
+            <button type="button" data-approve="${k.Id}" class="is-sm">${t('apd_approve_btn')}</button>
+            <button type="button" class="secondary is-sm" data-revise="${k.Id}">${t('apd_revise_btn')}</button>
           ` : ''}
           ${k.Status === 'approved' ? `
-            <button type="button" class="secondary is-sm" data-revise="${k.Id}">ตีกลับให้แก้</button>
-            ${period.Status === 'published' ? `<button type="button" class="is-sm" data-publish-single="${k.Id}">ประกาศรายตัว</button>` : ''}
+            <button type="button" class="secondary is-sm" data-revise="${k.Id}">${t('apd_revise_btn')}</button>
+            ${period.Status === 'published' ? `<button type="button" class="is-sm" data-publish-single="${k.Id}">${t('apd_publish_single_btn')}</button>` : ''}
           ` : ''}
-          ${k.Status === 'need_revision' && k.DecidedAt ? `<span class="muted" style="font-size:12px">ตีกลับเมื่อ ${thaiDateTime(k.DecidedAt)}</span>` : ''}
+          ${k.Status === 'need_revision' && k.DecidedAt ? `<span class="muted" style="font-size:12px">${escapeHtml(tf('apd_revised_at', { date: thaiDateTime(k.DecidedAt) }))}</span>` : ''}
           ${grantCellHtml(k)}
         </td>
       </tr>
@@ -257,24 +259,24 @@ export async function render(container, params) {
           ${PERIOD_STATUSES.map((s, i) => {
             const curIdx = PERIOD_STATUSES.indexOf(period.Status);
             const cls = s === period.Status ? 'is-current' : (i < curIdx ? 'is-done' : '');
-            return `${i > 0 ? '<span class="stp-line"></span>' : ''}<div class="stp ${cls}"><span class="n">${i + 1}</span>${escapeHtml(PERIOD_STATUS_LABELS[s]?.th ?? s)}</div>`;
+            return `${i > 0 ? '<span class="stp-line"></span>' : ''}<div class="stp ${cls}"><span class="n">${i + 1}</span>${escapeHtml(PERIOD_STATUS_LABELS[s] ? L(PERIOD_STATUS_LABELS[s]) : s)}</div>`;
           }).join('')}
         </div>
 
-        <div class="section-head"><h2>สรุปการส่งโครงการ</h2></div>
+        <div class="section-head"><h2>${t('apd_summary_heading')}</h2></div>
         <div class="card">
           <div class="hstack" style="justify-content:space-between;flex-wrap:wrap;gap:24px">
-            <div><div class="metric is-xl">${submitted.length}</div><p class="muted" style="margin:2px 0 0">ส่งเข้ารอบทั้งหมด</p></div>
-            <div><div class="metric is-lg">${submitted.filter((k) => k.ProjectType === 'individual').length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">รายบุคคล</p></div>
-            <div><div class="metric is-lg">${submitted.filter((k) => k.ProjectType === 'group').length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">กลุ่ม</p></div>
-            <div><div class="metric is-lg" style="color:var(--primary)">${submitted.filter((k) => k.IsCompleted).length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">เสร็จแล้ว</p></div>
-            <div><div class="metric is-lg" style="color:#B45309">${submitted.filter((k) => !k.IsCompleted).length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">ยังดำเนินการ</p></div>
+            <div><div class="metric is-xl">${submitted.length}</div><p class="muted" style="margin:2px 0 0">${t('apd_summary_total_submitted')}</p></div>
+            <div><div class="metric is-lg">${submitted.filter((k) => k.ProjectType === 'individual').length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">${t('kzform_individual')}</p></div>
+            <div><div class="metric is-lg">${submitted.filter((k) => k.ProjectType === 'group').length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">${t('kzform_group')}</p></div>
+            <div><div class="metric is-lg" style="color:var(--primary)">${submitted.filter((k) => k.IsCompleted).length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">${t('apd_completed_label')}</p></div>
+            <div><div class="metric is-lg" style="color:#B45309">${submitted.filter((k) => !k.IsCompleted).length}</div><p class="muted" style="margin:2px 0 0;font-size:12.8px">${t('apd_in_progress_label')}</p></div>
           </div>
         </div>
         ${byPlant.length > 0 ? `
           <div class="panel is-scroll" style="margin-top:var(--sp-4)">
             <table class="data-table">
-              <thead><tr><th>โรงงาน</th><th class="is-num">รายบุคคล</th><th class="is-num">กลุ่ม</th><th class="is-num">เสร็จแล้ว</th><th class="is-num">ยังดำเนินการ</th><th class="is-num">รวม</th></tr></thead>
+              <thead><tr><th>${t('apd_col_plant')}</th><th class="is-num">${t('kzform_individual')}</th><th class="is-num">${t('kzform_group')}</th><th class="is-num">${t('apd_completed_label')}</th><th class="is-num">${t('apd_in_progress_label')}</th><th class="is-num">${t('apd_col_total')}</th></tr></thead>
               <tbody>
                 ${byPlant.map((p) => `
                   <tr>
@@ -292,14 +294,14 @@ export async function render(container, params) {
         ` : ''}
 
         <div class="section-head" style="margin-top:var(--sp-6)">
-          <h2>รายชื่อผู้มีสิทธิ์รับเงินรางวัลส่งโครงการ</h2>
-          <span class="section-note">${submitted.length} คน · 20 บาท/คน</span>
+          <h2>${t('apd_reward_heading')}</h2>
+          <span class="section-note">${escapeHtml(tf('apd_reward_summary', { n: submitted.length }))}</span>
         </div>
-        <p class="field-hint">ทุกคนที่ส่งโครงการในรอบนี้แล้ว (ไม่ว่าจะให้คะแนน/เสร็จหรือยัง) มีสิทธิ์รับเงินรางวัลนี้ — จ่ายจริงทำนอกระบบ (HR/บัญชี) หน้านี้แสดงรายชื่อไว้อ้างอิงเท่านั้น</p>
+        <p class="field-hint">${t('apd_reward_hint')}</p>
         ${submitted.length > 0 ? `
           <div class="panel is-scroll" style="margin-top:var(--sp-4)">
             <table class="data-table">
-              <thead><tr><th>ชื่อ-นามสกุล</th><th>รหัสพนักงาน</th><th>แผนก</th><th>รหัสโครงการ</th><th>วันที่ส่ง</th></tr></thead>
+              <thead><tr><th>${t('apd_col_fullname')}</th><th>${t('apd_col_employee_id')}</th><th>${t('apd_col_department')}</th><th>${t('apd_col_kaizen_code')}</th><th>${t('apd_col_submitted_date')}</th></tr></thead>
               <tbody>${submittersRows}</tbody>
             </table>
           </div>
@@ -308,39 +310,39 @@ export async function render(container, params) {
         <div class="two-col" style="margin-top:var(--sp-6)">
           <div>
             <div class="section-head">
-              <h2>น้ำหนักกรรมการ</h2>
-              <span class="badge" data-status="${weightSum === 100 ? 'approved' : 'need_revision'}">${weightSum === 100 ? '✓ รวม 100%' : `รวม ${weightSum}%`}</span>
+              <h2>${t('apd_weights_heading')}</h2>
+              <span class="badge" data-status="${weightSum === 100 ? 'approved' : 'need_revision'}">${weightSum === 100 ? t('apd_weight_complete_badge') : escapeHtml(tf('apd_weight_sum_badge', { pct: weightSum }))}</span>
             </div>
-            <div id="weight-list">${weightRows || '<p class="muted">ยังไม่มีกรรมการ</p>'}</div>
+            <div id="weight-list">${weightRows || `<p class="muted">${t('apd_no_committee_yet')}</p>`}</div>
             ${weightSum !== 100 && period.Status !== 'draft' ? `
-              <div class="warning" style="margin-top:var(--sp-3)">น้ำหนักรวมไม่ครบ 100% แล้ว — ถ้าบันทึกตอนนี้ การคำนวณคะแนนถ่วงน้ำหนัก (weighted score) ของทุกโครงการในรอบนี้จะผิดเพี้ยนไปจากที่ตั้งใจ (เงื่อนไข "รวม 100%" ถูกบังคับแค่ตอนเปิดรอบครั้งแรกเท่านั้น การแก้ทีหลังไม่มีการเช็คซ้ำ)</div>
+              <div class="warning" style="margin-top:var(--sp-3)">${t('apd_weight_warning')}</div>
             ` : ''}
             ${['draft', 'open', 'scoring'].includes(period.Status) ? `
               <div class="member-row" style="margin-top:var(--sp-4)">
                 <select id="f-add-committee" style="flex:1">
-                  <option value="">-- เลือกกรรมการ --</option>
+                  <option value="">${t('apd_select_committee_placeholder')}</option>
                   ${candidateOptions}
                 </select>
                 <input type="number" id="f-add-weight" min="0" max="100" placeholder="%" style="width:90px" />
-                <button type="button" id="btn-add-weight" class="secondary">+ เพิ่ม</button>
+                <button type="button" id="btn-add-weight" class="secondary">${t('apd_add_btn')}</button>
               </div>
-              <button type="button" id="btn-save-weights" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : 'บันทึกน้ำหนัก'}</button>
+              <button type="button" id="btn-save-weights" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('apd_save_weights_btn')}</button>
             ` : ''}
             <div id="weight-error"></div>
           </div>
 
           <div>
-            <div class="section-head"><h2>การจัดการรอบ</h2></div>
+            <div class="section-head"><h2>${t('apd_manage_period_heading')}</h2></div>
             ${period.Status === 'draft' ? `
               <div class="panel is-flush">
                 <div class="checklist">
                   <div class="checklist-item ${weightSum === 100 ? '' : 'is-blocked'}">
                     <span class="mark">${weightSum === 100 ? checkIcon() : ''}</span>
-                    <div><div class="check-title">น้ำหนักกรรมการรวม 100%</div><div class="check-sub">ตอนนี้ ${weightSum}%</div></div>
+                    <div><div class="check-title">${t('apd_check_weight_100_title')}</div><div class="check-sub">${escapeHtml(tf('apd_check_weight_100_sub', { pct: weightSum }))}</div></div>
                   </div>
                 </div>
               </div>
-              <button type="button" id="btn-open" style="margin-top:12px" ${weightSum === 100 && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (weightSum === 100 ? 'เปิดรอบ' : 'เปิดรอบ — ยังไม่ครบเงื่อนไข')}</button>
+              <button type="button" id="btn-open" style="margin-top:12px" ${weightSum === 100 && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (weightSum === 100 ? t('apd_open_period_btn') : t('apd_open_period_btn_blocked'))}</button>
             ` : ''}
             ${['open', 'scoring'].includes(period.Status) ? `
               <div class="panel is-flush">
@@ -353,7 +355,7 @@ export async function render(container, params) {
                   `).join('')}
                 </div>
               </div>
-              <button type="button" id="btn-close" style="margin-top:12px" ${canClose && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (canClose ? 'ปิดรอบ' : 'ปิดรอบ — ยังไม่ครบเงื่อนไข')}</button>
+              <button type="button" id="btn-close" style="margin-top:12px" ${canClose && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (canClose ? t('apd_close_period_btn') : t('apd_close_period_btn_blocked'))}</button>
             ` : ''}
             ${period.Status === 'closed' ? `
               <div class="panel is-flush">
@@ -366,22 +368,22 @@ export async function render(container, params) {
                   `).join('')}
                 </div>
               </div>
-              <button type="button" id="btn-publish" style="margin-top:12px" ${canPublish && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (canPublish ? 'ประกาศผล' : 'ประกาศผล — ยังไม่ครบเงื่อนไข')}</button>
+              <button type="button" id="btn-publish" style="margin-top:12px" ${canPublish && !state.actionSaving ? '' : 'disabled'}>${state.actionSaving ? t('common_loading') : (canPublish ? t('apd_publish_period_btn') : t('apd_publish_period_btn_blocked'))}</button>
             ` : ''}
-            ${period.Status === 'published' ? '<p class="muted">รอบนี้ประกาศผลแล้ว</p>' : ''}
+            ${period.Status === 'published' ? `<p class="muted">${t('apd_period_published_note')}</p>` : ''}
             <div id="action-error"></div>
           </div>
         </div>
 
-        <div class="section-head"><h2>โครงการที่ต้องตัดสิน (${decisionState.total})</h2></div>
-        ${decisionState.total === 0 ? '<p class="muted">ยังไม่มีโครงการ</p>' : `
+        <div class="section-head"><h2>${escapeHtml(tf('apd_decisions_heading', { n: decisionState.total }))}</h2></div>
+        ${decisionState.total === 0 ? `<p class="muted">${t('apd_no_projects')}</p>` : `
           <div class="panel is-scroll">
             <table class="data-table">
-              <thead><tr><th>รหัส</th><th>ชื่อ</th><th>สถานะ</th><th>การตัดสิน</th></tr></thead>
+              <thead><tr><th>${t('apd_col_code')}</th><th>${t('apd_col_title')}</th><th>${t('apd_col_status')}</th><th>${t('apd_col_decision')}</th></tr></thead>
               <tbody>${kaizenRows}</tbody>
             </table>
           </div>
-          ${decisionState.hasMore ? `<div style="text-align:center;margin-top:var(--sp-4)"><button type="button" class="secondary" id="btn-load-more-decisions" ${decisionState.loadingMore ? 'disabled' : ''}>${decisionState.loadingMore ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${decisionState.total - decisionState.rows.length})`}</button></div>` : ''}
+          ${decisionState.hasMore ? `<div style="text-align:center;margin-top:var(--sp-4)"><button type="button" class="secondary" id="btn-load-more-decisions" ${decisionState.loadingMore ? 'disabled' : ''}>${decisionState.loadingMore ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: decisionState.total - decisionState.rows.length }))}</button></div>` : ''}
         `}
       </div>
     `;
@@ -429,7 +431,7 @@ export async function render(container, params) {
 
   async function onConfirmGrant(kaizenId) {
     if (!grantState.reason.trim()) {
-      grantState.error = 'กรุณาระบุเหตุผล';
+      grantState.error = t('apd_reason_required');
       renderPage();
       return;
     }
@@ -448,7 +450,7 @@ export async function render(container, params) {
   }
 
   async function onRevokeGrant(grantId, kaizenId) {
-    if (!confirm('เพิกถอนสิทธิ์แก้ไขชั่วคราวนี้? เจ้าของโครงการจะแก้ไขต่อไม่ได้ทันที')) return;
+    if (!confirm(t('apd_confirm_revoke_grant'))) return;
     try {
       await revokeKaizenEditGrant(grantId);
       grantState.byKaizenId.delete(kaizenId);
@@ -535,7 +537,7 @@ export async function render(container, params) {
   // ดู Spec.md §4.8 finding H4 (admin ตั้งสถานะ published ตรงๆ ได้อยู่แล้วผ่าน k_update_admin
   // ไม่มี gate เรื่อง period status เลย ปุ่มนี้แค่เปิดทางให้ทำทีละโครงการ)
   async function onPublishSingle(kaizenId) {
-    if (!confirm('ประกาศผลโครงการนี้แยกจากรอบ? ใช้สำหรับโครงการที่ตัดสินไม่ทันตอนประกาศผลรอบหลัก')) return;
+    if (!confirm(t('apd_confirm_publish_single'))) return;
     state.actionError = ''; renderPage();
     try {
       await updateKaizen(kaizenId, { Status: 'published' });
@@ -550,7 +552,7 @@ export async function render(container, params) {
   async function onDecide(kaizenId, status) {
     let revisionNote = null;
     if (status === 'need_revision') {
-      revisionNote = prompt('ระบุเหตุผลที่ต้องแก้ไข (revision note):');
+      revisionNote = prompt(t('apd_prompt_revision_note'));
       if (revisionNote === null) return; // กด Cancel — ยกเลิกการตีกลับทั้งหมด ไม่ใช่ตีกลับด้วยโน้ตว่าง
     }
     state.actionError = ''; renderPage();
