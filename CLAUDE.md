@@ -39,22 +39,25 @@ repo. Don't re-add these unless the user explicitly asks.
 **Commit:** everything under `js/`, `css/`, `assets/`, `supabase/*.sql`, `index.html`, `CLAUDE.md`,
 `Spec.md`, `.claude/settings.json` (project-scope, no secrets), `js/config.js.example`.
 
-## Deploying (Vercel, decided 2026-09-17)
+## Deploying (Netlify, decided 2026-09-17)
 
-Hosted on Vercel — a plain static site (no build step for local dev, see below), but Vercel *does*
+Hosted on Netlify — a plain static site (no build step for local dev, see below), but Netlify *does*
 run one build step in production solely to materialize `js/config.js` (gitignored, see above) from
 env vars, since there's no other way to get real secrets onto a static host without committing them.
+(Originally set up on Vercel the same day, then switched: Vercel's free Hobby tier disallows
+commercial use by ToS, and this is an internal company tool — Pro is $20/mo/seat. Netlify's free
+tier has no such commercial-use restriction, and the setup below is otherwise identical.)
 
-`vercel.json` sets `buildCommand: bash scripts/gen-config.sh` (writes `js/config.js` from
-`SUPABASE_URL`/`SUPABASE_ANON_KEY`/`MAX_UPLOAD_MB` env vars — see that script), `installCommand: true`
-(no `package.json`, nothing to install), and `outputDirectory: .` (serve the repo root as-is).
+`netlify.toml` sets `build.command = "bash scripts/gen-config.sh"` (writes `js/config.js` from
+`SUPABASE_URL`/`SUPABASE_ANON_KEY`/`MAX_UPLOAD_MB` env vars — see that script) and
+`build.publish = "."` (serve the repo root as-is, no separate build output dir).
 
-**One-time project setup on vercel.com:** import the `NBD-Health-Care-Company-Limited/
-KAIZEN-proposal-program` GitHub repo → Framework Preset "Other" → in Project Settings →
-Environment Variables, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` (same values as a local
-`js/config.js`; `MAX_UPLOAD_MB` optional, defaults to 20) for Production/Preview/Development →
-deploy. No routing rewrites needed — `js/router.js` is a hash router (`#/...`), so there's nothing
-after `#` for the server to ever see.
+**One-time project setup on netlify.com:** "Add new site" → "Import an existing project" → the
+`NBD-Health-Care-Company-Limited/KAIZEN-proposal-program` GitHub repo → build settings are picked
+up from `netlify.toml` automatically → in Site configuration → Environment variables, set
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` (same values as a local `js/config.js`; `MAX_UPLOAD_MB`
+optional, defaults to 20) → deploy. No routing rewrites needed — `js/router.js` is a hash router
+(`#/...`), so there's nothing after `#` for the server to ever see.
 
 ## Running locally
 
