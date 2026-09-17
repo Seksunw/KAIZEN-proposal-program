@@ -1,7 +1,7 @@
 // js/ui.js — helper กลางที่ view เรียกใช้ร่วมกัน (MIGRATION.md ข้อ 0c)
 // escapeHtml ย้ายมาจากที่เคยซ้ำอยู่หลายไฟล์ — view อื่นควร import จากที่นี่แทนการประกาศเอง
-import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z9';
-import { getLang, setLang } from './i18n.js?v=20260911z9';
+import { KAIZEN_STATUS_LABELS, PERIOD_STATUS_LABELS, CRITERIA, SCORE_LEVELS, SYSTEM_TIMEZONE } from './constants.js?v=20260911z10';
+import { getLang, setLang } from './i18n.js?v=20260911z10';
 
 const ALL_STATUS_LABELS = { ...PERIOD_STATUS_LABELS, ...KAIZEN_STATUS_LABELS };
 const ROLE_LABELS = {
@@ -404,4 +404,52 @@ export async function hydrateAvatars(root, getSignedUrl) {
       el.innerHTML = `<img src="${url}" alt="" />`;
     } catch { /* เก็บตัวย่อชื่อเดิมไว้เป็น fallback */ }
   }));
+}
+
+// ปุ่ม "แปลเป็นอังกฤษ" สำหรับข้อความไทยที่ผู้ใช้กรอกเอง (ProblemDescription/ImprovementApproach)
+// — ให้กรรมการที่อ่านไทยไม่ได้กดแปลดูได้ คนละเรื่องกับ i18n ของ UI/label (นั่นแปลข้อความคงที่
+// ของแอปเอง อันนี้แปลเนื้อหาที่พนักงานพิมพ์) ★ translateFn รับมาจากผู้เรียก (api.js's
+// translateTexts) กัน ui.js ผูกกับ api.js ตรงๆ เหมือน hydrateAvatars() ด้านบน
+const TRANSLATE_WIDGET_LABELS = {
+  th: { button: 'แปลเป็นอังกฤษ', loading: 'กำลังแปล...', error: 'แปลไม่สำเร็จ ลองใหม่อีกครั้ง', resultHeading: 'คำแปล (อัตโนมัติ)' },
+  en: { button: 'Translate to English', loading: 'Translating...', error: 'Translation failed, please try again', resultHeading: 'Translation (auto)' },
+};
+
+export function translateWidgetHtml(id) {
+  const l = TRANSLATE_WIDGET_LABELS[getLang()] ?? TRANSLATE_WIDGET_LABELS.th;
+  return `
+    <div style="margin-top:var(--sp-2)">
+      <button type="button" class="secondary is-sm" data-translate-btn="${id}">${escapeHtml(l.button)}</button>
+      <div data-translate-result="${id}"></div>
+    </div>
+  `;
+}
+
+export function wireTranslateWidget(container, id, getTexts, translateFn) {
+  const btn = container.querySelector(`[data-translate-btn="${id}"]`);
+  const resultEl = container.querySelector(`[data-translate-result="${id}"]`);
+  if (!btn || !resultEl) return;
+  const l = TRANSLATE_WIDGET_LABELS[getLang()] ?? TRANSLATE_WIDGET_LABELS.th;
+  let cachedHtml = null;
+  btn.addEventListener('click', async () => {
+    if (cachedHtml) { resultEl.innerHTML = cachedHtml; btn.hidden = true; return; }
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = l.loading;
+    try {
+      const translated = await translateFn(getTexts());
+      cachedHtml = translated.map((text) => `
+        <div style="margin-top:var(--sp-2)">
+          <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.03em">${escapeHtml(l.resultHeading)}</div>
+          <p style="font-size:14px;line-height:1.6;margin:2px 0 0">${escapeHtml(text)}</p>
+        </div>
+      `).join('');
+      resultEl.innerHTML = cachedHtml;
+      btn.hidden = true;
+    } catch {
+      resultEl.innerHTML = `<div class="error" style="font-size:13px;margin-top:var(--sp-2)">${escapeHtml(l.error)}</div>`;
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
 }

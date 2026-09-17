@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z9';
-import { t, tf, getLang } from '../i18n.js?v=20260911z9';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z9';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z9';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData, translateTexts } from '../api.js?v=20260911z10';
+import { t, tf, getLang } from '../i18n.js?v=20260911z10';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z10';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z10';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;
@@ -102,8 +102,10 @@ export async function render(container, params, session) {
 
           <h3 style="margin-top:var(--sp-6)">${t('kzdetail_problem_heading')}</h3>
           <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ProblemDescription || '—')}</p>
+          ${kaizen.ProblemDescription ? translateWidgetHtml('kzdetail-problem') : ''}
           <h3>${t('kzform_approach_label')}</h3>
           <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ImprovementApproach || '—')}</p>
+          ${kaizen.ImprovementApproach ? translateWidgetHtml('kzdetail-approach') : ''}
 
           <h3>${t('kzdetail_progress_heading')}</h3>
           ${renderTimeline(kaizen.KaizenProgressUpdates ?? [])}
@@ -168,6 +170,13 @@ export async function render(container, params, session) {
   }
   await hydratePhotoPair(beforePhotos[0], 'before');
   await hydratePhotoPair(afterPhotos[0], 'after');
+
+  if (kaizen.ProblemDescription) {
+    wireTranslateWidget(container, 'kzdetail-problem', () => [kaizen.ProblemDescription], translateTexts);
+  }
+  if (kaizen.ImprovementApproach) {
+    wireTranslateWidget(container, 'kzdetail-approach', () => [kaizen.ImprovementApproach], translateTexts);
+  }
 
   async function hydratePhotoPair(attachment, phase) {
     if (!attachment) return;

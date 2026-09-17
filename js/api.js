@@ -1,5 +1,5 @@
 // js/api.js — ทุก call ไป Supabase + snake_case⇄PascalCase ผ่านที่นี่เท่านั้น (§5.2)
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z9';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z10';
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -694,6 +694,25 @@ export async function likeKaizen(kaizenId, userId) {
 export async function unlikeKaizen(kaizenId, userId) {
   const { error } = await client.from('kaizen_likes').delete().eq('kaizen_id', kaizenId).eq('user_id', userId);
   if (error) throw error;
+}
+
+// ================================================================
+// translate — proxy ไป Netlify Function (netlify/functions/translate.js) ที่ซ่อน
+// GOOGLE_TRANSLATE_API_KEY ไว้ฝั่ง server เท่านั้น (เรียกตรงจาก browser ไม่ได้ ไม่งั้น key
+// หลุด) — ใช้ให้กรรมการที่อ่านไทยไม่ออกแปล ProblemDescription/ImprovementApproach เป็น
+// อังกฤษได้ คนละเรื่องกับ i18n ของ UI เอง (นั่นแปล label/เมนู อันนี้แปลเนื้อหาที่ผู้ใช้กรอกเอง)
+// ★ ทำงานได้เฉพาะบน Netlify จริง (มี /.netlify/functions/ ให้เรียก) — รันผ่าน
+// python3 -m http.server ตรงๆ (dev ปกติของโปรเจกต์นี้) endpoint นี้จะ 404 เสมอ
+// ================================================================
+export async function translateTexts(texts, target = 'en') {
+  const res = await fetch('/.netlify/functions/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ texts, target }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Translation failed');
+  return data.translated;
 }
 
 export { client as supabase };

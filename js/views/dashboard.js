@@ -1,8 +1,8 @@
 // js/views/dashboard.js — ตาม design handoff README.md §3: period banner + task-list + 2 คอลัมน์
 // (แทน .stat-grid เดิมทั้งหมด — MIGRATION.md ข้อ 2)
-import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z9';
-import { t, tf } from '../i18n.js?v=20260911z9';
-import { thaiDate } from '../ui.js?v=20260911z9';
+import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z10';
+import { t, tf } from '../i18n.js?v=20260911z10';
+import { thaiDate } from '../ui.js?v=20260911z10';
 
 function escapeHtml(s) {
   const div = document.createElement('div');

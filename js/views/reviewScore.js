@@ -5,12 +5,12 @@
 //   ต่อด้วยการ์ด "ส่งคะแนน" (คะแนนรวม/ความเห็น/ปุ่มส่ง) อยู่ด้านล่าง — ให้คะแนนก่อนเห็นปุ่มส่ง
 import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
-  getAttachmentSignedUrl, getMasterData,
-} from '../api.js?v=20260911z9';
-import { t, tf, getLang } from '../i18n.js?v=20260911z9';
-import { navigate } from '../router.js?v=20260911z9';
-import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z9';
-import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z9';
+  getAttachmentSignedUrl, getMasterData, translateTexts,
+} from '../api.js?v=20260911z10';
+import { t, tf, getLang } from '../i18n.js?v=20260911z10';
+import { navigate } from '../router.js?v=20260911z10';
+import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z10';
+import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z10';
 
 export async function render(container, params, session) {
   document.title = `${t('rvs_page_title')} · ${t('appName')}`;
@@ -153,8 +153,10 @@ export async function render(container, params, session) {
 
       <h3 style="margin-top:var(--sp-6)">${t('kzdetail_problem_heading')}</h3>
       <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ProblemDescription || '—')}</p>
+      ${kaizen.ProblemDescription ? translateWidgetHtml('rvs-problem') : ''}
       <h3>${t('kzform_approach_label')}</h3>
       <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ImprovementApproach || '—')}</p>
+      ${kaizen.ImprovementApproach ? translateWidgetHtml('rvs-approach') : ''}
 
       <div class="two-col" style="gap:var(--sp-5);margin-top:var(--sp-6)">
         <div class="card">
@@ -272,6 +274,12 @@ export async function render(container, params, session) {
 
     hydratePhotos();
     renderCriteriaList();
+    if (kaizen.ProblemDescription) {
+      wireTranslateWidget(container, 'rvs-problem', () => [kaizen.ProblemDescription], translateTexts);
+    }
+    if (kaizen.ImprovementApproach) {
+      wireTranslateWidget(container, 'rvs-approach', () => [kaizen.ImprovementApproach], translateTexts);
+    }
 
     document.getElementById('f-overall-comment')?.addEventListener('input', (e) => { state.overallComment = e.target.value; });
     document.getElementById('btn-save-draft')?.addEventListener('click', onSaveDraft);
