@@ -754,6 +754,54 @@ delete from evaluation_periods where code in ('C3TEST-01', 'H3TEST-01', 'H1H2TES
 
 ---
 
+### Round 10 — Dashboard cleanup + kaizenForm mobile redesign (ขั้นตอน/toggle switch/ร่างอัตโนมัติ) (2026-09-16)
+
+**Dashboard/Profile — เก็บงานค้างจาก Round 8 + จัดระยะห่างให้เท่ากันทั้งระบบ:**
+- เอา "โครงการของฉันในรอบนี้" ออกจาก dashboard.js ตามที่ผู้ใช้ขอไว้ตั้งแต่ Round 8 (พักไว้ตอนนั้น) — ลบ `renderRowList()`/`STATUS_LABEL`/`STATUS_VAR_SUFFIX`/`canPropose` และ import ที่ไม่ใช้แล้วทั้งหมด เหลือ "ผลรอบที่ประกาศแล้ว" เป็นบล็อกเดียวเต็มความกว้าง
+- พบว่าระยะห่างหัวข้อ→เนื้อหาไม่เท่ากันข้ามหน้า (บางหน้า 10px บางหน้า 18-36px) — เพิ่ม `.section-head.is-borderless` (dashboard.js/profile.js) และตัด margin/padding ส่วนเกินออกจาก `.step-carousel`/`.wizard.steps` ใน kaizenForm.js ให้ตรงกับ default 18px ทั้งระบบ
+
+**kaizenForm.js — ย้ายปุ่ม "ย้อนกลับ/ไปขั้นถัดไป" ขึ้นไปรวมกับลูกศร/ปัดการ์ดบนแถบขั้นตอนแทน:**
+- ผู้ใช้ตั้งคำถามว่าถ้าตัดปุ่มล่างจอออกจะกระทบอะไร เพราะ scroller ด้านบนก็เลื่อนขั้นได้อยู่แล้ว → ตัดสินใจย้ายความสามารถทั้งหมด (validate ก่อนข้าม/persist ร่าง/ปลดล็อกขั้นถัดไป) เข้าไปที่ลูกศรซ้าย-ขวาของ step-carousel โดยพฤติกรรมเดิมทุกอย่างยังอยู่ครบ (ข้ามขั้นที่ปลดล็อกแล้ว = แค่เลื่อนดู, ข้ามขอบเขตใหม่ = ต้อง validate+persist ก่อน) เหลือแค่ "เก็บร่างไว้ก่อน" อย่างเดียวในแถบล่าง
+- **ปรับ timing**: เดิม DOM เปลี่ยนเนื้อหาทันที (0ms) ก่อนที่การ์ดจะเริ่มเลื่อนเสร็จ (~700-800ms) ทำให้ไม่สัมพันธ์กัน — ผู้ใช้ขอให้รอ animation เลื่อนจบก่อนค่อยเปลี่ยนเนื้อหา (แพทเทิร์นเดียวกับปุ่มสลับภาษาหน้า welcome ใน Round 9) เพิ่ม `animateStepThenCommit()` คุมลำดับนี้โดยเฉพาะ
+- ปุ่ม "ยืนยันส่งโครงการ" (ขั้น 6): ปรับให้หน้าตาเหมือนปุ่ม "Create account" หน้า welcome เป๊ะ (`.btn-block`) — ลองทำเป็นแถบปุ่มลอยติดล่างจอ (`position:fixed`) ก่อน เจอบั๊กปริศนา (การ์ด fixed ยังเลื่อนตามสกอลล์ทั้งที่เช็ค property ที่เกี่ยวข้องทุกตัวใน ancestor แล้วปกติหมด หาสาเหตุ CSS ไม่เจอ) ผู้ใช้ตัดสินใจไม่เอาแบบ fixed เลย ให้เป็นการ์ดปุ่มธรรมดาต่อจากข้อความคำเตือน เลื่อนตามหน้าไปด้วยเหมือนเนื้อหาอื่น — ทำใหม่ตามนี้ (ปัญหา fixed เลยตกไปโดยไม่ต้องหาสาเหตุต่อ) ภายหลังผู้ใช้ขอเอากรอบขาว (`.card`) ที่ครอบปุ่มไว้ออกด้วย เหลือปุ่มลอยเปล่าๆ
+- Step rail: เอาเลขลำดับการ์ด (1-6) ออก เหลือแค่เครื่องหมายถูกตอนกรอกแล้ว, ย้ายไอคอนมาเรียงข้างชื่อขั้น (ไม่ซ้อนบน) กันการ์ดที่มีไอคอนสูงกว่าการ์ดอื่นในแถวเดียวกัน
+
+**Toggle switch แทน chip สำหรับฟิลด์เลือกได้หลายค่า (หมวดปัญหา/ระดับผลกระทบ/สิ่งที่ต้องการสนับสนุน):**
+- ผู้ใช้ส่ง CSS ตัวอย่าง (Uiverse.io by namecho) มาให้ปรับใช้ — เปลี่ยนจาก `.chip` ปุ่มเป็น toggle switch แยกทีละแถวในทั้ง 3 ฟิลด์ ปรับสีจาก `--color-green` เดิม (จริงๆ เป็นสีฟ้า) เป็น `var(--primary)` ของแอป, ห่อด้วย `.card` ตามคำขอถัดมา (ยืนยัน UI ก่อนเริ่มทำตามที่ผู้ใช้ขอ)
+- ทดสอบยืนยันว่า toggle ใช้งานได้จริง ไม่ใช่แค่ UI: เปิด/ปิดถูกต้อง, ค่าสะท้อนกลับไปที่หน้าทบทวน (ขั้น 6) ถูกต้อง, ช่อง "อื่น ๆ" (ระบุหมวดอื่น/ระบุอื่น ๆ) reveal/hide ตามค่า toggle ถูกต้องทั้งคู่
+
+**สร้างร่างอัตโนมัติทันทีตั้งแต่ขั้น 2 (ผู้ใช้รายงานว่าไม่เห็นปุ่ม "เก็บร่างไว้ก่อน" ใน simulator):**
+- เดิม `persist()` รอจนกว่าจะรู้ชื่อโครงการ (title ไม่ว่าง) ถึงจะสร้างแถวจริงใน DB — แปลว่าที่ขั้น 1 และระหว่างกรอกขั้น 2 (ก่อนกด "ถัดไป" สำเร็จ) ยังไม่มี `draft.Id` เลยไม่โชว์แถบ "เก็บร่างไว้ก่อน" เลย — แก้ให้สร้างแถวทันทีตอนกด "ถัดไป" ออกจากขั้น 1 (มี owner/department/plant/project_type ก็พอ ไม่ต้องรอชื่อ)
+- **บั๊กที่เจอระหว่างแก้ (แก้ในรอบเดียวกัน)**: `title` เป็น NOT NULL ในตาราง แต่ `buildPatch()` เดิมแปลงค่าว่าง `''` เป็น `null` ให้ทุกฟิลด์เท่ากันหมด — พอสร้างร่างตั้งแต่ชื่อยังว่าง จะส่ง `title: null` ไปชน constraint ทันที ต้องกันเฉพาะ `Title` ไม่ให้แปลงเป็น null; และ create-branch เดิมทำ `Object.assign(state.draft, created)` ทั้งก้อน ซึ่งพอสร้างร่างตั้งแต่ฟิลด์อื่นยังว่างอยู่ (เช่น `ProblemDescription`) DB จะคืนค่าเป็น `null` กลับมาทับ state ท้องถิ่นจาก `''` เป็น `null` แล้วโค้ดที่เรียก `.trim()` กับฟิลด์เหล่านี้ตอน render ขั้น 2 จะ throw ทันที (หน้าว่างเปล่า) — แก้โดยดึงกลับมาแค่ `Id`/`Status` เหมือน branch update เดิม ไม่ assign ทั้งก้อน — ทดสอบยืนยันด้วยบัญชี employee จริง (test2): กด "ถัดไป" จากขั้น 1 → insert สำเร็จ (`title: ""`) → ปุ่มเก็บร่างโผล่ตั้งแต่ขั้น 2 → กรอกต่อจนจบไม่มี error
+
+**บั๊กเล็กที่เจอระหว่างทำ (ไม่เกี่ยวกับ logic หลัก):** พิมพ์ปิดคอมเมนต์ HTML ผิดเป็น `*/` (สไตล์ JS) แทน `-->` 2 ครั้ง ทำให้ parser ของ browser มองว่าคอมเมนต์ยังไม่ปิด กลืน markup ที่ตามมาทั้งหมดเข้าไปเป็น comment node (element จริงหายไปเงียบๆ ทั้งที่เห็นข้อความใน `.innerHTML`) — แก้ทั้งสองจุดแล้ว
+
+**ไฟล์ที่เปลี่ยน:** `js/views/dashboard.js` (ตัด "โครงการของฉันในรอบนี้"), `js/views/profile.js` (`is-borderless`), `js/views/kaizenForm.js` (รวมปุ่มขั้นเข้ากับ carousel, `animateStepThenCommit()`, toggle switch ×3 ฟิลด์, สร้างร่างอัตโนมัติที่ขั้น 2, `buildPatch()`/`persist()` แก้ null-Title), `css/style.css` (`.section-head.is-borderless`, `.toggle-list`/`.toggle-row`/`.switch*`, ตัด margin เกินของ `.step-carousel`/`.wizard.steps`)
+
+---
+
+### Round 11 — Push ขึ้น GitHub + Deploy จริงบน Netlify + พบบั๊ก RLS-adjacent จากการทดสอบสด (2026-09-17)
+
+**เตรียม repo ก่อน push ขึ้น GitHub org ของบริษัท (`NBD-Health-Care-Company-Limited/KAIZEN-proposal-program`):**
+- ตั้ง `.gitignore`: ไม่เอา `js/config.js`/`.env*`/`.claude/settings.local.json` (มี secret/เป็น local เฉพาะเครื่อง), ไม่เอาไฟล์หนัก 18MB (`KAIZEN Proposal Program.xlsx`), ไม่เอาเอกสารต้นฉบับ stakeholder (`*.xlsx`/`*.docx`) และดีไซน์เดิมที่เลิกใช้/ไม่เกี่ยวข้อง (`docs/*.md`, `apple.design.md`) ตามที่ผู้ใช้เลือกตัดออกให้ repo กระชับ — สรุปกฎไว้ใน `CLAUDE.md` หัวข้อ "Git hygiene" กันงานซ้ำในอนาคต
+- **ตรวจความปลอดภัยก่อน push พบจริง**: Spec.md §4.8 (ย่อหน้าบัญชีทดสอบ) มีรหัสผ่าน 3 บัญชีทดสอบเขียนตรงๆ เป็น plaintext (`pass@1234`/`admin@1234`) — ลบออกจากไฟล์ (เหลือแค่ email+role อ้างอิง, รหัสผ่านเก็บใน Claude memory local แทน) แล้ว **รวม 4 commit แรกเป็น commit เดียว** (ผ่าน orphan branch) ก่อน push จริง กันรหัสผ่านหลงเหลือใน git history แม้จะลบออกจากไฟล์ล่าสุดแล้วก็ตาม — ยืนยันด้วย `git rev-list --objects --all` scan ทุก object ว่าไม่มีรหัสผ่านหลุดอยู่จุดไหนอีก
+
+**เลือก hosting — Vercel → เปลี่ยนเป็น Netlify → ย้าย repo ไป personal account เพื่อ deploy:**
+- เทียบ Vercel/Netlify: ทั้งคู่พอสำหรับ static site ไม่มี build step, ใช้ hash router (`#/...`) เลยไม่ต้องพึ่ง server-side rewrite rule เลย — เลือก Vercel ก่อนเพราะ DX เชื่อมต่อ GitHub org ง่ายกว่า
+- **เจอทีหลังว่า Vercel Hobby (ฟรี) ห้ามใช้เชิงพาณิชย์ตาม ToS จริง** (ระบบนี้เป็นเครื่องมือภายในบริษัท) — Pro คิด ~$20/เดือน/คน ผู้ใช้เลือกเปลี่ยนไป **Netlify** แทน (free tier อนุญาตใช้เชิงพาณิชย์ได้) — สลับ `vercel.json` → `netlify.toml` (build command เดิม เปลี่ยนแค่ config file)
+- **เจอบล็อกที่สองระหว่าง import repo เข้า Netlify**: free tier ของ Netlify เองก็ปฏิเสธ deploy private repo ที่เป็นของ **Organization** (ต้องอัปเกรด Pro เหมือนกัน) แต่ไม่บล็อก private repo ของ **personal account** — แก้โดย push โค้ดชุดเดียวกันไปที่ repo ใหม่ใน personal account (`Seksunw/KAIZEN-proposal-program`) ผ่าน git remote ที่สอง (`deploy`, แยกจาก `origin` ที่ยังเป็น org repo หลัก) แล้ว import repo นี้เข้า Netlify แทน — หลีกเลี่ยงค่าใช้จ่ายได้ทั้งสองชั้น
+- **`js/config.js` เป็นความลับที่ gitignore ไว้ แต่ static host ต้องมีไฟล์นี้ตอน serve** — เพิ่ม `scripts/gen-config.sh` (generate ไฟล์นี้จาก env var `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`MAX_UPLOAD_MB` ตอน build) + `netlify.toml` (`build.command`/`build.publish`) ตั้ง env var ใน Netlify Site configuration — ทดสอบทั้ง success case และ fail-loud case (ลืมตั้ง env var ต้อง error ชัดเจน ไม่ deploy เงียบๆ ด้วย config เพี้ยน) ก่อน push จริง
+- Netlify เปิด "Team protection" (ล็อกทั้ง site ไว้หลัง Netlify login) เป็นค่าเริ่มต้น — ต้องกด "Make public" ที่ระดับ project เดี่ยว (ไม่ใช่ team-wide default ซึ่งมีผลแค่ project ใหม่ในอนาคต) พนักงานจริงถึงจะเข้าเว็บได้โดยไม่ต้องมีบัญชี Netlify
+
+**ทดสอบระบบ end-to-end บน production จริง (สร้างโครงการในบัญชีพนักงาน → ให้คะแนนในบัญชีกรรมการ) — เจอบั๊กจริง 2 เรื่อง:**
+1. ให้คะแนนด้วยบัญชี `test1` ไม่ได้ ชน RLS ของ `committee_scores` ตรงๆ — สาเหตุ: รอบที่เปิดอยู่ตอนนี้ (`KAIZEN SEPTEMBER 2026`) ตั้ง `committee_weights` ไว้แค่ `seksun_wongyang` คนเดียว (100%) `test1` ไม่ได้ถูกผูกเข้ารอบนี้เลย — **ไม่ใช่บั๊ก** เป็นข้อมูล config ของรอบจริง (ผู้ใช้ตัดสินใจไม่แก้ ข้อมูลจริงของบริษัทไม่ควรแตะโดยไม่จำเป็น) เปลี่ยนไปทดสอบด้วย `seksun_wongyang` แทนแล้วผ่านครบ (7/7 เกณฑ์ 25/35)
+2. **บั๊กจริงที่แก้แล้ว**: หน้าคิวตรวจ (`#/review`, `reviewQueue.js`) และหน้าให้คะแนนตรง (`#/review/:id`, `reviewScore.js`) พึ่ง RLS อย่างเดียวเพื่อกรองว่า "โครงการไหนอยู่ในคิวของฉัน" แต่ policy `k_read_feed` (`status <> 'draft'`, เพิ่มไว้ตั้งแต่ Round 7 สำหรับหน้า "โครงการทั้งหมด") ดันอนุญาตให้ **ทุกคนที่ login แล้ว** เห็นแถว `pending_review` ได้ด้วยเหมือนกัน ทำให้ user ที่มี role "committee" แต่ไม่ได้ถูกผูกกับรอบนั้นจริง (กรณี test1 ข้างต้น) ยังเห็นโครงการโผล่ในคิว "ยังไม่ให้คะแนน" อยู่ดี พอกดให้คะแนนถึงไปพังทีหลังด้วย raw RLS error ที่งง — ทั้งสองไฟล์มีข้อมูล `period.CommitteeWeights` พร้อมใช้เช็คอยู่แล้ว (เดิมใช้แค่แสดงผล "น้ำหนักคะแนนของคุณ X%") แค่ไม่เคยใช้เป็นเงื่อนไขกันเข้าคิว — เพิ่มเช็คนี้ทั้ง 2 ไฟล์ โชว์ข้อความ "คุณไม่ได้เป็นกรรมการของรอบนี้" แทนคิวหลอกๆ หรือ error ดิบ ทดสอบยืนยันทั้ง local + production จริง (deploy ผ่าน Netlify auto-deploy จาก push เข้า `deploy` remote) ว่าไม่กระทบ regression ของบัญชีที่ถูกผูกจริง (`seksun_wongyang` ยังเห็นคิวปกติ 2/2 เหมือนเดิม)
+- ลบโครงการทดสอบทิ้งหลังยืนยันผ่านครบ (DB row + attachment record cascade) เหลือไฟล์รูปทดสอบ 1 ไฟล์ค้างใน Storage bucket (ลบไม่ได้ 403 เพราะ RLS ของ storage คนละชุดกับ table — ไฟล์เล็ก ไม่กระทบอะไร)
+
+**ไฟล์ที่เปลี่ยน:** `.gitignore`, `CLAUDE.md` (หัวข้อ "Git hygiene" + "Deploying (Netlify)"), `netlify.toml` (ใหม่, แทนที่ `vercel.json` ที่ลบไป), `scripts/gen-config.sh` (ใหม่), `js/views/reviewQueue.js`/`js/views/reviewScore.js` (เพิ่มเช็ค `weightPct === null` กันเข้าคิว/ให้คะแนนถ้าไม่ได้เป็นกรรมการของรอบนั้นจริง)
+
+---
+
 ## 5. Data Contract — interface ระหว่าง component
 
 หลักการ: **DB คือ source of truth ของ shape ข้อมูล** (`snake_case`) ฝั่ง UI ใช้ `PascalCase` เสมอ — ห้ามฝั่งใดฝั่งหนึ่งอ่าน field name ของอีกฝั่งตรง ๆ ทุกการแปลงต้องผ่าน `js/api.js`
