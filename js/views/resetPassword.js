@@ -70,7 +70,10 @@ export async function render(container, params, session) {
             <div id="reset-error"></div>
             <button type="submit" class="btn-block" id="btn-submit">${t('reset_submit')}</button>
           </form>
-          <div id="reset-success" hidden><div class="success">${t('reset_success')}</div></div>
+          <div id="reset-success" hidden>
+            <div class="success">${t('reset_success')}</div>
+            <button type="button" class="btn-block" id="btn-reset-continue" style="margin-top:var(--sp-4)">${t('forgot_back_login')}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -117,7 +120,7 @@ export async function render(container, params, session) {
       form.hidden = true;
       successBox.hidden = false;
       await signOut();
-      setTimeout(() => navigate('#/login'), 2000);
+      document.getElementById('btn-reset-continue').addEventListener('click', () => navigate('#/login'));
     } catch (err) {
       errorBox.innerHTML = `<div class="error">${escapeHtml(translateError(err.message) || err.message || t('common_error_generic'))}</div>`;
       btn.disabled = false; btn.textContent = t('reset_submit');

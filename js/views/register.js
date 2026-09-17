@@ -95,7 +95,10 @@ export async function render(container) {
             <div id="register-error"></div>
             <button type="submit" class="btn-block">${t('register_submit')}</button>
           </form>
-          <div id="register-success" hidden><div class="success">${t('register_success')}</div></div>
+          <div id="register-success" hidden>
+            <div class="success">${t('register_success')}</div>
+            <button type="button" class="btn-block" id="btn-register-continue" style="margin-top:var(--sp-4)">${t('forgot_back_login')}</button>
+          </div>
           <div class="divider"></div>
           <p>${t('register_has_account')} <a href="#/login">${t('register_login_link')}</a></p>
         </div>
@@ -175,7 +178,7 @@ export async function render(container) {
       }
       form.hidden = true;
       successBox.hidden = false;
-      setTimeout(() => navigate('#/login'), 2500);
+      document.getElementById('btn-register-continue').addEventListener('click', () => navigate('#/login'));
     } catch (err) {
       // ★ ข้อความ error จาก unique constraint (email/employee_id ซ้ำ) เดิมโชว์ดิบๆ ตรงๆ เช่น
       // "duplicate key value violates unique constraint profiles_email_key" — ต่างข้อความกัน
