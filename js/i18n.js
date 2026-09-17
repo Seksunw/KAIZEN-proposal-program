@@ -532,6 +532,11 @@ const DICT = {
     kf_all_periods: 'ทุกรอบ',
     kf_like_aria: 'ถูกใจ',
     kf_problem_prefix: 'ปัญหา:',
+
+    // ---- login.js ----
+    login_brand_line: 'ระบบเสนอและประเมินโครงการ KAIZEN สำหรับพนักงาน Suntory Wellness',
+    login_sub: 'เข้าสู่ระบบด้วยอีเมลที่ Admin เปิดใช้งานให้',
+    login_pending_activation_hint: 'สมัครแล้วต้องรอผู้ดูแลระบบเปิดใช้งานบัญชีก่อนจึงจะเข้าสู่ระบบได้',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1065,6 +1070,11 @@ const DICT = {
     kf_all_periods: 'All periods',
     kf_like_aria: 'Like',
     kf_problem_prefix: 'Problem:',
+
+    // ---- login.js ----
+    login_brand_line: 'The system for submitting and evaluating KAIZEN projects, for Suntory Wellness employees',
+    login_sub: 'Sign in with the email an admin activated for you',
+    login_pending_activation_hint: "After registering, an admin needs to activate your account before you can sign in",
   },
 };
 

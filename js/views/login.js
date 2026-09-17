@@ -11,14 +11,14 @@ export async function render(container) {
       <div class="auth-brand">
         <img src="assets/suntory-wellness.jpg" alt="Suntory Wellness" />
         <div class="brand-sub">KAIZEN PROGRAM</div>
-        <p class="brand-line">ระบบเสนอและประเมินโครงการ KAIZEN สำหรับพนักงาน Suntory Wellness</p>
-        <p class="muted" style="font-size:12.8px;margin-top:var(--sp-5)">ตัดสินจาก 7 เกณฑ์</p>
+        <p class="brand-line">${t('login_brand_line')}</p>
+        <p class="muted" style="font-size:12.8px;margin-top:var(--sp-5)">${t('auth_criteria_label')}</p>
         ${criteriaTags(getLang())}
       </div>
       <div class="auth-form-wrap">
         <div class="auth-card">
           <h1>${t('login_title')}</h1>
-          <p class="auth-sub">เข้าสู่ระบบด้วยอีเมลที่ Admin เปิดใช้งานให้</p>
+          <p class="auth-sub">${t('login_sub')}</p>
           <form id="login-form">
             <div class="form-control">
               <input type="email" name="email" id="f-email" required autocomplete="email" placeholder=" " />
@@ -34,7 +34,7 @@ export async function render(container) {
           </form>
           <div class="divider"></div>
           <p>${t('login_no_account')} <a href="#/register">${t('login_register_link')}</a></p>
-          <p class="field-hint">สมัครแล้วต้องรอผู้ดูแลระบบเปิดใช้งานบัญชีก่อนจึงจะเข้าสู่ระบบได้</p>
+          <p class="field-hint">${t('login_pending_activation_hint')}</p>
         </div>
       </div>
     </div>
