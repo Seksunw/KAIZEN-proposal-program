@@ -784,7 +784,7 @@ delete from evaluation_periods where code in ('C3TEST-01', 'H3TEST-01', 'H1H2TES
 
 **เตรียม repo ก่อน push ขึ้น GitHub org ของบริษัท (`NBD-Health-Care-Company-Limited/KAIZEN-proposal-program`):**
 - ตั้ง `.gitignore`: ไม่เอา `js/config.js`/`.env*`/`.claude/settings.local.json` (มี secret/เป็น local เฉพาะเครื่อง), ไม่เอาไฟล์หนัก 18MB (`KAIZEN Proposal Program.xlsx`), ไม่เอาเอกสารต้นฉบับ stakeholder (`*.xlsx`/`*.docx`) และดีไซน์เดิมที่เลิกใช้/ไม่เกี่ยวข้อง (`docs/*.md`, `apple.design.md`) ตามที่ผู้ใช้เลือกตัดออกให้ repo กระชับ — สรุปกฎไว้ใน `CLAUDE.md` หัวข้อ "Git hygiene" กันงานซ้ำในอนาคต
-- **ตรวจความปลอดภัยก่อน push พบจริง**: Spec.md §4.8 (ย่อหน้าบัญชีทดสอบ) มีรหัสผ่าน 3 บัญชีทดสอบเขียนตรงๆ เป็น plaintext (`pass@1234`/`admin@1234`) — ลบออกจากไฟล์ (เหลือแค่ email+role อ้างอิง, รหัสผ่านเก็บใน Claude memory local แทน) แล้ว **รวม 4 commit แรกเป็น commit เดียว** (ผ่าน orphan branch) ก่อน push จริง กันรหัสผ่านหลงเหลือใน git history แม้จะลบออกจากไฟล์ล่าสุดแล้วก็ตาม — ยืนยันด้วย `git rev-list --objects --all` scan ทุก object ว่าไม่มีรหัสผ่านหลุดอยู่จุดไหนอีก
+- **ตรวจความปลอดภัยก่อน push พบจริง**: Spec.md §4.8 (ย่อหน้าบัญชีทดสอบ) มีรหัสผ่าน 3 บัญชีทดสอบเขียนตรงๆ เป็น plaintext — ลบออกจากไฟล์ (เหลือแค่ email+role อ้างอิง, รหัสผ่านเก็บใน Claude memory local แทน) แล้ว **รวม 4 commit แรกเป็น commit เดียว** (ผ่าน orphan branch) ก่อน push จริง กันรหัสผ่านหลงเหลือใน git history แม้จะลบออกจากไฟล์ล่าสุดแล้วก็ตาม — ยืนยันด้วย `git rev-list --objects --all` scan ทุก object ว่าไม่มีรหัสผ่านหลุดอยู่จุดไหนอีก (2026-09-17 พบว่าย่อหน้านี้เอง**ยังอ้างค่ารหัสผ่านจริงซ้ำอีกรอบ**ตอนอธิบายสิ่งที่ลบไป — แก้ไขออกแล้วในการแก้ไขครั้งนี้)
 
 **เลือก hosting — Vercel → เปลี่ยนเป็น Netlify → ย้าย repo ไป personal account เพื่อ deploy:**
 - เทียบ Vercel/Netlify: ทั้งคู่พอสำหรับ static site ไม่มี build step, ใช้ hash router (`#/...`) เลยไม่ต้องพึ่ง server-side rewrite rule เลย — เลือก Vercel ก่อนเพราะ DX เชื่อมต่อ GitHub org ง่ายกว่า
@@ -873,6 +873,44 @@ delete from evaluation_periods where code in ('C3TEST-01', 'H3TEST-01', 'H1H2TES
 **ยังไม่ทำ:** ยังไม่ push ไป `origin`/`deploy` สำหรับงานรอบนี้ (รอคำสั่งชัดเจนตามกติกาเดิม)
 
 **ไฟล์ที่เปลี่ยน:** `js/i18n.js` (คีย์ใหม่รวม ~230 คีย์ ทั้ง th/en), `js/app.js` (renderChrome() ตั้งค่า static chrome ใหม่), `index.html` (ลบ Thai attribute/text ออกจาก mobile-drawer, bump app.js tag), 13 ไฟล์ `js/views/*.js` ตามรายชื่อด้านบน — bump shared version tag `20260911z7`→`20260911z8` ทุกไฟล์
+
+---
+
+### Round 15 — บั๊ก password recovery จริง (2 ชั้น), UX ปุ่ม success screen, ฟีเจอร์แปลภาษาเนื้อหา KAIZEN (2026-09-17)
+
+**1) บั๊กจริง: ลิงก์ "ลืมรหัสผ่าน" พาไป `#/dashboard` แทน `#/reset-password`**
+
+พบจากผู้ใช้ทดสอบสดจริง (ไม่ใช่จากการไล่โค้ดอ่านเฉยๆ) — ตั้งค่า Supabase Dashboard ก่อนหน้านี้ (Site URL/Redirect URLs ยังเป็น `localhost:3000` ค่า default ทำให้ลิงก์พัง) แก้ไปแล้วเป็นค่าจริงของโปรเจกต์ (`https://kaizen-proposal-program.netlify.app` + `http://localhost:8123/*` ใน allowlist) หลังจากนั้นลิงก์ verify ทำงานถูกต้องระดับ Supabase แต่แอปเองยังพาไปหน้าผิด
+
+**สาเหตุจริง (ยืนยันด้วยการเปิดลิงก์จริงจากบัญชีผู้ใช้เองซ้ำหลายรอบ ไม่ใช่เดา):**
+- `app.js`'s `onAuthStateChange` handler เดิมพึ่ง event `'PASSWORD_RECOVERY'` เพียงอย่างเดียวเพื่อ `navigate('#/reset-password')` — event นี้ยิงมาถึงจริง (ยืนยันจาก `sessionStorage` flag ถูกตั้งค่าถูกต้อง) แต่ยิงมา**ช้ากว่า** `router.js`'s bootstrap logic ("hash ว่าง → เด้งไป `#/dashboard` ตาม session") เพราะ Supabase เคลียร์ `#access_token=...&type=recovery` ออกจาก hash เหลือค่าว่างก่อน event จะยิงมาถึง — แพ้ race ครั้งแรก
+- แก้ชั้นที่ 1: เช็ค `location.hash.includes('type=recovery')` แบบ synchronous ตั้งแต่ต้น `bootstrap()` (เหมือน pattern `#error=` ที่มีอยู่แล้ว) ตั้ง flag + set hash เป็น `#/reset-password` ทันที — **ทดสอบซ้ำด้วยลิงก์จริงอีกรอบ ยังพังอยู่** เพราะ Supabase เคลียร์ hash เป็นค่าว่าง**อีกครั้ง**ทีหลัง (ตอนประมวลผล token เสร็จจริง ซึ่งช้ากว่า) เขียนทับค่าที่เพิ่งตั้งไปแล้ว
+- แก้ชั้นที่ 2: `router.js`'s "hash ว่าง" branch เช็ค `sessionStorage` flag เดียวกันนี้ก่อนเสมอ ถ้ามี flag ให้ไป `#/reset-password` แทนที่จะใช้ default เดิม — กันไม่ว่า hash จะโดนเคลียร์กี่รอบก็ตาม
+- **ทดสอบยืนยันสำเร็จ:** เปิดลิงก์ recovery จริงจากอีเมลจริง (บัญชี admin) ครบ full cycle — ตั้งรหัสผ่านใหม่ (ค่าที่รู้แน่ชัด ไม่บันทึกไว้ในเอกสารนี้) แล้ว login ด้วยรหัสนั้นทันที เข้า dashboard สำเร็จ พิสูจน์ว่า flow reset→login ทำงานถูกต้อง 100% (ผู้ใช้เจอ "login ไม่ได้" ตอนแรกเป็นเพราะพิมพ์รหัสตอน login ไม่ตรงกับตอนตั้ง ไม่ใช่บั๊ก — ยืนยันแยกจากการทดสอบซ้ำด้วยรหัสที่รู้ค่าแน่ชัด)
+
+**2) UX: success screen เด้งไป `#/login` เร็วเกินจะทันอ่าน**
+
+`register.js`/`resetPassword.js` ทั้งคู่ใช้ `setTimeout(..., 2000-2500)` auto-redirect หลังสำเร็จ — สั้นเกินไปจนพลาดดูข้อความสำเร็จ (เจอจริงทั้งจากผู้ใช้และตอนผมทดสอบเองก็พลาดดูไม่ทันเหมือนกัน) แก้โดยตัด timer ออก เปลี่ยนเป็นปุ่ม "กลับไปหน้าเข้าสู่ระบบ" (reuse คีย์ `forgot_back_login` เดิม) ให้กดเองแทน — ทดสอบด้วยการสมัครสมาชิกจริง (throwaway account) ยืนยันข้อความ+ปุ่มค้างอยู่จนกว่าจะกด ไม่เด้งหนีเอง
+
+**3) ฟีเจอร์ใหม่: ปุ่ม "แปลเป็นอังกฤษ" สำหรับเนื้อหา KAIZEN ภาษาไทย**
+
+**ปัญหา:** พนักงานกรอก `ProblemDescription`/`ImprovementApproach` เป็นภาษาไทยเสมอ (ต่างจาก dropdown หมวดหมู่/ระดับผลกระทบที่มี label EN อยู่แล้วจาก seed data) กรรมการที่อ่านไทยไม่ออกเข้าใจเนื้อหาไม่ได้ — ผู้ใช้ขอให้เสนอ 3 แนวทาง (แปลอัตโนมัติผ่าน API / เพิ่มช่องกรอก EN คู่ตอนส่ง / ใช้ฟีเจอร์แปลในตัวเบราว์เซอร์) **เลือกแนวทางที่ 1**
+
+**Infra ใหม่ (ครั้งแรกที่โปรเจกต์นี้มี backend ของตัวเอง — เดิม 100% static):**
+- `netlify/functions/translate.js` (ใหม่) — proxy ไป Google Cloud Translation API v2 อ่าน `GOOGLE_TRANSLATE_API_KEY` จาก Netlify environment variable (ตั้งเป็น sensitive value) เท่านั้น ไม่เคยส่งไปถึง browser — key ถูก restrict ไว้ที่ Google Cloud Console ให้ใช้ได้แค่ Cloud Translation API เท่านั้น (Application restrictions = None เพราะเรียกจาก server-side ไม่มี referrer/IP คงที่ให้ผูก) ป้องกันด้วย 2 ชั้น: key restriction + เก็บเป็นความลับฝั่ง server
+- `netlify.toml` เพิ่ม `[functions] directory = "netlify/functions"`
+- `js/api.js`'s `translateTexts(texts, target)` — POST ไป `/.netlify/functions/translate` — **ทำงานได้เฉพาะบน Netlify จริงเท่านั้น** รันผ่าน `python3 -m http.server` (dev ปกติของโปรเจกต์) endpoint นี้จะ 404 เสมอ (ข้อจำกัดที่ยอมรับได้ เพราะ dev คนอื่นยังทดสอบ UI/logic ส่วนที่เหลือได้ปกติ)
+- `js/ui.js`'s `translateWidgetHtml(id)`/`wireTranslateWidget(container, id, getTexts, translateFn)` — widget กลางใช้ร่วมกัน 2 จุด, `translateFn` รับมาจากผู้เรียก (เหมือน pattern `hydrateAvatars()`'s `getSignedUrl` ที่มีอยู่แล้ว) กัน `ui.js` ผูกกับ `api.js` ตรงๆ — label เป็น local `{th,en}` object (pattern เดียวกับ `ROLE_LABELS`) ไม่ใช้ `i18n.js` เพราะแปลเนื้อหาที่ผู้ใช้กรอก ไม่ใช่ข้อความคงที่ของ UI
+- `kaizenDetail.js`/`reviewScore.js` — เพิ่มปุ่มใต้ Problem/Approach แต่ละช่อง (เฉพาะตอนมีข้อความ)
+- **เงื่อนไขเพิ่มทีหลัง (ผู้ใช้ขอ):** ปุ่มโชว์**เฉพาะตอนตั้งค่าแอปเป็น EN เท่านั้น** กันกดเล่น/เปลืองโควต้าโดยไม่จำเป็น (คนอ่านไทยได้ไม่มีเหตุผลต้องแปล) — แก้จุดเดียวที่ `translateWidgetHtml()` คืนค่าว่างถ้า `getLang() !== 'en'`
+
+**ทดสอบยืนยันครบวงจร:** (1) `curl` ตรงเข้า Netlify Function จริง แปลประโยคไทยจริงถูกต้อง (2) login ด้วยบัญชีกรรมการจริงบน production กดปุ่มบนหน้ารายละเอียด KAIZEN จริง ได้ผลแปลถูกต้อง ไม่มี console error ปุ่มซ่อนตัวเองหลังกด (3) เช็ค label ปุ่มถูกต้องทั้ง TH/EN (4) หลังเพิ่มเงื่อนไข EN-only เช็ค local ยืนยัน TH mode = 0 ปุ่ม, EN mode = โผล่ครบ 2 ปุ่มพร้อม label ถูกต้อง
+
+**การตัดสินใจที่เกี่ยวข้อง (ไม่ทำ):** ผู้ใช้ถามเรื่องแก้ไขชื่อ/รหัสพนักงานเองได้ในหน้า Profile — เช็คโค้ดพบว่า `FullName` แก้เองได้อยู่แล้ว (ไม่มีอะไรกัน) แต่ `EmployeeId` มี DB trigger `guard_profile_fields()` บล็อกไว้ชัดเจน (raise exception ถ้าไม่ใช่ admin) เป็น business rule ตั้งใจแต่แรก — **ตัดสินใจไม่แก้อะไรในส่วนนี้** ผู้ใช้จะใช้วิธีปิด trigger ชั่วคราวผ่าน Supabase SQL Editor เองเป็นครั้งคราวแทนถ้าจำเป็น (หมายเหตุสำคัญที่อธิบายไปแล้ว: SQL Editor รันแบบไม่มี `auth.uid()` context จึงโดน trigger บล็อกเหมือนกันถ้าไม่ปิด trigger ก่อน)
+
+**ไฟล์ที่เปลี่ยน:** `js/app.js` (recovery hash check ต้น bootstrap), `js/router.js` (recovery flag check ใน "hash ว่าง" branch), `js/views/register.js`/`resetPassword.js` (ปุ่มแทน timer), `netlify.toml` + `netlify/functions/translate.js` (ใหม่), `js/api.js` (`translateTexts`), `js/ui.js` (translate widget + EN-only gate), `js/views/kaizenDetail.js`/`reviewScore.js` (ใช้ widget) — bump shared version tag `20260911z8`→`z9`→`z10` ตามรอบที่แก้ (ui.js/router.js/api.js เปลี่ยนหลายครั้ง), `index.html`'s `js/app.js?v=` bump `l`→`m`→`n` ตามลำดับ
+
+**Push:** ทุก commit รอบนี้ push ขึ้นทั้ง `deploy` (personal, Netlify source) และ `origin` (บริษัท) แล้ว ตามคำสั่งชัดเจนของผู้ใช้ทุกครั้ง
 
 ---
 
