@@ -39,6 +39,23 @@ repo. Don't re-add these unless the user explicitly asks.
 **Commit:** everything under `js/`, `css/`, `assets/`, `supabase/*.sql`, `index.html`, `CLAUDE.md`,
 `Spec.md`, `.claude/settings.json` (project-scope, no secrets), `js/config.js.example`.
 
+## Deploying (Vercel, decided 2026-09-17)
+
+Hosted on Vercel — a plain static site (no build step for local dev, see below), but Vercel *does*
+run one build step in production solely to materialize `js/config.js` (gitignored, see above) from
+env vars, since there's no other way to get real secrets onto a static host without committing them.
+
+`vercel.json` sets `buildCommand: bash scripts/gen-config.sh` (writes `js/config.js` from
+`SUPABASE_URL`/`SUPABASE_ANON_KEY`/`MAX_UPLOAD_MB` env vars — see that script), `installCommand: true`
+(no `package.json`, nothing to install), and `outputDirectory: .` (serve the repo root as-is).
+
+**One-time project setup on vercel.com:** import the `NBD-Health-Care-Company-Limited/
+KAIZEN-proposal-program` GitHub repo → Framework Preset "Other" → in Project Settings →
+Environment Variables, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` (same values as a local
+`js/config.js`; `MAX_UPLOAD_MB` optional, defaults to 20) for Production/Preview/Development →
+deploy. No routing rewrites needed — `js/router.js` is a hash router (`#/...`), so there's nothing
+after `#` for the server to ever see.
+
 ## Running locally
 
 There is no build step, bundler, package.json, or npm scripts — this is plain HTML/CSS/JS.
