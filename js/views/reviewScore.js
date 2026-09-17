@@ -7,13 +7,13 @@ import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
   getAttachmentSignedUrl, getMasterData,
 } from '../api.js?v=20260911z7';
-import { t, getLang } from '../i18n.js?v=20260911z7';
+import { t, tf, getLang } from '../i18n.js?v=20260911z7';
 import { navigate } from '../router.js?v=20260911z7';
 import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z7';
 import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z7';
 
 export async function render(container, params, session) {
-  document.title = `ให้คะแนน KAIZEN · ${t('appName')}`;
+  document.title = `${t('rvs_page_title')} · ${t('appName')}`;
   container.innerHTML = `<div class="page-body"><p>${t('common_loading')}</p></div>`;
 
   let kaizen;
@@ -34,12 +34,12 @@ export async function render(container, params, session) {
   // getOrCreateMyScore() เพื่อไม่ให้สร้างแถว committee_scores ค้างไว้เปล่าๆ สำหรับโครงการตัวเอง
   if (kaizen.OwnerId === session.user.id) {
     container.innerHTML = `
-      ${pageHeader({ title: 'ให้คะแนน KAIZEN' })}
+      ${pageHeader({ title: t('rvs_page_title') })}
       <div class="page-body">${stateCard({
         kind: 'warning',
-        title: 'ให้คะแนนโครงการของตัวเองไม่ได้',
-        body: `"${escapeHtml(kaizen.Title)}" เป็นโครงการที่คุณเป็นเจ้าของ — กรรมการให้คะแนนโครงการของตัวเองไม่ได้ เพื่อความยุติธรรมในการตัดสิน`,
-        actions: '<a href="#/review"><button type="button" class="secondary">กลับไปคิวตรวจ</button></a>',
+        title: t('rq_cannot_score_title'),
+        body: escapeHtml(tf('rvs_own_project_body', { title: kaizen.Title })),
+        actions: `<a href="#/review"><button type="button" class="secondary">${t('rvs_back_to_queue')}</button></a>`,
       })}</div>
     `;
     return;
@@ -53,12 +53,12 @@ export async function render(container, params, session) {
   // ด้วยข้อความที่อ่านออกแทน error ดิบจาก DB
   if (!period || period.CommitteeWeights?.[session.user.id] == null) {
     container.innerHTML = `
-      ${pageHeader({ title: 'ให้คะแนน KAIZEN' })}
+      ${pageHeader({ title: t('rvs_page_title') })}
       <div class="page-body">${stateCard({
         kind: 'warning',
-        title: 'คุณไม่ได้เป็นกรรมการของรอบนี้',
-        body: 'Admin ยังไม่ได้กำหนดให้คุณเป็นกรรมการของรอบประเมินนี้ — ติดต่อ Admin ถ้าควรได้รับสิทธิ์ให้คะแนนในรอบนี้',
-        actions: '<a href="#/review"><button type="button" class="secondary">กลับไปคิวตรวจ</button></a>',
+        title: t('rq_not_committee_title'),
+        body: t('rq_not_committee_body'),
+        actions: `<a href="#/review"><button type="button" class="secondary">${t('rvs_back_to_queue')}</button></a>`,
       })}</div>
     `;
     return;
@@ -132,7 +132,7 @@ export async function render(container, params, session) {
     return `
       <div>
         <div class="photo-slot" data-photo-slot="${phase}">
-          ${attachment ? '<img alt="" />' : 'ยังไม่มีรูป'}
+          ${attachment ? '<img alt="" />' : t('kzdetail_no_photo')}
         </div>
         <div class="photo-caption">
           <span class="phase ${isAfter ? 'is-after' : ''}">${label}</span>
@@ -144,38 +144,38 @@ export async function render(container, params, session) {
 
   function renderProjectDetail() {
     return `
-      ${!kaizen.IsCompleted ? `<div class="warning" style="margin-bottom:16px">โครงการนี้ยังไม่เสร็จ (อยู่ระหว่างดำเนินการ) — ให้คะแนนจากข้อมูล ณ ตอนนี้ได้เลย เจ้าของโครงการจะยังตามอัปเดตความคืบหน้าต่อได้</div>` : ''}
+      ${!kaizen.IsCompleted ? `<div class="warning" style="margin-bottom:16px">${t('rvs_in_progress_notice')}</div>` : ''}
       <div class="photo-pair">
-        ${photoSlotHtml(beforePhoto, 'ก่อนทำ', false)}
-        ${photoSlotHtml(afterPhoto, 'หลังทำ', true)}
+        ${photoSlotHtml(beforePhoto, t('kzdetail_before'), false)}
+        ${photoSlotHtml(afterPhoto, t('kzdetail_after'), true)}
       </div>
       ${otherPhotos.length > 0 ? `<div class="attach-grid" style="margin-top:var(--sp-2)" id="other-photos"></div>` : ''}
 
-      <h3 style="margin-top:var(--sp-6)">ปัญหา</h3>
+      <h3 style="margin-top:var(--sp-6)">${t('kzdetail_problem_heading')}</h3>
       <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ProblemDescription || '—')}</p>
-      <h3>แนวทางการปรับปรุง</h3>
+      <h3>${t('kzform_approach_label')}</h3>
       <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ImprovementApproach || '—')}</p>
 
       <div class="two-col" style="gap:var(--sp-5);margin-top:var(--sp-6)">
         <div class="card">
-          <h2 style="margin-bottom:var(--sp-2)">ผลที่วัดได้</h2>
+          <h2 style="margin-bottom:var(--sp-2)">${t('kzdetail_measured_results')}</h2>
           ${Number(kaizen.CostSavingPerMonth) > 0 ? `
             <div class="metric is-lg">${Number(kaizen.CostSavingPerMonth).toLocaleString('th-TH')}</div>
-            <p class="muted" style="margin:2px 0 0">บาท/เดือน${kaizen.CostSavingRank ? ` · Cost-saving rank ${kaizen.CostSavingRank}` : ''}</p>
-          ` : '<p class="muted" style="margin:0">ยังไม่มีข้อมูล Cost saving</p>'}
+            <p class="muted" style="margin:2px 0 0">${t('kzdetail_baht_per_month')}${kaizen.CostSavingRank ? ` · Cost-saving rank ${kaizen.CostSavingRank}` : ''}</p>
+          ` : `<p class="muted" style="margin:0">${t('kzdetail_no_cost_saving_data')}</p>`}
         </div>
         <div class="card">
           <dl class="def-grid">
-            <dt>งบประมาณ</dt><dd>${kaizen.BudgetBand ? escapeHtml(labelOf(budgetBands, kaizen.BudgetBand)) : '—'}</dd>
-            <dt>วันเริ่ม</dt><dd>${kaizen.StartDate ? thaiDate(kaizen.StartDate) : '—'}</dd>
-            <dt>วันเสร็จ</dt><dd>${kaizen.CompletionDate ? thaiDate(kaizen.CompletionDate) : '—'}</dd>
+            <dt>${t('kzform_budget_label')}</dt><dd>${kaizen.BudgetBand ? escapeHtml(labelOf(budgetBands, kaizen.BudgetBand)) : '—'}</dd>
+            <dt>${t('kzform_start_date')}</dt><dd>${kaizen.StartDate ? thaiDate(kaizen.StartDate) : '—'}</dd>
+            <dt>${t('kzform_completion_date')}</dt><dd>${kaizen.CompletionDate ? thaiDate(kaizen.CompletionDate) : '—'}</dd>
           </dl>
         </div>
       </div>
 
       ${kaizen.ProjectType === 'group' && (kaizen.TeamMembers ?? []).length > 0 ? `
         <div class="card" style="margin-top:var(--sp-6)">
-          <h2 style="margin-bottom:var(--sp-2)">ทีมงาน</h2>
+          <h2 style="margin-bottom:var(--sp-2)">${t('kzdetail_team_heading')}</h2>
           <div class="stack is-tight">
             ${kaizen.TeamMembers.map((m) => `
               <div class="hstack">
@@ -228,15 +228,15 @@ export async function render(container, params, session) {
       })}
       <div class="page-body">
         ${state.isLocked
-          ? '<div class="warning" style="margin-bottom:16px">รอบนี้ปิดแล้ว — คะแนนที่ส่งไว้ถูกล็อก แก้ไขไม่ได้อีก</div>'
-          : (state.isSubmitted ? '<div class="note" style="margin-bottom:16px">คุณส่งคะแนนนี้ไปแล้ว — ยังแก้ไขต่อได้จนกว่ารอบนี้จะปิด</div>' : '')}
+          ? `<div class="warning" style="margin-bottom:16px">${t('rvs_period_locked_notice')}</div>`
+          : (state.isSubmitted ? `<div class="note" style="margin-bottom:16px">${t('rvs_already_submitted_note')}</div>` : '')}
         <div class="detail-cols">
           <div>
             ${renderProjectDetail()}
           </div>
 
           <div class="score-rail">
-            <h3 style="margin-top:0">ให้คะแนน 7 เกณฑ์</h3>
+            <h3 style="margin-top:0">${t('rq_score_btn')}</h3>
             <div class="panel is-flush">
               <div class="criteria-list" id="criteria-list"></div>
             </div>
@@ -244,24 +244,24 @@ export async function render(container, params, session) {
             <div class="card" style="margin-top:var(--sp-5)">
               <div class="metric is-xl">${rawSum}<span class="muted" style="font-size:15px;font-weight:400"> / ${MAX_TOTAL_SCORE}</span></div>
               <div class="bar" style="margin-top:var(--sp-2)"><i style="width:${(rawSum / MAX_TOTAL_SCORE) * 100}%"></i></div>
-              <p class="muted" style="font-size:13px;margin:8px 0 0">${allDone ? 'ให้คะแนนครบ 7 เกณฑ์แล้ว' : `ให้ครบ ${doneCount} จาก 7 เกณฑ์ · เหลืออีก ${CRITERIA.length - doneCount} เกณฑ์จึงส่งได้`}</p>
-              ${weightPct !== null ? `<p class="muted" style="font-size:13px;margin:4px 0 0">น้ำหนักคะแนนของคุณ ${weightPct}%</p>` : ''}
-              <label style="margin-top:var(--sp-4)">ความเห็นโดยรวม
+              <p class="muted" style="font-size:13px;margin:8px 0 0">${allDone ? t('rvs_all_criteria_done') : escapeHtml(tf('rvs_criteria_progress', { done: doneCount, remaining: CRITERIA.length - doneCount }))}</p>
+              ${weightPct !== null ? `<p class="muted" style="font-size:13px;margin:4px 0 0">${escapeHtml(tf('rq_weight_label', { pct: weightPct }))}</p>` : ''}
+              <label style="margin-top:var(--sp-4)">${t('rvs_overall_comment_label')}
                 <textarea id="f-overall-comment" rows="3" ${state.isLocked ? 'disabled' : ''}>${escapeHtml(state.overallComment)}</textarea>
               </label>
               <div id="score-error"></div>
               ${!state.isLocked ? `
                 <div class="stack is-tight" style="margin-top:var(--sp-5)">
                   ${!state.isSubmitted ? `
-                    <button type="button" id="btn-submit-score" ${state.saving || !allDone ? 'disabled' : ''}>${state.saving ? t('common_loading') : (allDone ? 'ส่งคะแนน' : `ส่งคะแนน — ยังขาด ${CRITERIA.length - doneCount} เกณฑ์`)}</button>
-                    <button type="button" id="btn-save-draft" class="ghost" ${state.saving ? 'disabled' : ''}>เก็บร่างไว้ก่อน</button>
-                    <p class="muted" style="font-size:12px;margin:4px 0 0">ส่งแล้วยังแก้ไขต่อได้จนกว่ารอบนี้จะปิด</p>
+                    <button type="button" id="btn-submit-score" ${state.saving || !allDone ? 'disabled' : ''}>${state.saving ? t('common_loading') : (allDone ? t('rvs_submit_score_btn') : escapeHtml(tf('rvs_submit_score_missing', { n: CRITERIA.length - doneCount })))}</button>
+                    <button type="button" id="btn-save-draft" class="ghost" ${state.saving ? 'disabled' : ''}>${t('kzform_save_draft')}</button>
+                    <p class="muted" style="font-size:12px;margin:4px 0 0">${t('rvs_can_still_edit_note')}</p>
                   ` : `
-                    <button type="button" id="btn-save-draft" ${state.saving || !allDone ? 'disabled' : ''}>${state.saving ? t('common_loading') : 'บันทึกการแก้ไขคะแนน'}</button>
-                    <a href="#/review" style="display:block;margin-top:var(--sp-2)">กลับไปคิวตรวจให้คะแนน</a>
+                    <button type="button" id="btn-save-draft" ${state.saving || !allDone ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('rvs_save_score_edit_btn')}</button>
+                    <a href="#/review" style="display:block;margin-top:var(--sp-2)">${t('rvs_back_to_review_queue_long')}</a>
                   `}
                 </div>
-              ` : `<a href="#/review" style="display:block;margin-top:var(--sp-4)">กลับไปคิวตรวจให้คะแนน</a>`}
+              ` : `<a href="#/review" style="display:block;margin-top:var(--sp-4)">${t('rvs_back_to_review_queue_long')}</a>`}
             </div>
           </div>
         </div>
@@ -305,7 +305,7 @@ export async function render(container, params, session) {
             `).join('');
         return `
           <div class="criterion-open">
-            <div class="crit-index">เกณฑ์ที่ ${idx + 1} จาก ${CRITERIA.length}</div>
+            <div class="crit-index">${escapeHtml(tf('rvs_criterion_index', { idx: idx + 1, total: CRITERIA.length }))}</div>
             <div class="crit-name">${label}</div>
             <div style="margin-top:12px">${options}</div>
           </div>
@@ -324,7 +324,7 @@ export async function render(container, params, session) {
         <div class="criterion-todo" data-open="${idx}" style="cursor:pointer">
           <span class="mark"></span>
           <span class="crit-name">${label}</span>
-          <span class="crit-hint">ยังไม่ได้ให้คะแนน</span>
+          <span class="crit-hint">${t('rvs_criterion_not_scored')}</span>
         </div>
       `;
     }).join('');
