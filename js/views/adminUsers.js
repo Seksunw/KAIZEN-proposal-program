@@ -1,8 +1,8 @@
 // js/views/adminUsers.js — รออนุมัติแยกขึ้นบน + ตาราง 5 คอลัมน์ (MIGRATION.md ข้อ 12)
-import { getAllProfiles, getProfilesPage, updateProfile, getMasterData, getAvatarSignedUrl } from '../api.js?v=20260911z7';
-import { t, tf } from '../i18n.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, thaiDate, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z7';
-import { ROLES } from '../constants.js?v=20260911z7';
+import { getAllProfiles, getProfilesPage, updateProfile, getMasterData, getAvatarSignedUrl } from '../api.js?v=20260911z8';
+import { t, tf } from '../i18n.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, thaiDate, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z8';
+import { ROLES } from '../constants.js?v=20260911z8';
 
 const PAGE_SIZE = 20;
 

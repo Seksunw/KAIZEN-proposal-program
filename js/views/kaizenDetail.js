@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z7';
-import { t, getLang } from '../i18n.js?v=20260911z7';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z7';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z7';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z8';
+import { t, tf, getLang } from '../i18n.js?v=20260911z8';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z8';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z8';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;
@@ -15,7 +15,7 @@ export async function render(container, params, session) {
     container.innerHTML = `<div class="page-body">${stateCard({
       kind: 'error',
       title: t('error_load_failed'),
-      body: escapeHtml(err.message || 'สัญญาณในไลน์ผลิตไม่นิ่งเป็นสาเหตุที่พบบ่อย'),
+      body: escapeHtml(err.message || t('kzlist_load_error_hint')),
       actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
@@ -68,18 +68,18 @@ export async function render(container, params, session) {
 
   const statusLabel = canSeeStatus ? statusBadge(kaizen.Status, lang) : '';
   const contextParts = [labelOf(departments, kaizen.Department), labelOf(plants, kaizen.Plant)];
-  if (kaizen.ProjectType === 'group') contextParts.push(`โครงการกลุ่ม ${(kaizen.TeamMembers ?? []).length + 1} คน`);
+  if (kaizen.ProjectType === 'group') contextParts.push(tf('kzdetail_group_project', { n: (kaizen.TeamMembers ?? []).length + 1 }));
 
   const actions = [];
   if (isOwner && kaizen.Status === 'need_revision') {
-    actions.push(`<a href="#/kaizen/${kaizen.Id}/edit"><button type="button">แก้ไขตามที่กรรมการแจ้ง</button></a>`);
+    actions.push(`<a href="#/kaizen/${kaizen.Id}/edit"><button type="button">${t('dashboard_task_revision_btn')}</button></a>`);
   } else if (isOwner && kaizen.Status === 'draft') {
-    actions.push(`<a href="#/kaizen/${kaizen.Id}/edit"><button type="button">กรอกต่อ</button></a>`);
+    actions.push(`<a href="#/kaizen/${kaizen.Id}/edit"><button type="button">${t('dashboard_continue_btn')}</button></a>`);
   }
   // ★ 2026-09-08: เข้าคิวกรรมการได้แม้ยังไม่เสร็จงาน (ดู schema.sql can_track_progress()) —
   //   ปุ่มนี้เลยต้องโชว์ต่อแม้ status ไปถึง pending_review/scored/approved แล้ว ตราบใดที่ยังไม่เสร็จ
   if (isOwner && !kaizen.IsCompleted && ['submitted', 'in_progress', 'pending_review', 'scored', 'approved'].includes(kaizen.Status)) {
-    actions.push(`<a href="#/kaizen/${kaizen.Id}/progress"><button type="button" class="secondary">บันทึกความคืบหน้า</button></a>`);
+    actions.push(`<a href="#/kaizen/${kaizen.Id}/progress"><button type="button" class="secondary">${t('kzdetail_log_progress_btn')}</button></a>`);
   }
 
   container.innerHTML = `
@@ -93,49 +93,49 @@ export async function render(container, params, session) {
       <div class="detail-cols">
         <div>
           <div class="photo-pair">
-            ${photoSlotHtml(beforePhotos[0], 'ก่อนทำ', false)}
-            ${photoSlotHtml(afterPhotos[0], 'หลังทำ', true)}
+            ${photoSlotHtml(beforePhotos[0], t('kzdetail_before'), false)}
+            ${photoSlotHtml(afterPhotos[0], t('kzdetail_after'), true)}
           </div>
           ${otherPhotos.length > 0 ? `
             <div class="attach-grid" style="margin-top:var(--sp-2)" id="other-photos"></div>
           ` : ''}
 
-          <h3 style="margin-top:var(--sp-6)">ปัญหา</h3>
+          <h3 style="margin-top:var(--sp-6)">${t('kzdetail_problem_heading')}</h3>
           <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ProblemDescription || '—')}</p>
-          <h3>แนวทางการปรับปรุง</h3>
+          <h3>${t('kzform_approach_label')}</h3>
           <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ImprovementApproach || '—')}</p>
 
-          <h3>ความคืบหน้า</h3>
+          <h3>${t('kzdetail_progress_heading')}</h3>
           ${renderTimeline(kaizen.KaizenProgressUpdates ?? [])}
         </div>
 
         <div>
           <div class="card">
-            <h2>ผลที่วัดได้</h2>
+            <h2>${t('kzdetail_measured_results')}</h2>
             ${Number(kaizen.CostSavingPerMonth) > 0 ? `
               <div class="metric is-xl">${Number(kaizen.CostSavingPerMonth).toLocaleString('th-TH')}</div>
-              <p class="muted" style="margin:2px 0 0">บาท/เดือน${kaizen.CostSavingRank ? ` · Cost-saving rank ${kaizen.CostSavingRank}` : ''}</p>
-            ` : '<p class="muted" style="margin:0">ยังไม่มีข้อมูล Cost saving</p>'}
+              <p class="muted" style="margin:2px 0 0">${t('kzdetail_baht_per_month')}${kaizen.CostSavingRank ? ` · Cost-saving rank ${kaizen.CostSavingRank}` : ''}</p>
+            ` : `<p class="muted" style="margin:0">${t('kzdetail_no_cost_saving_data')}</p>`}
             ${resultRow ? `
               <hr />
               <div class="metric is-lg">${Number(resultRow.WeightedScore).toFixed(2)}</div>
-              <p class="muted" style="margin:2px 0 0">/ 100 · ${resultRow.RankOverall !== null ? `อันดับ ${resultRow.RankOverall}` : 'ยังไม่เสร็จ — ไม่นับอันดับ'}</p>
+              <p class="muted" style="margin:2px 0 0">/ 100 · ${resultRow.RankOverall !== null ? escapeHtml(tf('kzdetail_rank', { rank: resultRow.RankOverall })) : t('dashboard_not_ranked')}</p>
             ` : ''}
           </div>
 
           <div class="card" style="margin-top:var(--sp-4)">
             <dl class="def-grid">
-              <dt>งบประมาณ</dt><dd>${kaizen.BudgetBand ? escapeHtml(labelOf(budgetBands, kaizen.BudgetBand)) : '—'}</dd>
-              <dt>วันเริ่ม</dt><dd>${kaizen.StartDate ? thaiDate(kaizen.StartDate) : '—'}</dd>
-              <dt>วันเสร็จ</dt><dd>${kaizen.CompletionDate ? thaiDate(kaizen.CompletionDate) : '—'}</dd>
-              <dt>ติดตามครั้งถัดไป</dt><dd>${kaizen.NextFollowUpDate ? thaiDate(kaizen.NextFollowUpDate) : '—'}</dd>
-              <dt>ผู้รับผิดชอบ</dt><dd>${kaizen.ResponsibleUserId === session.user.id ? escapeHtml(session.profile.FullName) : 'เจ้าของโครงการ'}</dd>
+              <dt>${t('kzform_budget_label')}</dt><dd>${kaizen.BudgetBand ? escapeHtml(labelOf(budgetBands, kaizen.BudgetBand)) : '—'}</dd>
+              <dt>${t('kzform_start_date')}</dt><dd>${kaizen.StartDate ? thaiDate(kaizen.StartDate) : '—'}</dd>
+              <dt>${t('kzform_completion_date')}</dt><dd>${kaizen.CompletionDate ? thaiDate(kaizen.CompletionDate) : '—'}</dd>
+              <dt>${t('kzform_next_followup')}</dt><dd>${kaizen.NextFollowUpDate ? thaiDate(kaizen.NextFollowUpDate) : '—'}</dd>
+              <dt>${t('kzdetail_responsible')}</dt><dd>${kaizen.ResponsibleUserId === session.user.id ? escapeHtml(session.profile.FullName) : t('kzdetail_project_owner')}</dd>
             </dl>
           </div>
 
           ${kaizen.ProjectType === 'group' && (kaizen.TeamMembers ?? []).length > 0 ? `
             <div class="card" style="margin-top:var(--sp-4)">
-              <h2 style="margin-bottom:var(--sp-2)">ทีมงาน</h2>
+              <h2 style="margin-bottom:var(--sp-2)">${t('kzdetail_team_heading')}</h2>
               <div class="stack is-tight">
                 ${kaizen.TeamMembers.map((m) => `
                   <div class="hstack">
@@ -187,7 +187,7 @@ function photoSlotHtml(attachment, label, isAfter) {
   return `
     <div>
       <div class="photo-slot" data-photo-slot="${phase}">
-        ${attachment ? '<img alt="" />' : 'ยังไม่มีรูป'}
+        ${attachment ? '<img alt="" />' : t('kzdetail_no_photo')}
       </div>
       <div class="photo-caption">
         <span class="phase ${isAfter ? 'is-after' : ''}">${label}</span>
@@ -198,7 +198,7 @@ function photoSlotHtml(attachment, label, isAfter) {
 }
 
 function renderTimeline(updates) {
-  if (updates.length === 0) return '<p class="muted">ยังไม่มีการอัปเดตความคืบหน้า</p>';
+  if (updates.length === 0) return `<p class="muted">${t('kzdetail_no_progress_updates')}</p>`;
   const sorted = [...updates].sort((a, b) => (a.UpdateDate < b.UpdateDate ? 1 : -1));
   return `
     <ul class="timeline">
@@ -208,7 +208,7 @@ function renderTimeline(updates) {
           <div style="flex:1;min-width:0">
             <span class="tl-date">${thaiDate(p.UpdateDate)}</span>
             <p class="tl-note">${escapeHtml(p.Note)}</p>
-            ${p.Obstacles ? `<p class="tl-obstacle">ติดขัด: ${escapeHtml(p.Obstacles)}</p>` : ''}
+            ${p.Obstacles ? `<p class="tl-obstacle">${escapeHtml(tf('kzdetail_obstacle_prefix', { text: p.Obstacles }))}</p>` : ''}
           </div>
         </li>
       `).join('')}

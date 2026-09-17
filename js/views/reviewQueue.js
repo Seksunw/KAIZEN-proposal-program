@@ -1,7 +1,7 @@
 // js/views/reviewQueue.js — คิวตรวจให้คะแนน (MIGRATION.md ข้อ 7)
-import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z7';
-import { t, tf } from '../i18n.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z7';
+import { getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getMasterData, getKaizenByPeriod } from '../api.js?v=20260911z8';
+import { t, tf } from '../i18n.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, masterLabel } from '../ui.js?v=20260911z8';
 
 const FILTERS = [
   { key: 'todo', labelKey: 'rq_filter_todo' },

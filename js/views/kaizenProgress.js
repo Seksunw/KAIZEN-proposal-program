@@ -5,18 +5,18 @@
 //   เรื่องนี้จริงผ่าน can_track_progress()/guard_kaizen_field_lock() ใน schema.sql (ไม่ใช่แค่ UI)
 // หมายเหตุ: ไม่มี trigger ฝั่ง DB sync progress_pct/next_follow_up_date/status อัตโนมัติ
 // ใน MVP — ต้องอัปเดต kaizen_projects เองที่นี่คู่กับการ insert kaizen_progress_updates
-import { getKaizenById, updateKaizen, addProgressUpdate, uploadAttachment } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
-import { navigate } from '../router.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, stateCard, statusBadge, thaiDate, todayInSystemTz } from '../ui.js?v=20260911z7';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
+import { getKaizenById, updateKaizen, addProgressUpdate, uploadAttachment } from '../api.js?v=20260911z8';
+import { t, tf } from '../i18n.js?v=20260911z8';
+import { navigate } from '../router.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, stateCard, statusBadge, thaiDate, todayInSystemTz } from '../ui.js?v=20260911z8';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z8';
 
 const COST_BASIS_MIN_LEN = 30;
 const TRACKABLE_STATUSES = ['submitted', 'in_progress', 'pending_review', 'scored', 'approved'];
 const NOT_YET_SENT_STATUSES = ['submitted', 'in_progress'];
 
 export async function render(container, params, session) {
-  document.title = `บันทึกความคืบหน้า · ${t('appName')}`;
+  document.title = `${t('kzdetail_log_progress_btn')} · ${t('appName')}`;
   container.innerHTML = `<div class="page-body"><p>${t('common_loading')}</p></div>`;
 
   let kaizen;
@@ -34,10 +34,10 @@ export async function render(container, params, session) {
 
   if (kaizen.OwnerId !== session.user.id || kaizen.IsCompleted || !TRACKABLE_STATUSES.includes(kaizen.Status)) {
     container.innerHTML = `
-      ${pageHeader({ title: 'บันทึกความคืบหน้า' })}
+      ${pageHeader({ title: t('kzdetail_log_progress_btn') })}
       <div class="page-body">
-        <p class="muted">ไม่สามารถอัปเดตความคืบหน้าของโครงการนี้ในสถานะปัจจุบันได้</p>
-        <a href="#/kaizen/${kaizen.Id}">กลับไปหน้ารายละเอียด</a>
+        <p class="muted">${t('kzprog_cannot_update')}</p>
+        <a href="#/kaizen/${kaizen.Id}">${t('kzform_back_to_detail')}</a>
       </div>
     `;
     return;
@@ -66,9 +66,9 @@ export async function render(container, params, session) {
   function completeChecklist() {
     const costOk = !(Number(state.costSaving) > 0) || state.costBasis.trim().length >= COST_BASIS_MIN_LEN;
     return [
-      { key: 'date', title: 'วันที่เสร็จ', ok: Boolean(state.completionDate), sub: state.completionDate ? thaiDate(state.completionDate) : 'ยังไม่ได้ระบุ' },
-      { key: 'photo', title: 'รูปหลังทำ', ok: hasAfterPhoto(), sub: hasAfterPhoto() ? 'มีรูปแล้ว' : 'ต้องถ่าย/เลือกรูปอย่างน้อย 1 รูป' },
-      { key: 'cost', title: 'หลักฐาน Cost saving', ok: costOk, sub: Number(state.costSaving) > 0 ? `${state.costBasis.trim().length}/${COST_BASIS_MIN_LEN} ตัวอักษร` : 'ไม่มี Cost saving ข้ามได้' },
+      { key: 'date', title: t('kzform_completion_date'), ok: Boolean(state.completionDate), sub: state.completionDate ? thaiDate(state.completionDate) : t('kzprog_check_not_specified') },
+      { key: 'photo', title: t('kzprog_check_after_photo'), ok: hasAfterPhoto(), sub: hasAfterPhoto() ? t('kzprog_check_has_photo') : t('kzprog_check_need_photo') },
+      { key: 'cost', title: t('kzprog_check_cost_evidence'), ok: costOk, sub: Number(state.costSaving) > 0 ? tf('kzprog_check_chars_of', { current: state.costBasis.trim().length, min: COST_BASIS_MIN_LEN }) : t('kzprog_check_no_cost_skip') },
     ];
   }
 
@@ -80,61 +80,61 @@ export async function render(container, params, session) {
 
     container.innerHTML = `
       ${pageHeader({
-        breadcrumb: [{ label: t('nav_kaizen'), href: '#/kaizen' }, { label: kaizen.Title, href: `#/kaizen/${kaizen.Id}` }, { label: 'บันทึกความคืบหน้า' }],
-        title: 'บันทึกความคืบหน้า',
+        breadcrumb: [{ label: t('nav_kaizen'), href: '#/kaizen' }, { label: kaizen.Title, href: `#/kaizen/${kaizen.Id}` }, { label: t('kzdetail_log_progress_btn') }],
+        title: t('kzdetail_log_progress_btn'),
         sub: escapeHtml(kaizen.Title),
       })}
       <div class="page-body">
         <div class="two-col">
           <div>
-            <div class="section-head"><h2>บันทึกความคืบหน้าใหม่</h2></div>
-            <label style="margin-top:var(--sp-5)"><span>รายละเอียด (ทำอะไรไปแล้ว) <span class="req">*</span></span>
-              <textarea id="f-note" rows="3" placeholder="เช่น ปรับความสูงชั้นวางแล้ว 2 จาก 4 โซน">${escapeHtml(state.note)}</textarea>
+            <div class="section-head"><h2>${t('kzprog_new_progress_heading')}</h2></div>
+            <label style="margin-top:var(--sp-5)"><span>${t('kzprog_detail_label')} <span class="req">*</span></span>
+              <textarea id="f-note" rows="3" placeholder="${t('kzprog_detail_placeholder')}">${escapeHtml(state.note)}</textarea>
             </label>
-            <label style="margin-top:var(--sp-5)">ติดอะไรอยู่หรือไม่ (ถ้ามี)<textarea id="f-obstacles" rows="2">${escapeHtml(state.obstacles)}</textarea></label>
-            <label style="margin-top:var(--sp-5)">วันติดตามครั้งถัดไป<input type="date" id="f-next-followup" value="${state.nextFollowUpDate}" /></label>
+            <label style="margin-top:var(--sp-5)">${t('kzprog_obstacles_label')}<textarea id="f-obstacles" rows="2">${escapeHtml(state.obstacles)}</textarea></label>
+            <label style="margin-top:var(--sp-5)">${t('kzform_next_followup')}<input type="date" id="f-next-followup" value="${state.nextFollowUpDate}" /></label>
             <div id="progress-error"></div>
-            <button type="button" id="btn-save-progress" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : 'บันทึกความคืบหน้า'}</button>
+            <button type="button" id="btn-save-progress" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('kzdetail_log_progress_btn')}</button>
 
-            <div class="section-head"><h2>ส่งให้กรรมการให้คะแนน</h2></div>
+            <div class="section-head"><h2>${t('kzprog_send_committee_heading')}</h2></div>
             ${notYetSent ? `
-              <p class="field-hint">ส่งได้เลยไม่ต้องรอให้เสร็จงาน — ถ้ายังไม่เสร็จ กรรมการจะให้คะแนนจากข้อมูล ณ ตอนนี้ และคุณยังตามอัปเดตความคืบหน้า/ทำเครื่องหมายเสร็จได้ต่อ แต่หลังส่งแล้วจะแก้ไขเนื้อหาหลักของโครงการ (ชื่อ/ปัญหา/แนวทาง ฯลฯ) ไม่ได้อีก</p>
+              <p class="field-hint">${t('kzprog_send_hint')}</p>
               <div id="send-error"></div>
-              <button type="button" id="btn-send-committee" style="margin-top:var(--sp-5)" ${state.sending ? 'disabled' : ''}>${state.sending ? t('common_loading') : 'ส่งให้กรรมการให้คะแนน'}</button>
+              <button type="button" id="btn-send-committee" style="margin-top:var(--sp-5)" ${state.sending ? 'disabled' : ''}>${state.sending ? t('common_loading') : t('kzprog_send_committee_heading')}</button>
             ` : `
-              <div class="note">ส่งให้กรรมการแล้ว ${statusBadge(kaizen.Status)}</div>
+              <div class="note">${tf('kzprog_already_sent', { badge: statusBadge(kaizen.Status) })}</div>
             `}
 
-            <div class="section-head"><h2>ทำเครื่องหมายว่าเสร็จแล้ว</h2></div>
+            <div class="section-head"><h2>${t('kzprog_mark_complete_heading')}</h2></div>
             <div class="panel is-flush" style="margin-top:var(--sp-4)">
               <div class="checklist" id="complete-checklist"></div>
             </div>
             <div style="margin-top:var(--sp-5)">
-              <label>วันที่เสร็จ<input type="date" id="f-completion-date" value="${state.completionDate}" /></label>
+              <label>${t('kzform_completion_date')}<input type="date" id="f-completion-date" value="${state.completionDate}" /></label>
               ${!hasAfterPhoto() ? `
                 <label class="dropzone" for="f-after-photo" style="width:118px;margin-top:var(--sp-4)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-                  ถ่าย/เลือกรูป
+                  ${t('kzprog_take_photo_btn')}
                 </label>
                 <input type="file" accept="image/*" id="f-after-photo" style="display:none" />
               ` : ''}
-              <label style="margin-top:var(--sp-5)">Cost saving / เดือน (บาท)<input type="number" min="0" step="1" id="f-cost-saving" value="${state.costSaving}" /></label>
-              <label style="margin-top:var(--sp-5)">หลักฐาน/ที่มาของ Cost saving<textarea id="f-cost-basis" rows="3">${escapeHtml(state.costBasis)}</textarea></label>
+              <label style="margin-top:var(--sp-5)">${t('kzform_cost_saving_label')}<input type="number" min="0" step="1" id="f-cost-saving" value="${state.costSaving}" /></label>
+              <label style="margin-top:var(--sp-5)">${t('kzform_cost_basis_label')}<textarea id="f-cost-basis" rows="3">${escapeHtml(state.costBasis)}</textarea></label>
               <div id="complete-error"></div>
               <button type="button" id="btn-complete" style="margin-top:var(--sp-5)"></button>
             </div>
           </div>
 
           <div>
-            <div class="section-head"><h2>ประวัติความคืบหน้า</h2></div>
+            <div class="section-head"><h2>${t('kzprog_history_heading')}</h2></div>
             ${updates.length === 0
-              ? '<p class="muted">ยังไม่มีการบันทึกความคืบหน้า</p>'
+              ? `<p class="muted">${t('kzprog_no_history')}</p>`
               : `<div class="row-list">${updates.map((p) => `
                   <div class="row-item" style="align-items:flex-start">
                     <div class="row-main">
                       <span class="tl-date">${thaiDate(p.UpdateDate)}</span>
                       <p class="tl-note">${escapeHtml(p.Note)}</p>
-                      ${p.Obstacles ? `<p class="tl-obstacle">ติดขัด: ${escapeHtml(p.Obstacles)}</p>` : ''}
+                      ${p.Obstacles ? `<p class="tl-obstacle">${escapeHtml(tf('kzdetail_obstacle_prefix', { text: p.Obstacles }))}</p>` : ''}
                     </div>
                   </div>
                 `).join('')}</div>`}
@@ -186,11 +186,11 @@ export async function render(container, params, session) {
 
     const btn = document.getElementById('btn-complete');
     btn.disabled = state.saving || remaining > 0;
-    btn.textContent = state.saving ? t('common_loading') : (remaining > 0 ? `ทำเครื่องหมายว่าเสร็จแล้ว — ยังขาด ${remaining} ข้อ` : 'ทำเครื่องหมายว่าเสร็จแล้ว');
+    btn.textContent = state.saving ? t('common_loading') : (remaining > 0 ? tf('kzprog_mark_complete_missing', { n: remaining }) : t('kzprog_mark_complete_heading'));
   }
 
   async function onSaveProgress() {
-    if (!state.note.trim()) { state.error = 'กรุณากรอกรายละเอียดความคืบหน้า'; renderPage(); return; }
+    if (!state.note.trim()) { state.error = t('kzprog_val_note_required'); renderPage(); return; }
 
     state.saving = true; state.error = ''; renderPage();
     try {
@@ -216,7 +216,7 @@ export async function render(container, params, session) {
   }
 
   async function onSendToCommittee() {
-    if (!confirm('ยืนยันส่งให้กรรมการให้คะแนน? หลังจากนี้จะแก้ไขเนื้อหาหลักของโครงการไม่ได้อีก (ยังอัปเดตความคืบหน้า/ทำเครื่องหมายเสร็จได้ต่อ)')) return;
+    if (!confirm(t('kzprog_confirm_send'))) return;
 
     state.sending = true; state.sendError = ''; renderPage();
     try {
@@ -239,10 +239,10 @@ export async function render(container, params, session) {
       if (state.afterFile) {
         // ★ เช็คว่าเป็นรูปจริงก่อนอัปโหลด — ดู kaizenForm.js finding M6 เดียวกัน (Spec.md §4.8)
         if (!state.afterFile.type.startsWith('image/')) {
-          throw new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น');
+          throw new Error(t('kzprog_err_image_only'));
         }
         if (state.afterFile.size > MAX_UPLOAD_MB * 1024 * 1024) {
-          throw new Error(`ไฟล์ต้องไม่เกิน ${MAX_UPLOAD_MB}MB`);
+          throw new Error(tf('kzform_file_too_large', { mb: MAX_UPLOAD_MB }));
         }
         await uploadAttachment({ kaizenId: kaizen.Id, phase: 'after', file: state.afterFile, uploadedBy: session.user.id });
       }

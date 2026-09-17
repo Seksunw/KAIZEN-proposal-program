@@ -548,6 +548,10 @@ const DICT = {
     // ---- notFound.js ----
     nf_body: 'ไม่พบหน้า {hash} — ลองกลับไปแดชบอร์ดแล้วเข้าใหม่จากเมนู',
     nf_empty_hash_label: '(ว่าง)',
+
+    // ---- index.html static mobile-drawer chrome (set dynamically by app.js) ----
+    mobile_drawer_close_aria: 'ปิดเมนู',
+    mobile_drawer_nav_aria: 'เมนูเพิ่มเติม',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1097,6 +1101,10 @@ const DICT = {
     // ---- notFound.js ----
     nf_body: "Page not found: {hash} — try going back to the dashboard and navigating from the menu",
     nf_empty_hash_label: '(empty)',
+
+    // ---- index.html static mobile-drawer chrome (set dynamically by app.js) ----
+    mobile_drawer_close_aria: 'Close menu',
+    mobile_drawer_nav_aria: 'More menu',
   },
 };
 

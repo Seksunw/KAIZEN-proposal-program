@@ -10,15 +10,15 @@ import {
   getKaizenById, createKaizen, updateKaizen, submitKaizen,
   getOpenPeriod, getPeriodById, getMasterData, uploadAttachment, deleteAttachment, getAttachmentSignedUrl,
   getAvatarSignedUrl, getKaizenEditGrants,
-} from '../api.js?v=20260911z7';
-import { t, tf, getLang } from '../i18n.js?v=20260911z7';
-import { navigate } from '../router.js?v=20260911z7';
-import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString, masterLabel, thaiDateTime } from '../ui.js?v=20260911z7';
+} from '../api.js?v=20260911z8';
+import { t, tf, getLang } from '../i18n.js?v=20260911z8';
+import { navigate } from '../router.js?v=20260911z8';
+import { escapeHtml, translateError, statusBadge, initials, openLightbox, resizeImage, hydrateAvatars, stateCard, todayInSystemTz, daysBetweenDateStrings, addDaysToDateString, masterLabel, thaiDateTime } from '../ui.js?v=20260911z8';
 import {
   CATEGORIES, CATEGORY_LABELS, IMPACTS, IMPACT_LABELS,
   SUPPORT_NEEDED, SUPPORT_NEEDED_LABELS, ATTACHMENT_PHASES, ATTACHMENT_PHASE_LABELS,
-} from '../constants.js?v=20260911z7';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
+} from '../constants.js?v=20260911z8';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z8';
 
 // ★ i18n audit Round 13 (full project translation) — เดิมเป็น array ข้อความไทยดิบ เปลี่ยนเป็น
 // เก็บ "คีย์" แทน เรียก t() ตอน render จริงถึงจะได้ค่าตามภาษาปัจจุบันเสมอ (ไม่ cache ค่าดิบไว้ตรงนี้

@@ -1,9 +1,9 @@
 // js/views/profile.js — โปรไฟล์ของฉัน: รูป/ชื่อ/role, สถิติโครงการ, ข้อมูลบัญชี
-import { getMyKaizenList, getPeriods, getResults, getMasterData, uploadAvatar, updateProfile, getAvatarSignedUrl, signOut } from '../api.js?v=20260911z7';
-import { t, tf, getLang, setLang } from '../i18n.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, hydrateAvatars, resizeImage, masterLabel } from '../ui.js?v=20260911z7';
-import { navigate } from '../router.js?v=20260911z7';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
+import { getMyKaizenList, getPeriods, getResults, getMasterData, uploadAvatar, updateProfile, getAvatarSignedUrl, signOut } from '../api.js?v=20260911z8';
+import { t, tf, getLang, setLang } from '../i18n.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, initials, roleLabel, hydrateAvatars, resizeImage, masterLabel } from '../ui.js?v=20260911z8';
+import { navigate } from '../router.js?v=20260911z8';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z8';
 
 export async function render(container, params, session) {
   document.title = `${t('pr_page_title')} · ${t('appName')}`;

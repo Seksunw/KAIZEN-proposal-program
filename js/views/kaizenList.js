@@ -1,7 +1,7 @@
 // js/views/kaizenList.js — รายการ KAIZEN ของฉัน (MIGRATION.md ข้อ 3)
-import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z7';
+import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z8';
+import { t, tf } from '../i18n.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z8';
 
 const PAGE_SIZE = 20;
 
@@ -15,26 +15,26 @@ const SORT_PRIORITY = {
 };
 
 const FILTERS = [
-  { key: 'all', label: 'ทั้งหมด', statuses: null },
-  { key: 'need_revision', label: 'ต้องแก้ไข', statuses: ['need_revision'] },
-  { key: 'in_progress', label: 'กำลังทำ', statuses: ['submitted', 'in_progress'] },
-  { key: 'pending', label: 'รอผลตัดสิน', statuses: ['pending_review', 'scored', 'approved'] },
-  { key: 'draft', label: 'ร่าง', statuses: ['draft'] },
-  { key: 'published', label: 'ประกาศผลแล้ว', statuses: ['published'] },
+  { key: 'all', labelKey: 'kzlist_filter_all', statuses: null },
+  { key: 'need_revision', labelKey: 'kzlist_filter_need_revision', statuses: ['need_revision'] },
+  { key: 'in_progress', labelKey: 'kzlist_filter_in_progress', statuses: ['submitted', 'in_progress'] },
+  { key: 'pending', labelKey: 'kzlist_filter_pending', statuses: ['pending_review', 'scored', 'approved'] },
+  { key: 'draft', labelKey: 'kzlist_filter_draft', statuses: ['draft'] },
+  { key: 'published', labelKey: 'kzlist_filter_published', statuses: ['published'] },
 ];
 
 function contextLine(k) {
   if (k.Status === 'need_revision') {
-    return k.RevisionNote ? `กรรมการแจ้ง: ${escapeHtml(k.RevisionNote)}` : 'กรรมการขอให้แก้ไขก่อนส่งใหม่';
+    return k.RevisionNote ? escapeHtml(tf('dashboard_task_revision_note', { note: k.RevisionNote })) : t('dashboard_task_revision_generic');
   }
-  if (k.Status === 'in_progress') return 'กำลังดำเนินการ';
+  if (k.Status === 'in_progress') return t('kzlist_ctx_in_progress');
   if (k.Status === 'draft') {
     const days = Math.floor((Date.now() - new Date(k.UpdatedAt ?? k.CreatedAt).getTime()) / 86400000);
-    return days > 0 ? `ร่างค้าง ${days} วัน` : 'บันทึกร่างวันนี้';
+    return days > 0 ? escapeHtml(tf('dashboard_task_draft_badge_days', { n: days })) : t('kzlist_ctx_draft_today');
   }
-  if (k.Status === 'pending_review') return 'รอกรรมการตรวจให้คะแนน';
-  if (k.Status === 'scored') return 'ให้คะแนนครบแล้ว รอ Admin ตัดสิน';
-  if (k.Status === 'approved') return 'อนุมัติแล้ว รอประกาศผล';
+  if (k.Status === 'pending_review') return t('kzlist_ctx_pending_review');
+  if (k.Status === 'scored') return t('kzlist_ctx_scored');
+  if (k.Status === 'approved') return t('kzlist_ctx_approved');
   return '';
 }
 
@@ -56,7 +56,7 @@ export async function render(container, params, session) {
     container.innerHTML = pageHeader({ title: t('nav_kaizen') }) + `<div class="page-body">${stateCard({
       kind: 'error',
       title: t('error_load_failed'),
-      body: escapeHtml(translateError(err.message) || err.message || 'สัญญาณในไลน์ผลิตไม่นิ่งเป็นสาเหตุที่พบบ่อย'),
+      body: escapeHtml(translateError(err.message) || err.message || t('kzlist_load_error_hint')),
       actions: `<button type="button" onclick="location.reload()">${t('state_retry')}</button>`,
     })}</div>`;
     return;
@@ -81,7 +81,7 @@ export async function render(container, params, session) {
   function renderPage() {
     const chips = FILTERS.map((f) => {
       const count = state.counts?.[f.key] ?? 0;
-      return `<button type="button" class="filter-chip ${state.filter === f.key ? 'is-on' : ''}" data-filter="${f.key}">${f.label} ${count}</button>`;
+      return `<button type="button" class="filter-chip ${state.filter === f.key ? 'is-on' : ''}" data-filter="${f.key}">${t(f.labelKey)} ${count}</button>`;
     }).join('');
 
     const rows = state.rows.map((k) => {
@@ -93,18 +93,18 @@ export async function render(container, params, session) {
       const followUpCell = !k.NextFollowUpDate
         ? '<span class="muted">—</span>'
         : overdue
-          ? `<span style="color:var(--danger);font-weight:600">เลยกำหนด ${overdueDays} วัน</span>`
+          ? `<span style="color:var(--danger);font-weight:600">${escapeHtml(tf('kzlist_overdue_days', { n: overdueDays }))}</span>`
           : thaiDate(k.NextFollowUpDate);
       const ctx = contextLine(k);
       return `
         <tr ${k.Status === 'need_revision' ? 'class="is-attention"' : ''}>
           <td class="kl-title">
             <a href="#/kaizen/${k.Id}" class="cell-title" style="text-decoration:none;display:block">${escapeHtml(k.Title)}</a>
-            <span class="cell-sub">${k.Code ? `<span class="mono">${escapeHtml(k.Code)}</span>` : '<span class="muted">ยังไม่มีรหัสจนกดส่ง</span>'}${ctx ? ` · ${ctx}` : ''}</span>
+            <span class="cell-sub">${k.Code ? `<span class="mono">${escapeHtml(k.Code)}</span>` : `<span class="muted">${t('kzlist_no_code_yet')}</span>`}${ctx ? ` · ${ctx}` : ''}</span>
           </td>
           <td class="kl-badge">${statusBadge(k.Status)}</td>
           <td class="kl-date">${followUpCell}</td>
-          <td class="kl-actions">${k.Status === 'draft' ? `<button type="button" class="secondary is-sm" data-delete="${k.Id}" ${state.deletingId === k.Id ? 'disabled' : ''}>${state.deletingId === k.Id ? t('common_loading') : 'ลบร่าง'}</button>` : ''}</td>
+          <td class="kl-actions">${k.Status === 'draft' ? `<button type="button" class="secondary is-sm" data-delete="${k.Id}" ${state.deletingId === k.Id ? 'disabled' : ''}>${state.deletingId === k.Id ? t('common_loading') : t('kzlist_delete_draft_btn')}</button>` : ''}</td>
         </tr>
       `;
     }).join('');
@@ -115,18 +115,18 @@ export async function render(container, params, session) {
         <div class="filter-bar" style="margin-bottom:16px">${chips}</div>
         ${state.total === 0
           ? emptyState({
-              title: state.filter === 'all' ? t('empty_my_kaizen') : 'ไม่มีโครงการในตัวกรองนี้',
+              title: state.filter === 'all' ? t('empty_my_kaizen') : t('kzlist_empty_filtered'),
               // ★ ไม่มีปุ่มสร้างโครงการซ้ำที่นี่ตั้งใจ — จุดเดียวที่ใช้เสนอ KAIZEN ใหม่ได้คือปุ่ม "+"
               // กลาง bottom tab bar (js/app.js) ตามกติกา CLAUDE.md (Spec.md §4.8 finding M2)
-              body: state.filter === 'all' && canCreate ? 'กดปุ่ม + ด้านล่างเพื่อเริ่มเสนอโครงการแรกของคุณ' : undefined,
+              body: state.filter === 'all' && canCreate ? t('kzlist_empty_cta') : undefined,
             })
           : `<div class="panel is-scroll">
                 <table class="data-table kl-table">
-                  <thead><tr><th>โครงการ</th><th>สถานะ</th><th>ติดตามครั้งถัดไป</th><th></th></tr></thead>
+                  <thead><tr><th>${t('kzlist_col_project')}</th><th>${t('kzlist_col_status')}</th><th>${t('kzlist_col_next_followup')}</th><th></th></tr></thead>
                   <tbody>${rows}</tbody>
                 </table>
               </div>
-              ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${state.total - state.rows.length})`}</button></div>` : ''}`}
+              ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: state.total - state.rows.length }))}</button></div>` : ''}`}
       </div>
     `;
 
@@ -157,7 +157,7 @@ export async function render(container, params, session) {
   }
 
   async function onDelete(id) {
-    if (!confirm('ลบร่างนี้ทิ้งถาวร? ข้อมูลและรูปที่แนบไว้จะหายไปทั้งหมด กู้คืนไม่ได้')) return;
+    if (!confirm(t('kzlist_confirm_delete'))) return;
     state.deletingId = id; renderPage();
     try {
       await deleteKaizen(id);

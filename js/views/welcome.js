@@ -1,8 +1,8 @@
 // js/views/welcome.js — หน้าต้อนรับก่อนล็อกอิน (หน้าแรกของเว็บสำหรับผู้ที่ยังไม่ล็อกอิน — ดู
 // router.js: hash ว่างพาผู้ใช้ที่ยังไม่ล็อกอินมาที่นี่แทนที่จะเด้งตรงไปฟอร์ม login เลย)
-import { t } from '../i18n.js?v=20260911z7';
-import { navigate } from '../router.js?v=20260911z7';
-import { authLangSwitchHtml, wireAuthLangSwitch } from '../ui.js?v=20260911z7';
+import { t } from '../i18n.js?v=20260911z8';
+import { navigate } from '../router.js?v=20260911z8';
+import { authLangSwitchHtml, wireAuthLangSwitch } from '../ui.js?v=20260911z8';
 
 export async function render(container, params, session) {
   // ★ ผู้ใช้ที่ล็อกอินอยู่แล้ว (เช่น กด back มาที่ #/welcome) ไม่ควรเห็นหน้านี้ — พาไป

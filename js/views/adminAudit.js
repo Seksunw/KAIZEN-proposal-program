@@ -1,8 +1,8 @@
 // js/views/adminAudit.js — เขียนเป็นประโยค จัดกลุ่มตามวัน (MIGRATION.md ข้อ 14)
-import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z7';
-import { t, tf, getLang } from '../i18n.js?v=20260911z7';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z7';
-import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z7';
+import { getAuditLog, getAllProfiles, getPeriods, getKaizenByIds, getAvatarSignedUrl } from '../api.js?v=20260911z8';
+import { t, tf, getLang } from '../i18n.js?v=20260911z8';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, initials, hydrateAvatars } from '../ui.js?v=20260911z8';
+import { KAIZEN_STATUS_LABELS } from '../constants.js?v=20260911z8';
 
 function L(labelObj) { return labelObj[getLang() === 'en' ? 'en' : 'th']; }
 

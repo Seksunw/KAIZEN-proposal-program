@@ -1,8 +1,8 @@
 // js/views/dashboard.js — ตาม design handoff README.md §3: period banner + task-list + 2 คอลัมน์
 // (แทน .stat-grid เดิมทั้งหมด — MIGRATION.md ข้อ 2)
-import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
-import { thaiDate } from '../ui.js?v=20260911z7';
+import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z8';
+import { t, tf } from '../i18n.js?v=20260911z8';
+import { thaiDate } from '../ui.js?v=20260911z8';
 
 function escapeHtml(s) {
   const div = document.createElement('div');
@@ -115,11 +115,11 @@ export async function render(container, params, session) {
   for (const k of myKaizen.filter((x) => x.Status === 'need_revision')) {
     tasks.push({
       variant: 'is-urgent',
-      badge: '<span class="badge" data-status="need_revision">ต้องแก้ไข</span>',
+      badge: `<span class="badge" data-status="need_revision">${t('dashboard_task_need_revision_badge')}</span>`,
       code: k.Code,
       title: k.Title,
-      meta: k.RevisionNote ? `กรรมการแจ้ง: ${escapeHtml(k.RevisionNote)}` : 'กรรมการขอให้แก้ไขก่อนส่งใหม่',
-      buttonLabel: 'แก้ไขตามที่กรรมการแจ้ง',
+      meta: k.RevisionNote ? escapeHtml(tf('dashboard_task_revision_note', { note: k.RevisionNote })) : t('dashboard_task_revision_generic'),
+      buttonLabel: t('dashboard_task_revision_btn'),
       href: `#/kaizen/${k.Id}/edit`,
     });
   }
@@ -128,11 +128,11 @@ export async function render(container, params, session) {
     const step = estimateFormStep(k);
     tasks.push({
       variant: 'is-warning',
-      badge: `<span class="badge" style="color:var(--warning-ink);background:var(--warning-soft);border:1px solid var(--warning-line)">ร่างค้าง${age > 0 ? ` ${age} วัน` : ''}</span>`,
+      badge: `<span class="badge" style="color:var(--warning-ink);background:var(--warning-soft);border:1px solid var(--warning-line)">${age > 0 ? escapeHtml(tf('dashboard_task_draft_badge_days', { n: age })) : t('dashboard_task_draft_badge')}</span>`,
       code: null,
-      title: k.Title || '(ยังไม่ได้ตั้งชื่อโครงการ)',
-      meta: `กรอกถึงขั้น ${step} จาก 6`,
-      buttonLabel: 'กรอกต่อ',
+      title: k.Title || t('dashboard_untitled_project'),
+      meta: tf('dashboard_task_draft_meta', { step }),
+      buttonLabel: t('dashboard_continue_btn'),
       href: `#/kaizen/${k.Id}/edit`,
     });
   }
@@ -140,11 +140,13 @@ export async function render(container, params, session) {
     const weightPct = openPeriod.CommitteeWeights?.[session.user.id] ?? null;
     tasks.push({
       variant: 'is-committee',
-      badge: '<span class="badge" style="color:var(--violet);background:var(--violet-soft);border:1px solid var(--violet-line)">หน้าที่กรรมการ</span>',
+      badge: `<span class="badge" style="color:var(--violet);background:var(--violet-soft);border:1px solid var(--violet-line)">${t('dashboard_committee_badge')}</span>`,
       code: null,
-      title: `เหลือ ${pendingToScore.length} โครงการที่คุณยังไม่ให้คะแนน`,
-      meta: `ให้คะแนนแล้ว ${scoredIds.size} จาก ${reviewQueue.length}${weightPct !== null ? ` · น้ำหนักคะแนนของคุณในรอบนี้ ${weightPct}%` : ''}`,
-      buttonLabel: 'เปิดคิวตรวจ',
+      title: tf('dashboard_committee_task_title', { n: pendingToScore.length }),
+      meta: weightPct !== null
+        ? tf('dashboard_committee_task_meta_weight', { done: scoredIds.size, total: reviewQueue.length, pct: weightPct })
+        : tf('dashboard_committee_task_meta_no_weight', { done: scoredIds.size, total: reviewQueue.length }),
+      buttonLabel: t('dashboard_open_review_btn'),
       href: '#/review',
     });
   }
@@ -165,11 +167,11 @@ export async function render(container, params, session) {
       bannerHtml = `
         <div class="page-body">
           <div class="card">
-            <div class="eyebrow period-eyebrow">รอบการประเมินที่เปิดอยู่</div>
+            <div class="eyebrow period-eyebrow">${t('dashboard_open_period_eyebrow')}</div>
             <h1>${escapeHtml(openPeriod.NameTh)} <span class="mono" style="font-size:15px;font-weight:400;color:var(--muted-2)">${escapeHtml(openPeriod.Code)}</span></h1>
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:var(--sp-3)">
               <span class="metric is-lg" style="color:${daysLeft >= 0 ? 'var(--warning)' : 'var(--danger)'}">${daysLeft >= 0 ? daysLeft : 0}</span>
-              <span class="muted" style="font-size:13.5px">${daysLeft >= 0 ? `วันก่อนปิดรับ · ${thaiDate(deadline)}` : 'ปิดรับแล้ว'}</span>
+              <span class="muted" style="font-size:13.5px">${daysLeft >= 0 ? escapeHtml(tf('dashboard_days_left_caption', { date: thaiDate(deadline) })) : t('dashboard_deadline_passed')}</span>
             </div>
             <div class="bar"><i class="is-warning" style="width:${elapsed}%"></i></div>
           </div>
@@ -179,7 +181,7 @@ export async function render(container, params, session) {
       bannerHtml = `
         <div class="page-body">
           <div class="card">
-            <div class="eyebrow period-eyebrow">รอบการประเมิน</div>
+            <div class="eyebrow period-eyebrow">${t('dashboard_period_eyebrow_generic')}</div>
             <h1>${t('dashboard_title')}</h1>
             <div class="note" style="margin-top:var(--sp-3)">${t('empty_no_open_period')}</div>
           </div>
@@ -190,7 +192,7 @@ export async function render(container, params, session) {
     const awardBannerHtml = latestAward ? `
       <div class="page-body" style="padding-bottom:0">
         <div class="card" style="border-color:var(--primary-line);background:var(--primary-soft)">
-          <div class="eyebrow" style="color:var(--primary)">รางวัลใหญ่ · ${escapeHtml(latestAward.Label)}</div>
+          <div class="eyebrow" style="color:var(--primary)">${escapeHtml(tf('dashboard_award_banner_eyebrow', { label: latestAward.Label }))}</div>
           <div class="stack is-tight" style="margin-top:var(--sp-3)">
             ${latestAward.Winners.map((w) => `
               <div class="hstack" style="justify-content:space-between;flex-wrap:wrap">
@@ -208,8 +210,8 @@ export async function render(container, params, session) {
       ${awardBannerHtml}
       <div class="page-body">
         <div class="section-head is-borderless">
-          <h2>ต้องทำก่อน</h2>
-          <span class="section-note">${tasks.length > 0 ? `${tasks.length} เรื่องที่ค้างอยู่ที่คุณ` : ''}</span>
+          <h2>${t('dashboard_todo_heading')}</h2>
+          <span class="section-note">${tasks.length > 0 ? escapeHtml(tf('dashboard_todo_count', { n: tasks.length })) : ''}</span>
         </div>
         <div class="task-list">
           ${tasks.length === 0
@@ -231,15 +233,15 @@ export async function render(container, params, session) {
         </div>
 
         <div style="margin-top:var(--sp-6)">
-          <div class="section-head is-borderless"><h2>ผลรอบที่ประกาศแล้ว</h2></div>
+          <div class="section-head is-borderless"><h2>${t('dashboard_results_heading')}</h2></div>
           ${myLatestResult ? `
             <div style="padding:var(--sp-4) 0;border-bottom:1px solid var(--line-soft)">
               <div class="muted" style="font-size:13px">${escapeHtml(myLatestResultPeriod.NameTh)}</div>
               <div style="display:flex;align-items:baseline;gap:7px;margin-top:3px">
                 <span class="metric is-lg">${Number(myLatestResult.WeightedScore).toFixed(2)}</span>
-                <span class="muted" style="font-size:13px">/ 100 · ${myLatestResult.RankOverall !== null ? `อันดับ ${myLatestResult.RankOverall} จาก ${resultCount}` : 'ยังไม่เสร็จ — ไม่นับอันดับ'}</span>
+                <span class="muted" style="font-size:13px">/ 100 · ${myLatestResult.RankOverall !== null ? escapeHtml(tf('dashboard_rank_of', { rank: myLatestResult.RankOverall, total: resultCount })) : t('dashboard_not_ranked')}</span>
               </div>
-              <a href="#/feed?period=${encodeURIComponent(myLatestResultPeriod.Code)}" style="font-size:12.8px;font-weight:600">ดูโครงการทั้งหมดในรอบนี้</a>
+              <a href="#/feed?period=${encodeURIComponent(myLatestResultPeriod.Code)}" style="font-size:12.8px;font-weight:600">${t('dashboard_view_all_projects')}</a>
             </div>
           ` : `<div class="empty-state"><div class="empty-title">${t('empty_leaderboard')}</div></div>`}
         </div>
