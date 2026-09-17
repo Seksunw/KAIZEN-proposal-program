@@ -323,6 +323,19 @@ async function bootstrap() {
     location.hash = `#/reset-password?error=${encodeURIComponent(code)}`;
   }
 
+  // ★ เจอบั๊กจริงจากการทดสอบสด (2026-09-17): ลิงก์ recovery ที่ยังไม่หมดอายุ Supabase เติม
+  // #access_token=...&type=recovery&... มาให้ — เดิมพึ่ง auth event 'PASSWORD_RECOVERY'
+  // (ด้านล่าง) เพื่อ navigate ไป #/reset-password อย่างเดียว แต่ event นั้นยิงมาช้ากว่า
+  // initRouter() ด้านล่างที่เช็ค "hash ว่าง → เด้งไป #/dashboard ตาม session" (Supabase เคลียร์
+  // #access_token ออกจาก hash เหลือค่างเปล่าไปแล้วตั้งแต่ก่อน event จะยิงมาถึง) แพ้ race แล้ว
+  // ค้างอยู่ที่ #/dashboard ทั้งที่ event ยิงมาถูกต้อง (ยืนยันจาก sessionStorage flag ถูกตั้งค่า
+  // จริง) — แก้ด้วยการเช็ค hash ดิบตรงๆ ก่อน initRouter() ทำงานเลย เหมือน #error= ด้านบน แทนที่
+  // จะพึ่ง event เพียงอย่างเดียว ไม่ต้องรอ async ใดๆ กันชนเรซนี้ตั้งแต่ต้นทาง
+  if (location.hash.includes('type=recovery')) {
+    try { sessionStorage.setItem('kaizen_recovery_flow', '1'); } catch { /* private mode */ }
+    location.hash = '#/reset-password';
+  }
+
   const authSession = await getSession();
   await refreshSession(authSession);
 
