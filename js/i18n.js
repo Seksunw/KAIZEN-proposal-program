@@ -544,6 +544,10 @@ const DICT = {
     forbidden_none: 'ไม่มี',
     forbidden_contact_admin: 'ถ้าควรมีสิทธิ์นี้ แจ้งผู้ดูแลระบบพร้อมรหัสพนักงาน {id}',
     forbidden_back_to_dashboard: 'กลับไปแดชบอร์ด',
+
+    // ---- notFound.js ----
+    nf_body: 'ไม่พบหน้า {hash} — ลองกลับไปแดชบอร์ดแล้วเข้าใหม่จากเมนู',
+    nf_empty_hash_label: '(ว่าง)',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1089,6 +1093,10 @@ const DICT = {
     forbidden_none: 'None',
     forbidden_contact_admin: 'If you should have this access, contact an admin with your employee ID {id}',
     forbidden_back_to_dashboard: 'Back to dashboard',
+
+    // ---- notFound.js ----
+    nf_body: "Page not found: {hash} — try going back to the dashboard and navigating from the menu",
+    nf_empty_hash_label: '(empty)',
   },
 };
 

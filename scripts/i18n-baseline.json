@@ -15,7 +15,7 @@
   "js/views/kaizenList.js": 0,
   "js/views/kaizenProgress.js": 0,
   "js/views/login.js": 0,
-  "js/views/notFound.js": 2,
+  "js/views/notFound.js": 0,
   "js/views/profile.js": 2,
   "js/views/register.js": 1,
   "js/views/resetPassword.js": 0,
