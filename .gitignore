@@ -1,0 +1,17 @@
+.DS_Store
+node_modules/
+js/config.js
+.env
+.env.*
+~$*
+.claude/settings.local.json
+
+# หนัก 18MB — ไม่เอาเข้า repo (ผู้ใช้ตัดสินใจ 2026-09-17)
+KAIZEN Proposal Program.xlsx
+
+# เอกสารต้นฉบับจาก stakeholder + ดีไซน์เดิมที่เลิกใช้แล้ว/ไม่เกี่ยวกับโปรเจกต์ — เก็บไว้ในเครื่อง
+# พอ ไม่เอาเข้า repo (ผู้ใช้ตัดสินใจ 2026-09-17)
+apple.design.md
+docs/
+KAIZEN Proposal Program score criteria.xlsx
+Project_KAIZEN_Form_Checkbox.docx

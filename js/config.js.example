@@ -1,0 +1,9 @@
+// Copy this file to js/config.js and fill in your Supabase project's values
+// (Project Settings → API in the Supabase dashboard). js/config.js is
+// gitignored — it is the one setting file per Spec.md §4 ("ไม่มี environment
+// แยก dev/prod ในตอนนี้ ตั้งค่าเดียวใน js/config.js").
+
+export const SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';
+export const SUPABASE_ANON_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+
+export const MAX_UPLOAD_MB = 20;

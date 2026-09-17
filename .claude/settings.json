@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__chrome-devtools-mcp__fill",
+      "mcp__chrome-devtools-mcp__evaluate_script"
+    ]
+  }
+}

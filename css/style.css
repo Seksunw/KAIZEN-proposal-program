@@ -1,0 +1,1684 @@
+/* ============================================================
+   KAIZEN Proposal Program — Suntory Wellness
+   stylesheet เดียวของทั้งแอป · แทน css/style.css ทั้งไฟล์
+   ไม่มี dark mode โดยตั้งใจ (ตัดออกตามการตัดสินใจออกแบบ)
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* พื้นหลังและพื้นผิว */
+  --bg: #F1F3F3;
+  --surface: #ffffff;
+  --surface-2: #FBFCFC;
+  --surface-3: #E9ECEC;
+
+  /* เส้น */
+  --border: #DEE3E4;
+  --border-strong: #C3CACC;
+  --line-soft: #EDF0F0;
+
+  /* ตัวอักษร — ทุกค่าผ่าน contrast 4.5:1 บนพื้นขาวและพื้น --bg */
+  --text: #15191B;
+  --muted: #545C61;        /* 6.8:1 */
+  --muted-2: #62696E;      /* 4.6:1 */
+  --ghost: #98A0A5;        /* กราฟิกเท่านั้น ห้ามใช้กับตัวอักษร */
+
+  /* สี action — Action Blue เดียวทั้งระบบ (ตาม apple.design.md) ใช้เฉพาะปุ่ม/ลิงก์/focus
+     ไม่แตะสีสถานะ (--danger/--warning/--st-*) เพราะเป็นคนละหน้าที่ (semantic ไม่ใช่ action) */
+  --primary: #0066cc;
+  --primary-hover: #0052a3;
+  --primary-soft: #E8F1FC;
+  --primary-line: #BBD9F5;
+
+  /* สีแบรนด์ Suntory — ใช้กับ identity ไม่ใช่ action */
+  --brand: #1F7791;
+
+  /* สีสถานะ */
+  --danger: #B91C1C;
+  --danger-soft: #FEF2F2;
+  --danger-line: #E9C4C4;
+  --warning: #92400e;
+  --warning-ink: #7A4C0A;
+  --warning-soft: #FFF8EB;
+  --warning-line: #F3DDB4;
+  --info: #0E7490;
+  --info-soft: #E4F6F9;
+  --info-line: #B7E2EE;
+  --violet: #5B21B6;
+  --violet-soft: #F5F0FF;
+  --violet-line: #DFD2FA;
+  --blue: #1D4ED8;
+  --blue-soft: #EAF1FF;
+
+  /* เรขาคณิต — ปรับมนขึ้นตาม apple.design.md (เดิมตั้งใจให้มนน้อย 3/4/5px) —
+     --radius-pill ใหม่สำหรับปุ่ม action (ทรง pill แบบ Apple) */
+  --radius-lg: 14px;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-pill: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(21, 25, 27, 0.05);
+  --shadow: 0 1px 2px rgba(21, 25, 27, 0.05), 0 6px 16px rgba(21, 25, 27, 0.05);
+
+  --sidebar-w: 236px;
+  --topbar-h: 0px;
+
+  --font: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* จังหวะระยะห่าง — มาตรฐานเดียวทั่วระบบ (2026-09-09): 4/8/12/16/24/32/48px */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* สถานะโครงการ — need_revision ทึบเพราะรอผู้ใช้ลงมือ ที่เหลือเงียบ */
+  --st-draft-bg: #F1F3F3;        --st-draft-fg: #545C61;      --st-draft-dot: #98A0A5;
+  --st-submitted-bg: #EAF1FF;    --st-submitted-fg: #1D4ED8;  --st-submitted-dot: #1D4ED8;
+  --st-inprogress-bg: #FFF8EB;   --st-inprogress-fg: #92400e; --st-inprogress-dot: #B45309;
+  --st-pending-bg: #F5F0FF;      --st-pending-fg: #5B21B6;    --st-pending-dot: #6D28D9;
+  --st-scored-bg: #E4F6F9;       --st-scored-fg: #0E7490;     --st-scored-dot: #0E7490;
+  --st-approved-bg: #ECFDF5;     --st-approved-fg: #047857;   --st-approved-dot: #047857;
+  --st-revision-bg: #B91C1C;     --st-revision-fg: #ffffff;   --st-revision-dot: #B91C1C;
+  --st-published-bg: #ECFDF5;    --st-published-fg: #047857;  --st-published-dot: #047857;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -0.012em; }
+a { color: var(--primary); }
+a:hover { color: var(--primary-hover); }
+
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.mono, .code { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.code { white-space: nowrap; font-size: 0.78em; color: var(--muted-2); }
+
+/* ============ shell ============ */
+.shell { display: flex; min-height: 100vh; }
+
+/* ============ mobile chrome (bottom tabbar + drawer) — 2026-09-10 ============
+   id ใหม่ล้วนๆ ไม่เคยมีมาก่อนหน้านี้ ปิดไว้นอก media query เป็น defense-in-depth (เผื่อ
+   [hidden] มีปัญหา element พวกนี้จะไม่มีวัน render ได้ที่ ≥760px) กติกาการแสดงผลจริงทั้งหมด
+   อยู่ใน @media (max-width:760px) ด้านล่างเท่านั้น — ไม่กระทบ selector เดิมใดๆ ในไฟล์นี้เลย */
+#mobile-tabbar, #mobile-drawer-backdrop, #mobile-drawer { display: none; }
+
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+/* ★ ต้องมี rule นี้ — #sidebar { display:flex } (author style) ชนะ [hidden] { display:none }
+   (browser UA default) เสมอ ไม่ว่า specificity จะเท่าไหร่ก็ตาม ถ้าไม่ประกาศ override เอง
+   ผลคือ app.js สั่ง sidebar.hidden=true ตอน logout แล้ว sidebar ไม่หายจริง (เจอจาก
+   ทดสอบจริง — logout แล้วหน้า login ถูกบีบแคบเพราะ sidebar เดิมยังกิน layout อยู่) */
+#sidebar[hidden] { display: none; }
+
+.sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.sidebar-brand img { display: block; width: 118px; height: auto; }
+.sidebar-brand .brand-sub {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+#sidebar-nav { display: flex; flex-direction: column; gap: 1px; padding: 10px 8px; flex: 1; }
+
+#sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+#sidebar-nav a:hover { background: var(--bg); color: var(--text); }
+#sidebar-nav a.active {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-weight: 600;
+}
+#sidebar-nav a > span:not(.nav-icon):not(.nav-count) { flex: 1; }
+#sidebar-nav .nav-icon { width: 17px; height: 17px; flex-shrink: 0; display: inline-flex; opacity: 0.85; }
+#sidebar-nav .nav-icon svg { width: 100%; height: 100%; }
+
+.nav-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.nav-count.is-warning { background: var(--warning-soft); color: var(--warning); }
+.nav-count.is-quiet { background: var(--primary-soft); color: var(--primary); }
+
+#sidebar-nav .nav-section {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--muted);
+  padding: 22px 12px 6px;
+}
+
+#sidebar-user {
+  border-top: 1px solid var(--line-soft);
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.sidebar-user-link {
+  display: flex; flex-direction: row; align-items: center; gap: 9px;
+  flex: 1; min-width: 0; text-decoration: none; color: inherit;
+  border-radius: var(--radius);
+}
+.sidebar-user-link:hover { background: var(--surface-2); }
+.sidebar-user-info { min-width: 0; flex: 1; }
+.sidebar-user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-role { font-size: 11.5px; color: var(--muted-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.sidebar-user-actions button { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; }
+.sidebar-user-actions button svg { width: 16px; height: 16px; display: block; }
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--text);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+}
+.avatar.is-quiet { background: var(--surface-3); color: var(--muted); }
+.avatar.is-sm { width: 28px; height: 28px; font-size: 12px; }
+.avatar.is-xl { width: 96px; height: 96px; font-size: 30px; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+
+/* ============ profile.js — โปรไฟล์ของฉัน ============ */
+.profile-hero {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 40px 24px 32px; border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: #fff;
+}
+.profile-avatar-wrap { position: relative; }
+.profile-avatar-wrap .avatar { background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.6); }
+.profile-avatar-edit {
+  position: absolute; right: -2px; bottom: -2px;
+  width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%;
+  background: #fff; color: var(--primary); border: 2px solid var(--primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.profile-avatar-edit svg { width: 15px; height: 15px; }
+.profile-name { margin-top: var(--sp-4); font-size: 19px; font-weight: 700; }
+.profile-role-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: var(--sp-2); }
+.profile-hero .badge-outline { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); color: #fff; }
+
+.profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: var(--sp-5); }
+.profile-stat-card {
+  text-align: center; padding: 14px 8px; border-radius: var(--radius-lg);
+  background: var(--primary-soft); border: 1px solid var(--primary-line);
+}
+.profile-stat-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+.profile-stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.profile-settings { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-top: var(--sp-3); }
+.profile-settings-row {
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line-soft);
+  font-size: 14.2px; background: var(--surface);
+}
+.profile-settings-row:last-child { border-bottom: none; }
+.profile-settings-label { color: var(--muted); flex-shrink: 0; }
+.profile-settings-value { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.profile-settings-row.is-button { width: 100%; border: none; border-radius: 0; cursor: pointer; min-height: 0; color: var(--text); font: inherit; }
+.profile-settings-row.is-button:hover { background: var(--surface-2); }
+.profile-settings-row.is-danger .profile-settings-label { color: var(--danger); font-weight: 600; }
+
+.shell-main { flex: 1; min-width: 0; }
+
+main#app { display: block; padding: 0 0 72px; }
+
+/* ★ ทุก view render ด้วย container.innerHTML = ... เสมอ (ไม่มีไฟล์ไหนใช้ appendChild) แปลว่า
+   #app มี child ใหม่ล้วนๆ ทุกครั้งที่เปลี่ยนหน้า/เปลี่ยน step ของ wizard — ไม่ต้องแก้ router.js
+   เลยสักบรรทัด แค่แปะ animation ไว้ที่นี่ก็ fire อัตโนมัติทุกครั้ง (2026-09-10) */
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#app > * { animation: pageFadeIn 0.2s ease both; }
+
+/* ============ page header ============ */
+.page-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 32px 18px;
+}
+.page-header-inner,
+.page-header > .page-header-main,
+.page-header > .page-header-actions { max-width: 1140px; }
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 24px;
+}
+.page-header-main { flex: 1; min-width: 240px; }
+.page-header h1 { margin: 0 0 4px; font-size: 25px; font-weight: 700; }
+.page-header .page-sub { margin: 0; font-size: 13.5px; color: var(--muted); }
+.page-header-actions { display: flex; gap: 9px; flex-shrink: 0; }
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+/* ★ dashboard.js — การ์ดรอบการประเมิน (2026-09-15) ผู้ใช้ขอแยกสไตล์ต่างจาก .eyebrow ทั่วไป
+   (ใหญ่ขึ้นเท่าตัวหนังสือ "วันก่อนปิดรับ" 13.5px, สีเขียว + glow) — ตั้งใจใช้ class เพิ่มต่างหาก
+   ไม่แก้ .eyebrow ตรงๆ เพราะ class นั้นใช้ร่วมกับ pageHeader() ใน ui.js/kaizenForm.js ทุกหน้า
+   แก้ตรงนั้นจะกระทบ eyebrow ทั้งแอปโดยไม่ตั้งใจ */
+.period-eyebrow {
+  font-size: 13.5px;
+  color: #16a34a;
+  animation: periodEyebrowPulse 1.8s ease-in-out infinite;
+}
+@keyframes periodEyebrowPulse {
+  0%, 100% { text-shadow: 0 0 4px rgba(22, 163, 74, 0.35); }
+  50% { text-shadow: 0 0 12px rgba(22, 163, 74, 0.85); }
+}
+
+.page-body { max-width: 1140px; padding: 24px 32px 0; }
+.page-body.is-narrow { max-width: 900px; }
+
+.breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-bottom: 8px; font-size: 12.8px; }
+.breadcrumb a { color: var(--muted); text-decoration: none; font-weight: 500; }
+.breadcrumb a:hover { color: var(--text); text-decoration: underline; }
+.breadcrumb a, .breadcrumb span:not(.sep) { min-width: 0; overflow-wrap: anywhere; }
+.breadcrumb .sep { color: var(--border-strong); }
+
+/* ============ section heads (แทนการ์ดซ้อนการ์ด) ============ */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+  margin-top: var(--sp-6);
+}
+.section-head:first-child { margin-top: 0; }
+/* ★ ต้องมี min-width:0 — flex item ปกติ min-width:auto จะไม่ยอมหดต่ำกว่าความกว้างข้อความ
+   บรรทัดเดียวของตัวเอง หัวข้อภาษาไทยยาวๆ คู่กับปุ่ม/note ท้ายแถว เลยดันทั้งแถวกว้างเกิน
+   viewport ที่จอแคบมาก (320px) — เจอจากทดสอบจริง (2026-09-10) */
+.section-head h2 { margin: 0; font-size: 15px; font-weight: 700; min-width: 0; }
+.section-head .section-note { font-size: 12.5px; color: var(--muted); }
+.section-head .spacer { flex: 1; }
+/* ★ จุดเดียวที่ไม่ต้องมีเส้นใต้หัวข้อ (dashboard.js: การ์ด "ต้องทำก่อน") — override เฉพาะจุด
+   ไม่แตะ .section-head เดิมเพราะใช้ร่วมกันทั่วระบบ (kaizenList/reviewScore/หน้า admin ฯลฯ) */
+.section-head.is-borderless { border-bottom: none; padding-bottom: 10px; }
+
+/* ============ surfaces ============ */
+.card,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+}
+.panel.is-flush { padding: 0; overflow: hidden; }
+/* ★ เจอจากทดสอบมือถือจริง — ตาราง (kaizenList/adminUsers/adminMaster/adminPeriods) ที่กว้างเกิน
+   viewport จะ scroll แนวนอนได้ก็จริง แต่ไม่มี hint ใดๆ เลยว่ายังมีคอลัมน์ (เช่น "สิทธิ์" ที่เป็น
+   ปุ่มสำคัญที่สุดในหน้าจัดการผู้ใช้) ซ่อนอยู่นอกจอ — ใช้ shadow-gradient สี่ชั้นมาตรฐาน (2 ชั้น
+   "local" ไว้ mask, 2 ชั้น "scroll" ไว้เป็นเงาจริง) โชว์เงาที่ขอบซ้าย/ขวาเฉพาะตอนยังเลื่อนได้ในทิศนั้น
+   และหายไปเองตอนเลื่อนสุดขอบ — ไม่ต้องแก้ JS/markup เลย ใช้ได้กับทุกตารางที่ห่อด้วย .is-scroll */
+/* ★ ตารางรอบการประเมิน (adminPeriods.js) — fix ความสูงไว้พอสำหรับ 4 แถว ถ้ามีมากกว่านั้น
+   ให้เลื่อนดูแนวตั้งเอาแทนที่จะยืดหน้าไปเรื่อยๆ */
+.periods-table { max-height: 234px; overflow-y: auto; }
+
+.panel.is-scroll {
+  padding: 0;
+  overflow-x: auto;
+  background-image:
+    linear-gradient(to right, var(--surface) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(255, 255, 255, 0), var(--surface) 70%),
+    linear-gradient(to right, rgba(21, 25, 27, .12), rgba(21, 25, 27, 0)),
+    linear-gradient(to left, rgba(21, 25, 27, .12), rgba(21, 25, 27, 0));
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.card h1 { margin: 0 0 4px; font-size: 21px; font-weight: 700; }
+.card h2 { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+/* ★ ตั้งใจไม่ scope ด้วย .card — ตรวจแล้วว่า h3 ทุกจุดในแอป (kaizenDetail/reviewScore/
+   kaizenForm ขั้น 5) ไม่เคยอยู่ใน .card เลยสักจุด ถ้า scope ไว้แบบเดิม h3 พวกนี้จะไม่ถูก
+   จัดสไตล์เลย ใช้ browser default แทน (ใหญ่กว่า/ระยะห่างไม่ตรงกับ h2 ข้างเคียงที่ผ่าน
+   .card h2/.section-head h2 มาแล้ว) */
+h3 { margin: var(--sp-5) 0 10px; font-size: 15px; font-weight: 700; }
+h3:first-child { margin-top: 0; }
+.card hr, hr { border: none; border-top: 1px solid var(--border); margin: var(--sp-5) 0; }
+
+.summary {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 15px 18px;
+  margin: var(--sp-3) 0;
+}
+
+/* คู่ label/value แทน <p><strong>…</strong> …</p> */
+.def-grid { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 13.5px; }
+.def-grid dt { color: var(--muted); }
+.def-grid dd { margin: 0; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+
+/* ============ typography helpers ============ */
+.muted { color: var(--muted); font-weight: 400; }
+.muted-2 { color: var(--muted-2); }
+.field-hint { margin: 0 0 var(--sp-2); font-size: 12.8px; color: var(--muted); line-height: 1.5; }
+.metric { font-family: var(--font-mono); font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.metric.is-xl { font-size: 30px; }
+.metric.is-lg { font-size: 24px; }
+.metric.is-md { font-size: 19px; }
+
+/* อันดับ leaderboard — อ้างถึงใน MIGRATION.md ข้อ 9 แต่ไม่มีนิยามมาในไฟล์ style.css ต้นทาง */
+.rank-num { font-family: var(--font-mono); font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-num.is-top { font-size: 19px; color: var(--text); font-weight: 600; }
+
+/* ============ task list (แทน .stat-grid / .stat-tile) ============ */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 14px 14px;
+  flex-wrap: wrap;
+  transition: border-color 0.12s ease;
+}
+.task-row:hover { border-color: var(--border-strong); }
+.task-row .task-rail { width: 4px; align-self: stretch; min-height: 34px; border-radius: 2px; flex-shrink: 0; background: var(--ghost); }
+.task-row.is-urgent .task-rail { background: var(--danger); }
+.task-row.is-warning .task-rail { background: #B45309; }
+.task-row.is-committee .task-rail { background: #6D28D9; }
+.task-row .task-main { flex: 1; min-width: 200px; }
+.task-row .task-main > div:last-child { min-width: 0; }
+.task-row .task-title { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.task-row .task-meta { font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+.task-row .task-tags { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 2px; }
+.task-row .task-tags > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* ============ rows (แทน .data-table ในหน้าที่เป็นรายการ) ============ */
+.row-list { display: flex; flex-direction: column; }
+.row-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+  color: var(--text);
+}
+.row-item:last-child { border-bottom: none; }
+.row-item:hover { background: var(--surface-2); }
+.row-item .row-main { flex: 1; min-width: 0; }
+.row-item .row-title { font-size: 14.5px; font-weight: 600; }
+.row-item .row-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.row-item .row-end { text-align: right; flex-shrink: 0; }
+
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.dot[data-status="draft"] { border: 1.5px solid var(--st-draft-dot); }
+.dot[data-status="submitted"] { background: var(--st-submitted-dot); }
+.dot[data-status="in_progress"] { background: var(--st-inprogress-dot); }
+.dot[data-status="pending_review"] { background: var(--st-pending-dot); }
+.dot[data-status="scored"] { background: var(--st-scored-dot); }
+.dot[data-status="approved"] { background: var(--st-approved-dot); }
+.dot[data-status="need_revision"] { background: var(--st-revision-dot); }
+.dot[data-status="published"] { background: var(--st-published-dot); }
+
+/* ============ tables ============ */
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+/* ตารางที่มีคอลัมน์เยอะเป็นพิเศษ (adminUsers.js: พนักงาน/แผนก/โรงงาน/สิทธิ์) — class แทน
+   inline style เพื่อให้ override ใน @media (max-width:760px) ได้สะอาดๆ โดยไม่ต้องใช้ !important */
+.data-table.is-wide { min-width: 760px; }
+.data-table th {
+  text-align: left;
+  padding: 9px 16px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--surface-2); }
+/* แถวที่แก้ไขแล้วยังไม่ได้บันทึก (adminUsers.js/adminMaster.js) — ใช้ token เดียวกับ
+   .warning แทนการ hardcode hex ซ้ำกันหลายจุด */
+.data-table tbody tr.is-dirty td { background: var(--warning-soft); }
+/* แถวที่ต้องการความสนใจ (kaizenList.js: need_revision) — ใช้ token เดียวกับ .error/
+   .checklist-item.is-blocked แทนการ hardcode hex ใหม่ */
+.data-table tbody tr.is-attention td { background: var(--danger-soft); }
+.data-table td .cell-title { font-size: 14.8px; font-weight: 600; }
+.data-table td .cell-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+/* ★ อีเมลยาวเกินตัดด้วย ... บรรทัดเดียว (adminUsers.js) แทนขึ้นบรรทัดใหม่/ล้นการ์ด — scope
+   เฉพาะ class นี้ ไม่แตะ .cell-sub กลางเพราะ adminPeriods.js/kaizenList.js ยังใช้ wrap ตามปกติ
+   ใช้ได้ทั้งเดสก์ท็อป/มือถือ ไม่ผูกกับ breakpoint ใด */
+.au-row-email { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ★ เจอจากทดสอบอีเมลยาวจริง — .hstack ทั่วไป flex-wrap:wrap (ตั้งใจไว้ใช้จุดอื่น) แต่ตัว
+   .au-row-email ที่ white-space:nowrap ทำให้ browser คำนวณ hypothetical width จากความยาวข้อความ
+   เต็มๆ (ไม่สนใจ min-width:0/ellipsis ตอนตัดสินใจ wrap) เกินพื้นที่บรรทัดเดียวเสมอ เลยดันรูป/
+   ชื่อ/ปุ่ม chevron แยกไปคนละบรรทัดเป็น 3 บรรทัดซ้อนกัน แทนที่จะอยู่แถวเดียวแล้วตัดคำแค่ในตัวเอง —
+   ปิด wrap เฉพาะแถวสรุปนี้ (ไม่แตะ .hstack กลาง) ให้บังคับอยู่บรรทัดเดียวเสมอ */
+.au-row-summary .hstack { flex-wrap: nowrap; }
+.data-table td.is-num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.data-table th.is-num { text-align: right; }
+
+.list-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+
+/* ============ badges ============ */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--st-draft-bg);
+  color: var(--st-draft-fg);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge[data-status="draft"]          { background: var(--st-draft-bg); color: var(--st-draft-fg); }
+.badge[data-status="submitted"]      { background: var(--st-submitted-bg); color: var(--st-submitted-fg); }
+.badge[data-status="in_progress"]    { background: var(--st-inprogress-bg); color: var(--st-inprogress-fg); }
+.badge[data-status="pending_review"] { background: var(--st-pending-bg); color: var(--st-pending-fg); }
+.badge[data-status="scored"]         { background: var(--st-scored-bg); color: var(--st-scored-fg); }
+.badge[data-status="approved"]       { background: var(--st-approved-bg); color: var(--st-approved-fg); }
+.badge[data-status="published"]      { background: var(--st-published-bg); color: var(--st-published-fg); }
+/* ทึบ เพราะเป็นสถานะเดียวที่รอผู้ใช้ลงมือ */
+.badge[data-status="need_revision"]  { background: var(--st-revision-bg); color: var(--st-revision-fg); }
+.badge[data-status="open"]           { background: var(--st-approved-bg); color: var(--st-approved-fg); }
+.badge[data-status="scoring"]        { background: var(--st-inprogress-bg); color: var(--st-inprogress-fg); }
+.badge[data-status="closed"]         { background: var(--st-scored-bg); color: var(--st-scored-fg); }
+
+.badge-outline { background: transparent; border: 1px solid var(--border); color: var(--muted-2); font-weight: 600; }
+
+/* ============ forms ============ */
+form { display: flex; flex-direction: column; gap: var(--sp-5); margin: var(--sp-4) 0; }
+
+.field { display: block; }
+.field > label,
+label.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-2);
+}
+.req { color: var(--danger); }
+
+/* label แบบเดิม (flex column) ยังใช้ได้ แต่เปลี่ยนสีให้อ่านง่ายขึ้น — gap: var(--sp-2) (8px)
+   ตามมาตรฐานระยะ label→input ทั่วระบบ */
+label { display: flex; flex-direction: column; gap: var(--sp-2); font-size: 14px; font-weight: 600; color: var(--text); }
+
+input, select, textarea {
+  font: inherit;
+  font-size: 15px;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+textarea { line-height: 1.6; resize: vertical; min-height: 92px; }
+input[type="checkbox"], input[type="radio"] {
+  width: 18px; height: 18px; min-height: 0; padding: 0;
+  accent-color: var(--primary);
+}
+input[type="file"] { padding: 9px 11px; }
+/* iOS Safari เรนเดอร์ date/datetime-local ด้วย native chrome ที่ไม่เคารพ box-sizing เท่า
+   text input ธรรมดา ทำให้กว้าง/สูงไม่เท่ากับช่องข้างเคียงแม้ width จะเท่ากันใน CSS ก็ตาม —
+   ปิด native appearance ให้ใช้กล่องเดียวกับ input ทั่วไปแทน ยังกดเปิด date picker ได้ปกติ */
+input[type="date"], input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.14);
+}
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--bg);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+input.is-invalid, textarea.is-invalid, select.is-invalid { border-color: var(--danger); }
+input.is-invalid:focus, textarea.is-invalid:focus { box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12); }
+input.is-num { font-family: var(--font-mono); text-align: right; }
+
+.field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+/* input ค้นหา/ชื่อประกาศที่ตั้งใจให้แคบกว่าปกติบนเดสก์ท็อป (นั่งข้างปุ่ม/chip อื่น) — บนมือถือ
+   ยืดเต็มความกว้างมาตรฐานเหมือนช่องอื่นทั้งหมด กันความรู้สึก "ระยะซ้ายขวาไม่เท่ากัน" ระหว่างหน้า */
+.field-narrow { max-width: 260px; }
+/* Min/Max/Rank ในตาราง adminMaster.js (budget_band/cost_saving_band) — ทุกช่องกว้างเท่ากัน
+   สม่ำเสมอ (ก่อนหน้านี้ 100px/100px/70px ตายตัวจนตัวเลขอย่าง 19999.99 โดนตัด) และ label อยู่
+   บน input เสมอ (ใช้ label เปล่า ไม่ใช่ .field-label ซึ่งเป็น display:block ทำให้ label+input
+   เรียงติดกันแนวนอนแทนที่จะซ้อนกัน) */
+.extra-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+.extra-fields label { flex: 1 1 110px; margin: 0; }
+
+/* ตัวนับตัวอักษร */
+.char-count { display: flex; align-items: center; gap: 10px; margin-top: var(--sp-2); flex-wrap: wrap; }
+.char-count .bar { flex: 1; min-width: 140px; height: 3px; background: var(--line-soft); border-radius: 2px; overflow: hidden; }
+.char-count .bar > i { display: block; height: 3px; background: #B45309; }
+.char-count.is-ok .bar > i { background: var(--primary); }
+.char-count .n { font-family: var(--font-mono); font-size: 12.5px; color: #B45309; }
+.char-count .msg { font-size: 12.8px; color: #B45309; font-weight: 500; }
+.char-count.is-ok .n, .char-count.is-ok .msg { color: var(--primary); }
+
+/* ★ ผู้ใช้ขอให้หัวข้อ fieldset (หมวดปัญหา/ระดับผลกระทบ/สิ่งที่ต้องการสนับสนุน — ใช้แค่ 3 จุดนี้
+   ใน kaizenForm.js เท่านั้น แก้ตรงนี้ได้ปลอดภัยไม่กระทบหน้าอื่น) ดูเหมือน label ธรรมดาด้านบน
+   (2026-09-16) — เดิม fieldset มีกรอบ/พื้นหลัง/padding ทำให้ดูเป็นกล่องแยกต่างหาก ตัดออกให้เหลือ
+   แค่ข้อความหัวข้อเปล่าๆ เหมือน label */
+fieldset { border: none; padding: 0; margin: 0; background: transparent; }
+legend { padding: 0; margin-bottom: var(--sp-2); color: var(--text); font-size: 14px; font-weight: 600; }
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  display: inline-flex;
+  min-height: 44px;
+  margin: 0 14px 0 0;
+  color: var(--text);
+  font-weight: 400;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
+.member-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+.member-row input { flex: 1; min-width: 160px; }
+.member-row .icon-btn { flex-shrink: 0; }
+
+/* ============ buttons ============ */
+button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 14.5px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+button:hover { background: var(--primary-hover); }
+/* กดแล้วยุบเล็กน้อยให้รู้สึกตอบสนอง (transform ไม่กระทบ layout/reflow เลย ปลอดภัยกับปุ่มทุก
+   variant ในแอป — .chip/.pick/.filter-chip/.icon-btn ล้วนเป็น <button> เหมือนกันหมด)
+   ★ 0.95 ตรงตาม apple.design.md (เดิม 0.96) */
+button:active { transform: scale(0.95); }
+button:disabled { background: var(--border-strong); color: #fff; cursor: not-allowed; }
+
+button.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+button.secondary:hover { background: var(--bg); border-color: var(--ghost); }
+button.secondary:disabled { background: var(--surface); color: var(--ghost); border-color: var(--line-soft); }
+
+button.ghost { background: transparent; color: var(--muted); font-weight: 500; }
+button.ghost:hover { background: var(--bg); color: var(--text); }
+
+button.danger { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); }
+button.danger:hover { background: var(--surface); border-color: var(--danger); color: var(--danger); }
+
+button.is-sm { font-size: 13px; min-height: 36px; padding: 7px 12px; }
+button.icon-btn { width: 44px; min-height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+button.icon-btn:hover { background: var(--bg); color: var(--text); }
+button.icon-btn svg { width: 16px; height: 16px; display: block; }
+
+.btn-block { width: 100%; }
+
+/* ============ chips (แทน checkbox แถวเล็ก ๆ ในฟอร์ม) ============ */
+.chip-set { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--ghost); color: var(--text); background: var(--surface); }
+.chip.is-on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.chip.is-other { border-style: dashed; }
+
+/* ============ toggle switch list (หมวดปัญหา — kaizenForm.js) ============
+   ★ ผู้ใช้ขอ (2026-09-16 อ้างอิง Uiverse.io by namecho) เปลี่ยนจาก .chip เป็น toggle switch
+   แยกทีละแถว — สโคปเฉพาะจุดนี้ ไม่แตะ .chip กลางที่ใช้ร่วมกับหน้าอื่นทั่วแอป */
+.toggle-list { display: flex; flex-direction: column; }
+.toggle-row {
+  display: flex;
+  flex-direction: row; /* กัน global label{flex-direction:column} */
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-row-label { min-width: 0; overflow-wrap: anywhere; }
+/* ★ สีอ้างอิงจากตัวอย่าง Uiverse (--color-green ในต้นฉบับ จริงๆ เป็นสีฟ้า) เปลี่ยนมาใช้
+   var(--primary) ของแอปแทนให้ตรงธีมเดิม ไม่ผูกสี hardcode ใหม่ */
+.switch {
+  --button-width: 3.5em;
+  --button-height: 2em;
+  --toggle-diameter: 1.5em;
+  --button-toggle-offset: calc((var(--button-height) - var(--toggle-diameter)) / 2);
+  --toggle-shadow-offset: 10px;
+  --toggle-wider: 3em;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.switch input[type="checkbox"] { display: none; }
+.switch .slider {
+  display: inline-block;
+  width: var(--button-width);
+  height: var(--button-height);
+  background-color: var(--border-strong);
+  border-radius: calc(var(--button-height) / 2);
+  position: relative;
+  transition: 0.3s all ease-in-out;
+}
+.switch .slider::after {
+  content: "";
+  display: inline-block;
+  width: var(--toggle-diameter);
+  height: var(--toggle-diameter);
+  background-color: #fff;
+  border-radius: calc(var(--toggle-diameter) / 2);
+  position: absolute;
+  top: var(--button-toggle-offset);
+  transform: translateX(var(--button-toggle-offset));
+  box-shadow: var(--toggle-shadow-offset) 0 calc(var(--toggle-shadow-offset) * 4) rgba(0, 0, 0, 0.1);
+  transition: 0.3s all ease-in-out;
+}
+.switch input[type="checkbox"]:checked + .slider { background-color: var(--primary); }
+.switch input[type="checkbox"]:checked + .slider::after {
+  transform: translateX(calc(var(--button-width) - var(--toggle-diameter) - var(--button-toggle-offset)));
+  box-shadow: calc(var(--toggle-shadow-offset) * -1) 0 calc(var(--toggle-shadow-offset) * 4) rgba(0, 0, 0, 0.1);
+}
+.switch input[type="checkbox"]:active + .slider::after { width: var(--toggle-wider); }
+.switch input[type="checkbox"]:checked:active + .slider::after {
+  transform: translateX(calc(var(--button-width) - var(--toggle-wider) - var(--button-toggle-offset)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch .slider, .switch .slider::after { transition: none; }
+}
+
+.filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.filter-chip {
+  font: inherit; font-size: 13px; font-weight: 500;
+  min-height: 34px; padding: 6px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+}
+.filter-chip:hover { border-color: var(--ghost); color: var(--text); background: var(--surface); }
+.filter-chip.is-on { background: var(--text); border-color: var(--text); color: #fff; font-weight: 600; }
+.filter-chip.is-danger { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); font-weight: 600; }
+
+/* ============ pick cards (ตัวเลือกใหญ่แทน radio) ============ */
+.pick-set { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.pick {
+  font: inherit; text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.pick:hover { border-color: var(--ghost); background: var(--surface); }
+.pick.is-on { border-color: var(--primary); background: var(--primary-soft); }
+.pick .pick-title { font-size: 14.5px; font-weight: 600; }
+.pick.is-on .pick-title { color: var(--primary); }
+.pick .pick-sub { font-size: 12.8px; color: var(--muted); margin-top: 2px; }
+
+/* ============ wizard step rail — การ์ดใหญ่ scroll-snap ทีละใบ (2026-09-16) ============
+   ★ ผู้ใช้ส่งภาพตัวอย่าง (CSS scroll-snap tutorial) ยืนยันรอบสอง — ต้องการการ์ดใหญ่เต็มความกว้าง
+   โชว์ทีละขั้น ไม่ใช่แถบ chip เล็กเห็นพร้อมกันหลายอันแบบที่ทำรอบแรก ปุ่มซ้าย/ขวา กับจุดบอก
+   ตำแหน่งเรียก goToStep() ตัวเดียวกับที่คลิกการ์ดตรงๆ อยู่แล้ว — ปัดการ์ดเอง (scroll) ก็เปลี่ยน
+   ขั้นได้เหมือนกัน (ดู scroll listener ใน renderStep()) เนื้อหาแต่ละขั้นข้างในไม่แตะเลย */
+/* ★ ไม่มี margin-top เพิ่ม (2026-09-16) — ให้ระยะจาก banner เท่ากับหน้าอื่น (โครงการของฉัน/feed
+   ที่ 18px) แทนที่จะบวก var(--sp-4) ทับ baseline เดิมจนห่างเกิน (วัดจริงตอนนั้น 34-36px) */
+.step-carousel { display: flex; align-items: center; gap: 8px; margin: 0; }
+.step-carousel-arrow {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  padding: 0;
+  min-height: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.step-carousel-arrow svg { width: 18px; height: 18px; display: block; }
+.step-carousel-arrow:hover:not(:disabled) { background: var(--surface-2); }
+.step-carousel-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+.wizard.steps {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  scrollbar-width: none;
+}
+.wizard.steps::-webkit-scrollbar { display: none; }
+/* ★ align-items:center (ไม่ใช่ default stretch) — กัน flex row ดึงการ์ดทุกใบให้สูงเท่าใบที่สูง
+   ที่สุดในแถวเดียวกัน (เจอจากวัดจริง 2026-09-16 — ดู renderStepRail() ใน kaizenForm.js) */
+.wizard.steps { align-items: center; }
+.step-slide { display: flex; flex: 0 0 100%; scroll-snap-align: center; }
+/* ★ สูงเท่ากับ .pick (การ์ดเลือก "ประเภทโครงการ" ขั้น 1 — วัดจริง 74.3px) ตามที่ผู้ใช้ขอ
+   2026-09-16 — ลด padding/gap ลงจากเดิมด้วย ไม่ใช่ตั้ง min-height เฉยๆ เพราะ padding/font เดิม
+   ใหญ่กว่านั้นอยู่แล้ว ตั้ง min-height ต่ำกว่าเนื้อหาจริงจะไม่มีผลอะไร */
+.step-slide-card {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 74px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 28px;
+  background: var(--text);
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+.step-slide-card:hover { background: var(--text); }
+.step-slide-title {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 21px; font-weight: 700;
+}
+.step-slide-title svg { color: #6ee7b7; }
+.step-slide-status { font-size: 13px; color: rgba(255, 255, 255, 0.62); }
+.step-slide.is-current .step-slide-card { box-shadow: 0 0 0 3px var(--primary-soft), 0 12px 28px rgba(0, 0, 0, 0.18); }
+.step-slide.is-done .step-slide-card { background: var(--surface-3); color: var(--text); }
+.step-slide.is-done .step-slide-status { color: var(--muted); }
+.step-slide.is-done .step-slide-card:hover { background: var(--surface-3); }
+.step-slide-card:disabled {
+  background: var(--surface-2);
+  color: var(--muted-2);
+  cursor: not-allowed;
+}
+.step-slide-card:disabled .step-slide-status { color: var(--muted-2); }
+
+.step-carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+.step-carousel-dot {
+  width: 7px; height: 7px;
+  padding: 0;
+  min-height: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--border-strong);
+  cursor: pointer;
+}
+.step-carousel-dot:disabled { opacity: 0.4; cursor: not-allowed; }
+.step-carousel-dot.is-active { width: 18px; border-radius: 4px; background: var(--text); }
+
+.autosave { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--primary); }
+.autosave::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+.wizard-actions,
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: var(--sp-6);
+  padding: 12px 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.wizard-actions .spacer, .sticky-actions .spacer { flex: 1; }
+
+/* ============ progress bars ============ */
+.bar { height: 4px; background: var(--line-soft); border-radius: 2px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--primary); }
+.bar.is-lg { height: 5px; }
+.bar > i.is-warning { background: #B45309; }
+.bar > i.is-danger { background: var(--danger); }
+
+/* ============ status stepper (รอบประเมิน) ============ */
+.stepper { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: var(--sp-4); }
+.stepper .stp { display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 13.2px; font-weight: 500; color: var(--muted); }
+.stepper .stp .n {
+  font-family: var(--font-mono);
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ghost);
+  display: flex; align-items: center; justify-content: center; font-size: 11.5px;
+}
+.stepper .stp.is-done { color: var(--text); }
+.stepper .stp.is-done .n { background: var(--primary); border-color: var(--primary); color: #fff; }
+.stepper .stp.is-current { color: var(--text); font-weight: 700; }
+.stepper .stp.is-current .n { background: var(--text); border-color: var(--text); color: #fff; }
+.stepper .stp-line { width: 18px; height: 1px; background: var(--border); }
+
+/* ============ checklist ============ */
+.checklist { }
+.checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line-soft); }
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item .mark { flex-shrink: 0; margin-top: 2px; display: flex; color: var(--primary); }
+.checklist-item .mark svg { width: 14px; height: 14px; }
+.checklist-item.is-todo .mark { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border-strong); margin-top: 4px; }
+.checklist-item.is-blocked { background: #FEF9F9; }
+.checklist-item.is-blocked .mark { border-color: var(--danger); }
+.checklist-item.is-blocked .check-title { color: var(--danger); }
+.checklist-item.is-warning .mark { border-color: #B45309; }
+.checklist-item.is-warning .check-title { color: var(--warning); }
+.checklist-item .check-title { font-size: 14.2px; font-weight: 600; }
+.checklist-item .check-sub { font-size: 12.8px; color: var(--muted); margin-top: 2px; }
+
+/* ============ callouts ============ */
+.error, .warning, .success, .note {
+  border-radius: var(--radius-lg);
+  padding: 12px 15px;
+  font-size: 13.2px;
+  line-height: 1.55;
+  font-weight: 500;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.error { color: #8F1D1D; background: var(--danger-soft); border: 1px solid var(--danger-line); }
+.warning { color: var(--warning-ink); background: var(--warning-soft); border: 1px solid var(--warning-line); }
+.success { color: var(--primary-hover); background: var(--primary-soft); border: 1px solid var(--primary-line); }
+.note { color: #0B5A70; background: var(--info-soft); border: 1px solid var(--info-line); }
+.error svg, .warning svg, .success svg, .note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
+
+/* ============ empty / error / loading states ============ */
+.state-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.state-card .state-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+}
+.state-card .state-icon svg { width: 19px; height: 19px; }
+.state-card .state-main { flex: 1; min-width: 240px; }
+.state-card .state-title { font-size: 17px; font-weight: 700; margin-bottom: 5px; }
+.state-card .state-body { margin: 0; font-size: 13.8px; color: var(--muted); line-height: 1.6; max-width: 560px; text-wrap: pretty; }
+.state-card .state-actions { display: flex; gap: 9px; margin-top: 15px; flex-wrap: wrap; align-items: center; }
+.state-card.is-error .state-icon { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); }
+.state-card.is-warning .state-icon { background: var(--warning-soft); border-color: var(--warning-line); color: var(--warning); }
+.state-card.is-forbidden .state-icon { background: var(--violet-soft); border-color: var(--violet-line); color: var(--violet); }
+
+.empty-state {
+  padding: 26px 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  background: var(--surface-2);
+}
+.empty-state .empty-title { font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
+.empty-state p { margin: 0 auto; max-width: 460px; font-size: 13.2px; color: var(--muted); line-height: 1.55; }
+.empty-state .empty-actions { margin-top: 14px; }
+
+@keyframes shimmer { 0% { background-position: -320px 0; } 100% { background-position: 320px 0; } }
+.skeleton {
+  background: linear-gradient(90deg, var(--line-soft) 25%, #F6F8F8 50%, var(--line-soft) 75%);
+  background-size: 320px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-sm);
+}
+.skeleton-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.skeleton-row { display: flex; gap: 16px; padding: 15px 18px; border-bottom: 1px solid var(--line-soft); }
+.skeleton-row:last-child { border-bottom: none; }
+.skeleton-row .sk-main { flex: 1; }
+.skeleton-row .sk-line { height: 13px; }
+.skeleton-row .sk-line + .sk-line { height: 10px; margin-top: 8px; }
+.skeleton-row .sk-end { width: 104px; height: 22px; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+  /* ปิด animation ใหม่ทั้งหมด (2026-09-10) แต่คง end-state ไว้ — drawer ยังเปิด/ปิดได้ปกติ
+     แค่ไม่มี transition ระหว่างทาง เหมือนหลักการเดียวกับ .skeleton ด้านบน */
+  #app > * { animation: none; }
+  .lightbox { animation: none; }
+  .info-modal-backdrop, .info-modal { animation: none; }
+  button, .tabbar-link { transition: background-color 0.15s ease, border-color 0.15s ease; }
+  button:active, .tabbar-link:active { transform: none; }
+  #mobile-drawer, #mobile-drawer-backdrop { transition: none; }
+  .data-table.is-collapsible tr td, .au-row-chevron { transition: none; }
+  .wizard.steps { scroll-behavior: auto; }
+}
+
+/* ============ photos ============ */
+.photo-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: var(--sp-3); }
+.photo-slot {
+  aspect-ratio: 4 / 3;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); text-align: center; padding: 16px;
+  font-size: 12.5px; line-height: 1.45;
+}
+.photo-slot img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.photo-caption { display: flex; align-items: baseline; gap: 8px; margin-top: var(--sp-2); }
+.photo-caption .phase { font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.photo-caption .phase.is-after { color: var(--primary); }
+.photo-caption .fact { font-size: 12.8px; color: var(--muted); }
+
+.attach-phase { margin-bottom: var(--sp-5); }
+.attach-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: var(--sp-2) 0; align-items: stretch; }
+.attach-item { width: 118px; }
+.attach-item img {
+  width: 118px; height: 88px; object-fit: cover;
+  border-radius: var(--radius); border: 1px solid var(--border);
+  display: block; margin-bottom: 6px; background: var(--surface-3);
+  cursor: zoom-in;
+}
+
+/* ============ kaizenFeed.js — โครงการทั้งหมด (2026-09-15, แทนที่หน้า leaderboard เดิม) ============
+   .feed-card ใช้ฐาน .card (border/radius/พื้นหลังเดิม) แค่ override padding เป็น 0 ให้รูปเบียด
+   ขอบการ์ดได้เต็มๆ แล้วค่อยเว้น padding เฉพาะโซนเนื้อหาใน .feed-body แทน — ไม่โชว์คะแนน/อันดับ
+   ใดๆ ในหน้านี้ตามที่ตกลงไว้ (คะแนนยังอยู่ที่ dashboard.js "ผลรอบที่ประกาศแล้ว" เหมือนเดิม) */
+.feed-list { display: flex; flex-direction: column; gap: var(--sp-5); max-width: 640px; }
+.feed-card { padding: 0; overflow: hidden; cursor: pointer; }
+.feed-photo { position: relative; aspect-ratio: 16 / 9; background: var(--surface-3); }
+.feed-photo img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+
+/* ★ ปุ่มไลค์ (2026-09-15) — เก็บจริงใน kaizen_likes ไม่ใช่แค่ UI toggle ตำแหน่งมุมขวาล่างของ
+   รูป (ไม่ใช่มุมขวาล่างทั้งการ์ด กันชนกับวันที่ด้านล่างการ์ดที่ความสูงไม่คงที่) สไตล์อ้างอิงจาก
+   ที่ผู้ใช้ส่งมา (regular/solid heart สลับกันด้วย class .liked + pop animation ตอนกดไลค์) ปรับ
+   ขนาดเล็กลงและใส่พื้นหลังโปร่งแสงให้อ่านง่ายบนรูปพื้นหลังที่สีไม่แน่นอน */
+.like-btn {
+  position: absolute; right: 12px; bottom: 12px;
+  display: flex; align-items: center; gap: 5px;
+  min-height: 0; padding: 7px 11px;
+  background: rgba(0, 0, 0, 0.45); color: #fff;
+  border: none; border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.like-btn svg { width: 19px; height: 19px; display: block; }
+.like-btn .solid-heart { display: none; color: #ff3040; }
+.like-btn.liked .regular-heart { display: none; }
+.like-btn.liked .solid-heart { display: inline-block; animation: likePop 0.3s linear; }
+.like-btn .like-count { font-size: 12.5px; font-weight: 700; }
+@keyframes likePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .like-btn.liked .solid-heart { animation: none; }
+  .period-eyebrow { animation: none; text-shadow: 0 0 8px rgba(22, 163, 74, 0.55); }
+}
+.feed-header { padding: 0 var(--sp-5) var(--sp-2); }
+.feed-body { padding: var(--sp-3) var(--sp-5) 0; }
+.feed-owner-name { font-weight: 600; font-size: 13.5px; min-width: 0; overflow-wrap: anywhere; }
+.feed-owner-meta { font-size: 12px; color: var(--muted); }
+.feed-title { font-size: 16px; font-weight: 700; margin: 0 0 8px; overflow-wrap: anywhere; }
+/* ★ ผู้ใช้ขอย่อ "ปัญหา" เหลือ 2 บรรทัดพอ (2026-09-15) เพราะคลิกเข้าไปดูรายละเอียดเต็มได้อยู่แล้ว
+   — ตัดด้วย "..." แทนการล้น ไม่ได้ fix ความสูงทั้งการ์ด (ตามที่ผู้ใช้ปฏิเสธไปก่อนหน้านี้) แค่
+   ข้อความส่วนนี้ส่วนเดียว */
+.feed-text { font-size: 13.8px; line-height: 1.55; color: var(--muted); margin: 0 0 6px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.feed-text b { color: var(--text); font-weight: 600; }
+.feed-date { font-size: 12px; color: var(--muted); }
+
+/* ============ lightbox ============ */
+@keyframes lightboxIn { from { opacity: 0; } to { opacity: 1; } }
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(21, 25, 27, 0.86);
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px;
+  animation: lightboxIn 0.2s ease;
+}
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius); }
+.lightbox-close {
+  position: fixed; top: 20px; right: 20px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; min-height: 0; padding: 0;
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.22); }
+.lightbox-close svg { width: 18px; height: 18px; }
+
+/* ============ criteria detail popup (login/register — กดชื่อเกณฑ์ดู rubric เต็ม) ============ */
+@keyframes infoModalIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.info-modal-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(21, 25, 27, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  animation: lightboxIn 0.2s ease;
+}
+.info-modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  max-width: 440px; width: 100%; max-height: 82vh; overflow-y: auto;
+  padding: var(--sp-6); position: relative;
+  box-shadow: var(--shadow);
+  animation: infoModalIn 0.2s ease;
+}
+.info-modal h3 { margin: 0 var(--sp-6) var(--sp-4) 0; font-size: 18px; }
+.info-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface-2); border: none; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; min-height: 0; padding: 0;
+}
+.info-modal-close:hover { background: var(--surface-3); }
+.info-modal-close svg { width: 16px; height: 16px; }
+.info-modal-levels { display: flex; flex-direction: column; gap: 10px; }
+.score-option.is-static { cursor: default; }
+.score-option.is-static:hover { border-color: var(--border); }
+.dropzone {
+  width: 118px; height: 88px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer; font: inherit; font-size: 12.5px; min-height: 0; padding: 0;
+  flex-shrink: 0;
+}
+.dropzone:hover { border-color: var(--primary); color: var(--primary); background: #F7FCFA; }
+.dropzone svg { width: 19px; height: 19px; }
+
+/* ============ scoring ============ */
+.criteria-list { }
+.criterion-done, .criterion-todo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.criterion-done .mark { color: var(--primary); display: flex; flex-shrink: 0; }
+.criterion-done .mark svg { width: 14px; height: 14px; }
+.criterion-done .crit-name { flex: 1; font-size: 14.5px; font-weight: 600; }
+.criterion-done .crit-score { font-family: var(--font-mono); font-size: 14px; }
+.criterion-todo .mark { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border-strong); flex-shrink: 0; }
+.criterion-todo .crit-name { flex: 1; font-size: 14.5px; font-weight: 500; color: var(--muted); }
+.criterion-todo .crit-hint { font-size: 12.5px; color: var(--muted-2); margin-left: 9px; }
+.criterion-open { padding: 16px 15px; background: var(--surface-2); border-bottom: 1px solid var(--line-soft); }
+.criterion-open .crit-index { font-family: var(--font-mono); font-size: 12px; color: var(--muted-2); }
+.criterion-open .crit-name { font-size: 15px; font-weight: 700; }
+
+.score-option {
+  /* ★ ต้องประกาศ flex-direction:row ตรงนี้ — .score-option เป็น <label> เดียวกับ label ทั่วไป
+     ที่มี base rule label{flex-direction:column} (ไว้เรียง text+input ของ label ปกติ) ถ้าไม่
+     override จะสืบ column มาด้วย ทำให้ปุ่ม/เลข/ข้อความ เรียงเป็น 3 แถวซ้อนกันแทนที่จะอยู่แถวเดียว */
+  display: flex; flex-direction: row; align-items: flex-start; gap: 11px;
+  min-height: 44px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 14.2px;
+  line-height: 1.5;
+  margin-bottom: 7px;
+}
+.score-option:hover { border-color: var(--ghost); }
+.score-option input { margin-top: 2px; flex-shrink: 0; }
+.score-option .lv { font-family: var(--font-mono); font-weight: 500; color: var(--muted-2); flex-shrink: 0; margin-right: 10px; }
+.score-option span:not(.lv) { min-width: 0; overflow-wrap: anywhere; }
+.score-option.is-on { border-color: var(--primary); background: var(--primary-soft); }
+.score-option.is-on .lv { color: var(--primary); }
+.score-option.inline { display: inline-flex; flex-direction: row; align-items: center; margin-right: 8px; }
+
+.score-rail { position: sticky; top: 20px; }
+
+/* ============ timeline ============ */
+.timeline { list-style: none; padding: 0; margin: var(--sp-3) 0; }
+.timeline li { display: flex; gap: 14px; padding-bottom: 20px; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline .tl-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 4px; }
+.timeline .tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
+.timeline li:first-child .tl-dot { background: var(--primary); }
+.timeline .tl-line { width: 1px; flex: 1; background: var(--border); margin: 4px 0; }
+.timeline .tl-date { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+.timeline .tl-pct { font-size: 12.5px; font-weight: 700; color: var(--primary); }
+.timeline .tl-note { margin: 3px 0 0; font-size: 14.5px; line-height: 1.6; }
+.timeline .tl-obstacle { margin: 4px 0 0; font-size: 13px; color: var(--warning); }
+
+/* ============ auth ============ */
+.auth-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  align-items: stretch;
+}
+.auth-brand {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 56px 48px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  position: sticky; top: 0; align-self: start; height: 100vh;
+}
+.auth-brand img { display: block; width: 288px; height: auto; margin: 0 auto; }
+.auth-brand .brand-sub { font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--brand); margin-top: 12px; }
+.auth-brand .brand-line { margin: 40px 0 0; font-size: 20px; font-weight: 600; line-height: 1.45; max-width: 380px; text-wrap: pretty; }
+.criteria-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; max-width: 420px; }
+.criteria-tag {
+  font: inherit;
+  font-size: 12.8px; font-weight: 600; color: var(--primary);
+  background: var(--primary-soft); border: 1px solid var(--primary-line);
+  border-radius: var(--radius-sm); min-height: 0; padding: 5px 11px;
+  cursor: pointer;
+}
+.criteria-tag:hover { background: var(--primary-soft); border-color: var(--primary); }
+
+.auth-form-wrap { padding: 56px 48px; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; }
+.auth-card { width: 100%; max-width: 400px; background: none; border: none; padding: 0; margin: 0; }
+.auth-card h1 { margin: 0 0 5px; font-size: 25px; font-weight: 700; }
+.auth-card .auth-sub { margin: 0 0 26px; font-size: 13.5px; color: var(--muted); }
+.auth-card .divider { height: 1px; background: var(--border); margin: 26px 0; }
+
+/* ปุ่มสลับภาษาบนหน้า auth (login ฯลฯ) — position:fixed ตั้งใจไม่ผูกกับ .auth-shell grid/flex
+   ด้านล่างเลย ลอยอิสระเหมือนกันทั้ง desktop/มือถือโดยไม่ต้องมี media query แยก */
+.auth-lang-switch { position: fixed; top: calc(16px + env(safe-area-inset-top)); right: 16px; z-index: 5; }
+
+/* ★ toggle แบบ pill 2 ช่อง (TH/EN) ตาม design ที่ผู้ใช้ส่งมา (Uiverse.io by
+   Pradeepsaranbishnoi, 2026-09-15) — ตัดเหลือ 2 ตัวเลือกจาก 3 เดิม สีตามต้นฉบับที่ให้มา */
+/* ★ ไม่ตั้ง position ที่นี่ (ต้นฉบับ Uiverse ใช้ position:relative) — .auth-lang-switch (ด้านบน)
+   ตั้ง position:fixed ไว้แล้วสำหรับวางมุมขวาบน ถ้าตั้ง relative ซ้ำที่นี่จะชนกันตาม source order
+   (declare หลังกว่าชนะ) ทำให้ fixed หาย กลายเป็น block เต็มความกว้างจอ (เจอบั๊กนี้จริงตอนทดสอบ) */
+.lang-switch { display: flex; background: #fff; padding: 0.6rem; border-radius: 99px; }
+.lang-switch input[type="radio"] { display: none; }
+/* ★ label ทั่วแอปถูกบังคับ flex-direction:column ไว้ (ดู CLAUDE.md) ต้อง override เป็น row
+   ตรงๆ ไม่งั้น TH/EN จะเรียงตัวผิดทรงเงียบๆ */
+.lang-switch-tab {
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  position: relative; z-index: 2;
+  height: 28px; width: 44px;
+  font-size: 0.8rem; font-weight: 600; color: #15191B;
+  border-radius: 99px; cursor: pointer;
+  transition: color 0.2s ease-in;
+}
+.lang-switch input[type="radio"]:checked + .lang-switch-tab { color: #185ee0; }
+.lang-switch input[id="lang-switch-en"]:checked ~ .lang-switch-glider { transform: translateX(100%); }
+.lang-switch-glider {
+  position: absolute; z-index: 1;
+  height: 28px; width: 44px;
+  background: #e6eef9;
+  border-radius: 99px;
+  transition: transform 0.34s ease-out;
+}
+
+/* หน้าต้อนรับ (welcome.js) — layout เดียวคอลัมน์เดียวกึ่งกลางจอ ตั้งใจแยกจาก .auth-shell (split
+   2 คอลัมน์) เพราะนี่คือหน้าจอเดียวแบบ "splash", ไม่ใช่ฟอร์มที่มีเนื้อหาเยอะแบบ login/register */
+.welcome-shell {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px; text-align: center; background: var(--bg);
+}
+.welcome-hero { margin-bottom: 40px; }
+/* ★ glow สีฟ้าอ่อน (2026-09-15, ปรับจาก --brand เข้มเดิมตามที่ผู้ใช้ขอ) pulse เบาๆ รอบวงกลม */
+.welcome-blob {
+  width: 220px; height: 220px; margin: 0 auto; border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  animation: welcomeBlobPulse 2.2s ease-in-out infinite;
+}
+@keyframes welcomeBlobPulse {
+  0%, 100% { box-shadow: 0 0 20px 2px rgba(125, 211, 252, 0.4); }
+  50% { box-shadow: 0 0 42px 14px rgba(125, 211, 252, 0.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-blob { animation: none; box-shadow: 0 0 20px 2px rgba(125, 211, 252, 0.4); }
+}
+/* ★ .welcome-blob พื้นขาวเหมือนกันแล้ว (2026-09-15) เลยไม่ต้องมีกรอบ/เงาแยกการ์ดออกจากพื้น
+   หลังอีกต่อไป — ผู้ใช้ขอเอาออกให้กลมกลืนไปเลย เหลือแค่ padding ดันโลโก้ไม่ให้ชิดขอบวงกลม */
+.welcome-blob-card { background: #fff; padding: 10px 14px; }
+/* ★ ขยายจาก 150px (2026-09-15) — คำนวณแล้วว่าที่ 168px + padding ด้านบน กล่องยังพอดีอยู่ใน
+   วงกลม 220px เส้นผ่านศูนย์กลางด้วยระยะขอบเหลือ (ไม่ชนขอบวงกลม) ตรวจสอบสดผ่านพิกัดจริงแล้ว */
+.welcome-blob-card img { display: block; width: 168px; height: auto; }
+.welcome-hero .brand-sub { margin-top: 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--brand); }
+.welcome-body h1 { margin: 0 0 12px; font-size: 27px; font-weight: 700; }
+.welcome-subtitle { margin: 0 auto; max-width: 360px; color: var(--muted); font-size: 14.5px; line-height: 1.65; }
+.welcome-actions { width: 100%; max-width: 340px; margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.welcome-login-link { font-weight: 600; color: var(--primary); text-decoration: none; }
+.welcome-login-link:hover { text-decoration: underline; }
+.label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
+/* ============ floating label (login/register only) ============
+   ปรับจากตัวอย่างที่ผู้ใช้ส่งมา (พื้นเข้ม/border ใต้/label ลอยขึ้นตอน :valid) ให้เข้ากับธีมสว่าง
+   ของแอป — ★ ใช้ :not(:placeholder-shown) แทน :valid เป็นตัวจุด transition เพราะ :valid จะทำให้
+   ช่องที่ไม่ required (เช่น "ชื่อ-นามสกุล (English)") ลอย label ขึ้นทันทีตั้งแต่ยังว่างอยู่ (ช่องว่าง
+   ที่ไม่ required ถือว่า valid โดย browser default) — ต้องมี placeholder=" " (เว้นวรรค) ที่ input
+   ทุกตัวที่ใช้ pattern นี้ ไม่งั้น :placeholder-shown จะไม่มีผล
+   ★ โครงสร้างต้องเป็น <input> ก่อน <label> เสมอ (ไม่ใช่ label ห่อ input แบบที่อื่นในแอป) เพราะ CSS
+   ใช้ sibling selector input+label — และ label ที่นี่ต้อง override display/position เอง ไม่งั้นจะติด
+   label{display:flex;flex-direction:column} ของ global (ดูหมายเหตุเดียวกันใน .score-option) */
+.form-control { position: relative; }
+.form-control input {
+  display: block;
+  width: 100%;
+  padding: 15px 2px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: 0;
+  color: var(--text);
+}
+.form-control input:focus {
+  outline: none;
+  box-shadow: none;
+  border-bottom-color: var(--primary);
+}
+.form-control input.is-invalid { border-bottom-color: var(--danger); }
+.form-control label {
+  position: absolute;
+  display: block;
+  top: 15px;
+  left: 2px;
+  margin: 0;
+  pointer-events: none;
+}
+.form-control label span {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+  transition: transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55), font-size 0.2s ease, color 0.2s ease;
+}
+.form-control input:focus + label span,
+.form-control input:not(:placeholder-shown) + label span {
+  transform: translateY(-20px);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.form-control input.is-invalid + label span { color: var(--danger); }
+
+/* ============ layout helpers ============ */
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 36px; align-items: start; }
+/* ตารางสรุปหน้าทบทวน (kaizenForm.js ขั้น 6) — ป้ายชื่อ/ค่า/ปุ่มแก้ ต่อแถว ดู responsive override
+   ใน @media (max-width:760px) ด้านล่าง (ไม่งั้นคอลัมน์ป้ายชื่อ 170px ตายตัวจะเบียดคอลัมน์ค่าจน
+   เหลือพื้นที่ไม่ถึง 100px บนมือถือ) */
+.review-summary { display: grid; grid-template-columns: 170px 1fr auto; gap: 10px 16px; align-items: start; }
+.review-summary > div { min-width: 0; overflow-wrap: anywhere; }
+/* เหมือน .two-col แต่สัดส่วนไม่เท่ากัน (kaizenDetail.js: gallery+เนื้อหา 1.6fr / สรุปผล 1fr) */
+.detail-cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: var(--sp-5); }
+.stack.is-tight { gap: var(--sp-3); }
+.hstack { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hstack > * { min-width: 0; }
+.spacer { flex: 1; }
+
+/* ============ responsive ============ */
+@media (max-width: 900px) {
+  .page-header, .page-body, .wizard-actions, .sticky-actions { padding-left: 20px; padding-right: 20px; }
+  .two-col { grid-template-columns: 1fr; gap: var(--sp-5); }
+  .detail-cols { grid-template-columns: 1fr; gap: var(--sp-5); }
+}
+
+@media (max-width: 760px) {
+  :root { --mobile-tabbar-h: 60px; }
+
+  .shell { flex-direction: column; }
+  #sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .sidebar-brand { flex-direction: row; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: none; flex-shrink: 0; justify-content: center; width: 100%; }
+  .sidebar-brand img { width: 88px; }
+  .sidebar-brand .brand-sub { display: none; }
+  /* ★ 2026-09-10: nav/user ย้ายไปเป็น bottom tabbar + drawer ด้านล่างแทนแถบบนที่ต้องเลื่อน
+     แนวนอน (ใช้นิ้วโป้งลำบาก) — #sidebar เหลือแค่แถบโลโก้บางๆ */
+  #sidebar-nav, #sidebar-user { display: none; }
+
+  /* ---- bottom tab bar (เมนูหลัก — thumb-reachable) ---- */
+  #mobile-tabbar {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 10px rgba(21, 25, 27, 0.06);
+  }
+  #mobile-tabbar[hidden] { display: none; }
+
+  .tabbar-link {
+    flex: 1;
+    min-width: 0; /* ★ ไม่งั้น flex item ไม่ยอมหดต่ำกว่าความกว้างข้อความ label ทำให้ทั้งแถบ
+                     ดันกว้างเกิน viewport แทนที่จะให้ .tabbar-label ทำ ellipsis ตามที่ตั้งใจ */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    padding: 4px 2px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    background: transparent;
+    color: var(--muted);
+    text-decoration: none;
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease, transform 0.15s ease;
+  }
+  .tabbar-link:hover { background: var(--bg); color: var(--text); }
+  .tabbar-link.active {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .tabbar-icon { position: relative; display: inline-flex; width: 24px; height: 24px; opacity: 0.9; }
+  .tabbar-icon svg { width: 100%; height: 100%; }
+  .tabbar-link.active .tabbar-icon { opacity: 1; }
+  /* ★ 2026-09-10: ซ่อน label เหลือแค่ไอคอน (mirror bottom-nav ของ Instagram ตามที่ผู้ใช้ขอ) —
+     ซ่อนด้วย clip แบบ sr-only แทนการลบออกจาก markup เพื่อให้ยัง อ่านได้ผ่าน screen reader */
+  .tabbar-label {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  /* ปุ่ม "+" เสนอ KAIZEN ใหม่ กลางแถบ — กรอบเหลี่ยมมนล้อมไอคอนให้เด่นกว่าไอคอนอื่น */
+  .tabbar-create .tabbar-icon {
+    width: 27px; height: 27px;
+    border: 1.8px solid currentColor;
+    border-radius: 8px;
+    opacity: 1;
+  }
+  .tabbar-create .tabbar-icon svg { width: 60%; height: 60%; margin: 20% auto; display: block; }
+  /* avatar แทนไอคอนแฮมเบอร์เกอร์บนปุ่ม "เมนู" ตัวสุดท้าย (mirror รูปโปรไฟล์ท้ายแถบของ Instagram) */
+  .tabbar-avatar {
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 10.5px; font-weight: 700;
+    overflow: hidden;
+  }
+  .tabbar-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+  .tabbar-badge {
+    position: absolute; top: -4px; right: -6px;
+    min-width: 15px; height: 15px; padding: 0 3px;
+    border-radius: 999px;
+    background: var(--danger); color: #fff;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+
+  /* ---- drawer / bottom sheet (เมนูรอง — admin + ข้อมูลผู้ใช้ + ภาษา + ออกจากระบบ) ---- */
+  #mobile-drawer-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    z-index: 900;
+    background: rgba(21, 25, 27, 0.86);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  #mobile-drawer-backdrop[hidden] { display: none; }
+  #mobile-drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
+  #mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 901;
+    max-height: 78vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: 14px 14px 0 0;
+    box-shadow: var(--shadow);
+    padding: 8px 0 calc(var(--sp-4) + env(safe-area-inset-bottom));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: transform 0.22s ease, opacity 0.22s ease;
+  }
+  #mobile-drawer[hidden] { display: none; }
+  #mobile-drawer.is-open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+  .mobile-drawer-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 4px auto 10px; flex-shrink: 0; }
+  .mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4) 6px; flex-shrink: 0; }
+  .mobile-drawer-head .eyebrow { margin: 0; }
+
+  #mobile-drawer-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px var(--sp-4) var(--sp-4);
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+  /* .avatar/.sidebar-user-info/.sidebar-user-name/.sidebar-user-role/.sidebar-user-actions
+     reuse ของเดิมได้ตรงๆ — ไม่ scope ไว้กับ #sidebar-user เลยไม่ต้องเขียนใหม่ */
+
+  #mobile-drawer-nav { display: flex; flex-direction: column; gap: 1px; padding: 0 8px; }
+  #mobile-drawer-nav a {
+    display: flex; align-items: center; gap: 11px;
+    min-height: 44px; padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px; font-weight: 500;
+  }
+  #mobile-drawer-nav a:active { background: var(--bg); }
+  #mobile-drawer-nav a.active {
+    background: var(--primary-soft);
+    border-color: var(--primary-line);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  #mobile-drawer-nav .nav-icon { width: 17px; height: 17px; flex-shrink: 0; display: inline-flex; opacity: 0.85; }
+  #mobile-drawer-nav .nav-icon svg { width: 100%; height: 100%; }
+
+  /* ---- กันไม่ให้ bottom tabbar บังเนื้อหา/ปุ่ม sticky เดิม ---- */
+  main#app { padding-bottom: calc(72px + var(--mobile-tabbar-h) + env(safe-area-inset-bottom)); }
+  .wizard-actions, .sticky-actions { bottom: calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom)); }
+
+  .page-header { padding: 16px 16px 14px; gap: 14px; }
+  .page-header h1 { font-size: 21px; }
+  .page-body { padding: 18px 16px 0; }
+  .field-narrow { max-width: none; }
+  .wizard-actions, .sticky-actions { padding: 10px 16px; }
+
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-brand { position: static; height: auto; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+  .auth-brand img { width: 208px; }
+  .auth-brand .brand-line { font-size: 17px; margin-top: 24px; }
+  .auth-form-wrap { padding: 28px 20px 48px; min-height: 0; }
+
+  .card, .panel { padding: 18px 16px; }
+  .row-item { padding: 13px 0; }
+
+  /* ============ ตาราง → card 1 คอลัมน์ (2026-09-10) ============
+     ★ root cause ของปัญหา badge/dropdown โดนตัดขอบจอ: .data-table มี min-width:640px (760px
+     สำหรับ .is-wide) เป็น fixed width ตายตัว — ที่จอ 320-430px กว้างไม่พอ ตารางเลยล้นแนวนอน
+     แม้จะเลื่อนดูได้ (.panel.is-scroll) แต่คอลัมน์ขวาสุด (สถานะ/แผนก/สิทธิ์) โดนตัดพ้นจอตั้งแต่แรกเห็น
+     แก้ต้นเหตุ (ไม่ใช้ overflow-x:hidden กลบปัญหา) ด้วยการยุบ table/tr/td เป็น display:block
+     ให้แต่ละแถวกลายเป็น "card" 1 คอลัมน์แทน — ไม่แตะ markup/JS event เดิมเลยสักบรรทัด เพราะ
+     <table>/<tr>/<td> ยังเป็น element เดิม แค่เปลี่ยนวิธี render ด้วย CSS */
+  .data-table, .data-table.is-wide { min-width: 0; }
+  .panel.is-scroll { overflow-x: visible; background-image: none; }
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody { display: block; width: 100%; }
+  .data-table tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+  .data-table tr:last-child { margin-bottom: 0; }
+  .data-table td {
+    display: block;
+    min-width: 0;
+    border-bottom: none;
+    padding: 4px 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .data-table td:first-child { padding-top: 0; }
+  .data-table td:last-child { padding-bottom: 0; }
+  .data-table td:empty { display: none; padding: 0; }
+  /* select/input ในเซลล์ (adminMaster.js/adminUsers.js) กว้างเต็ม card แทนที่จะแคบเท่าคอลัมน์เดิม */
+  .data-table td select, .data-table td input { width: 100%; }
+  .data-table .hstack { min-width: 0; }
+  .data-table .hstack > div:last-child { min-width: 0; }
+  /* แถบสีบอกสถานะ (is-dirty/is-attention) เดิมทาสีทีละ td เป็นแถบๆ — ยุบเป็น card
+     เดียวแล้วให้ทาสีทั้ง card แทน ไม่งั้นจะเห็นเป็นแถบสีขาด ๆ ตาม td แต่ละก้อน */
+  .data-table tbody tr.is-dirty,
+  .data-table tbody tr.is-attention { background: var(--warning-soft); }
+  .data-table tbody tr.is-attention { background: var(--danger-soft); }
+  .data-table tbody tr.is-dirty td,
+  .data-table tbody tr.is-attention td { background: transparent; }
+
+  /* ============ หน้า /admin/users — หุบรายละเอียดลงเหลือแถวสรุป (2026-09-16) ============
+     ผู้ใช้ขอให้การ์ดแต่ละคนย่อเหลือแค่รูป/ชื่อ/รหัส-อีเมล (td แรก) ค่าเริ่มต้น แล้วคลิกขยายเห็น
+     แผนก/โรงงาน/สิทธิ์/ปุ่มจัดการ (td ที่เหลือ) พร้อม animation หุบ-กาง — ใช้ max-height แทน
+     height:auto เพราะ CSS transition ไม่รองรับ auto โดยตรง เลือกค่าที่กว้างพอสำหรับ td ที่ยาว
+     ที่สุด (chip สิทธิ์ 3 ปุ่ม + dropdown กรรมการ) ไม่ต้องวัดจริงด้วย JS ให้ซับซ้อนเกินจำเป็น */
+  .data-table.is-collapsible tr td.au-row-summary { cursor: pointer; }
+  .data-table.is-collapsible tr td:not(.au-row-summary) {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    transition: max-height 0.28s ease, opacity 0.2s ease, padding 0.28s ease;
+  }
+  .data-table.is-collapsible tr.is-expanded td:not(.au-row-summary) {
+    max-height: 280px;
+    opacity: 1;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  /* ★ align-items:center จัดกึ่งกลาง "กล่อง" ของ 2 บรรทัดถูกต้องแล้ว (วัดจริง 22.65px จาก 45.3px)
+     แต่ชื่อ (cell-title ตัวใหญ่/หนา) สูงกว่าอีเมล (cell-sub ตัวเล็ก) กึ่งกลางกล่องเลยเยื้องไปทับ
+     บรรทัดชื่อเกือบสุด ไม่ตรงช่องว่างระหว่าง 2 บรรทัดแบบที่ตาเห็นว่าควรเป็น — ขยับลงเล็กน้อยให้
+     สมดุลสายตา แทนที่จะพึ่ง align-items เฉยๆ */
+  .au-row-chevron { display: none; color: var(--muted-2); flex-shrink: 0; margin-left: auto; margin-top: 3px; transition: transform 0.2s ease; }
+  .au-row-chevron svg { width: 16px; height: 16px; display: block; }
+  .data-table.is-collapsible .au-row-chevron { display: flex; }
+  .data-table.is-collapsible tr.is-expanded .au-row-chevron { transform: rotate(180deg); }
+
+  /* ★ ผู้ใช้ขอให้แถวเดียวกันเหมือนเดสก์ท็อป (2026-09-16) — ใช้ auto แทน 170px ตายตัว เพราะ
+     grid จะปรับความกว้างคอลัมน์ป้ายชื่อตามป้ายที่ยาวที่สุดเอง (ไม่กินพื้นที่เกินจำเป็นแบบ 170px
+     คงที่บนจอแคบ) ส่วนคอลัมน์ค่ายังตัดคำ/ขึ้นบรรทัดใหม่ได้ตามปกติจาก .review-summary > div ด้านบน */
+  .review-summary { grid-template-columns: auto 1fr auto; gap: 6px 10px; }
+
+  /* ============ การ์ดแบบยาว (kaizenList) ยุบเหลือ 2-3 บรรทัด (2026-09-11) ============
+     เดิม .data-table stack ทุก td เป็นบรรทัดแยกกันหมด ทำให้การ์ดที่มีหลาย td (ชื่อ/badge/วันที่)
+     สูงเกินจำเป็น (4-5 บรรทัด) — ใช้ grid วาง td ตาม grid-row/grid-column เอง (ไม่สนใจลำดับ td
+     ใน HTML) ให้ td สั้นๆ ไปอยู่แถวเดียวกันแทน */
+  .kl-table tr { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; row-gap: 4px; }
+  .kl-table .kl-title { grid-column: 1 / -1; }
+  .kl-table .kl-badge { grid-row: 2; grid-column: 1; align-self: center; }
+  .kl-table .kl-date { grid-row: 2; grid-column: 2; align-self: center; font-size: 12.5px; text-align: right; }
+  .kl-table .kl-actions:not(:empty) { grid-row: 3; grid-column: 1 / -1; margin-top: 4px; }
+}
