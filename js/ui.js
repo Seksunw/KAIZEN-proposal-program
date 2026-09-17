@@ -416,7 +416,10 @@ const TRANSLATE_WIDGET_LABELS = {
 };
 
 export function translateWidgetHtml(id) {
-  const l = TRANSLATE_WIDGET_LABELS[getLang()] ?? TRANSLATE_WIDGET_LABELS.th;
+  // ★ โชว์ปุ่มนี้เฉพาะตอนตั้งค่าแอปเป็น EN เท่านั้น (ผู้ใช้ขอ 2026-09-17) — คนอ่านไทยได้ไม่มี
+  // เหตุผลต้องกดแปล กันกดเล่น/เปลืองโควต้า Google Translate API โดยไม่จำเป็น
+  if (getLang() !== 'en') return '';
+  const l = TRANSLATE_WIDGET_LABELS.en;
   return `
     <div style="margin-top:var(--sp-2)">
       <button type="button" class="secondary is-sm" data-translate-btn="${id}">${escapeHtml(l.button)}</button>
