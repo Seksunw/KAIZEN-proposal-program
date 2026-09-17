@@ -151,6 +151,13 @@ export async function render(container, params, session) {
     });
   }
 
+  // ★ ผู้ใช้ขอ (2026-09-18) — เดิม render tasks.length ทั้งหมดไม่มี cap เลย ถ้าค้างเยอะ (เช่น 20
+  // เรื่อง) หน้าจะยาวมาก โดยเฉพาะมือถือต้องเลื่อนผ่านหมดก่อนถึงส่วน "ผลรอบที่ประกาศแล้ว" ด้านล่าง
+  // โชว์แค่ preview ก่อน (5 อันแรกตามลำดับ urgent > warning > committee ที่ push เข้า tasks ไว้
+  // อยู่แล้ว) มีปุ่มกดดูที่เหลือ — ไม่ทำ pagination จริงเพราะ tasks โหลดมาในหน่วยความจำครบอยู่แล้ว
+  const TASK_PREVIEW_LIMIT = 5;
+  let tasksExpanded = false;
+
   function renderPage() {
     // ============ period banner ============
     let bannerHtml;
@@ -216,7 +223,7 @@ export async function render(container, params, session) {
         <div class="task-list">
           ${tasks.length === 0
             ? `<div class="empty-state"><div class="empty-title">${t('empty_no_tasks')}</div></div>`
-            : tasks.map((task) => `
+            : (tasksExpanded ? tasks : tasks.slice(0, TASK_PREVIEW_LIMIT)).map((task) => `
               <div class="task-row ${task.variant}">
                 <span class="task-rail"></span>
                 <div class="task-main">
@@ -231,6 +238,11 @@ export async function render(container, params, session) {
               </div>
             `).join('')}
         </div>
+        ${!tasksExpanded && tasks.length > TASK_PREVIEW_LIMIT ? `
+          <div style="text-align:center;margin-top:var(--sp-4)">
+            <button type="button" class="secondary" id="btn-show-more-tasks">${escapeHtml(tf('kzlist_load_more', { n: tasks.length - TASK_PREVIEW_LIMIT }))}</button>
+          </div>
+        ` : ''}
 
         <div style="margin-top:var(--sp-6)">
           <div class="section-head is-borderless"><h2>${t('dashboard_results_heading')}</h2></div>
@@ -247,6 +259,11 @@ export async function render(container, params, session) {
         </div>
       </div>
     `;
+
+    document.getElementById('btn-show-more-tasks')?.addEventListener('click', () => {
+      tasksExpanded = true;
+      renderPage();
+    });
   }
 
   renderPage();
