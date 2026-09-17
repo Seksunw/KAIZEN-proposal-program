@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z8';
-import { t, tf, getLang } from '../i18n.js?v=20260911z8';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z8';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z8';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData } from '../api.js?v=20260911z9';
+import { t, tf, getLang } from '../i18n.js?v=20260911z9';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z9';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z9';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;

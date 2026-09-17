@@ -6,10 +6,10 @@ import {
   getSession, onAuthStateChange, getMyProfile, signOut,
   getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getAllProfiles,
   getAvatarSignedUrl,
-} from './api.js?v=20260911z8';
-import { initRouter, navigate } from './router.js?v=20260911z8';
-import { initLang, t } from './i18n.js?v=20260911z8';
-import { escapeHtml, initials, roleLabel, hydrateAvatars } from './ui.js?v=20260911z8';
+} from './api.js?v=20260911z9';
+import { initRouter, navigate } from './router.js?v=20260911z9';
+import { initLang, t } from './i18n.js?v=20260911z9';
+import { escapeHtml, initials, roleLabel, hydrateAvatars } from './ui.js?v=20260911z9';
 
 const ICONS = {
   dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',

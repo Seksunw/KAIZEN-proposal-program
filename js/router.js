@@ -77,6 +77,21 @@ export function initRouter(getSession) {
 
 async function onRouteChange() {
   if (!location.hash) {
+    // ★ เจอบั๊กจริงจากการทดสอบสด (2026-09-17): ลิงก์ recovery ที่ Supabase redirect กลับมาพร้อม
+    // #access_token=...&type=recovery ถูก app.js ดักไป #/reset-password ทันทีตั้งแต่ bootstrap()
+    // (ก่อนไฟล์นี้ทำงานด้วยซ้ำ) แต่ Supabase client เองก็ทำ history.replaceState เคลียร์ hash
+    // ทิ้งทีหลังอีกที (ตอนประมวลผล token เสร็จจริง ซึ่งช้ากว่า) กลายเป็นเขียนทับ hash ที่เพิ่งตั้ง
+    // ไว้ให้กลายเป็นค่าง่าง อีกที ทำให้ตกลงมาเจอเงื่อนไข "hash ว่าง" นี้อีกรอบ แล้วเด้งไป
+    // #/dashboard เพราะตอนนี้มี session แล้ว (ทั้งที่เพิ่งตั้งใจจะพาไป reset-password) — กันซ้ำอีก
+    // ชั้นด้วย sessionStorage flag เดียวกับที่ app.js ตั้งไว้ ให้ชนะการเช็คนี้เสมอไม่ว่า hash จะ
+    // โดนเคลียร์กี่รอบก็ตาม
+    let isRecoveryFlow = false;
+    try { isRecoveryFlow = sessionStorage.getItem('kaizen_recovery_flow') === '1'; } catch { /* private mode */ }
+    if (isRecoveryFlow) {
+      location.hash = '#/reset-password';
+      return;
+    }
+
     // ★ เข้าเว็บครั้งแรกแบบไม่มี hash เลย — คนที่ล็อกอินอยู่แล้ว (เช่น เปิดแท็บใหม่) พาไป
     // dashboard ตรงๆ ต่อ ส่วนคนที่ยังไม่ล็อกอินพาไปหน้า welcome ก่อน (เดิมพาไป #/dashboard
     // เสมอ ซึ่งจะโดน route guard ด้านล่างเด้งไป #/login ต่ออีกที — เปลี่ยนเป็น #/welcome ตรงๆ

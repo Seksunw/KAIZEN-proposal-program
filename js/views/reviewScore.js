@@ -6,11 +6,11 @@
 import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
   getAttachmentSignedUrl, getMasterData,
-} from '../api.js?v=20260911z8';
-import { t, tf, getLang } from '../i18n.js?v=20260911z8';
-import { navigate } from '../router.js?v=20260911z8';
-import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z8';
-import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z8';
+} from '../api.js?v=20260911z9';
+import { t, tf, getLang } from '../i18n.js?v=20260911z9';
+import { navigate } from '../router.js?v=20260911z9';
+import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel } from '../ui.js?v=20260911z9';
+import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z9';
 
 export async function render(container, params, session) {
   document.title = `${t('rvs_page_title')} · ${t('appName')}`;
