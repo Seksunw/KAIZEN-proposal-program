@@ -527,6 +527,11 @@ const DICT = {
     register_avatar_optional_hint: 'ไม่บังคับ — ข้ามไปตั้งค่าทีหลังก็ได้',
     register_full_name_en_hint: 'ใส่ไว้เผื่อรายงาน/ประกาศผลภาษาอังกฤษ ไม่บังคับ',
     register_err_duplicate: 'ไม่สามารถสมัครด้วยข้อมูลนี้ได้ — กรุณาตรวจสอบอีเมล/รหัสพนักงาน หรือติดต่อผู้ดูแลระบบ',
+
+    // ---- kaizenFeed.js ----
+    kf_all_periods: 'ทุกรอบ',
+    kf_like_aria: 'ถูกใจ',
+    kf_problem_prefix: 'ปัญหา:',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1055,6 +1060,11 @@ const DICT = {
     register_avatar_optional_hint: "Optional — you can skip this and set it later",
     register_full_name_en_hint: 'For English reports/announcements — optional',
     register_err_duplicate: 'Registration failed with this information — please check your email/employee ID, or contact an admin',
+
+    // ---- kaizenFeed.js ----
+    kf_all_periods: 'All periods',
+    kf_like_aria: 'Like',
+    kf_problem_prefix: 'Problem:',
   },
 };
 

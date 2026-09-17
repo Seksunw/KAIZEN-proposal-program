@@ -10,7 +10,7 @@
   "js/views/forbidden.js": 4,
   "js/views/forgotPassword.js": 1,
   "js/views/kaizenDetail.js": 4,
-  "js/views/kaizenFeed.js": 6,
+  "js/views/kaizenFeed.js": 2,
   "js/views/kaizenForm.js": 21,
   "js/views/kaizenList.js": 0,
   "js/views/kaizenProgress.js": 0,

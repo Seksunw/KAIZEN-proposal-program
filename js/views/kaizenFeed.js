@@ -4,7 +4,7 @@
 // RLS ใหม่ k_read_feed/ka_read_feed/profiles_read_feed (ดู migration_2026-09-15_kaizen-feed.sql)
 // — ไม่แตะ kaizen_progress_updates/committee_scores เลย (ยังเป็นข้อมูลภายในเหมือนเดิม)
 import { getFeedPage, getPeriods, getMasterData, getAttachmentSignedUrl, getAvatarSignedUrl, getLikesForKaizenIds, likeKaizen, unlikeKaizen } from '../api.js?v=20260911z7';
-import { t } from '../i18n.js?v=20260911z7';
+import { t, tf } from '../i18n.js?v=20260911z7';
 import { getQuery, navigate } from '../router.js?v=20260911z7';
 import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, thaiDate, initials, openLightbox, hydrateAvatars, masterLabel } from '../ui.js?v=20260911z7';
 
@@ -120,7 +120,7 @@ export async function render(container, params, session) {
 
   async function renderPage() {
     const chips = periods.length > 0 ? [
-      `<button type="button" class="filter-chip ${state.periodId === null ? 'is-on' : ''}" data-period="">ทุกรอบ</button>`,
+      `<button type="button" class="filter-chip ${state.periodId === null ? 'is-on' : ''}" data-period="">${t('kf_all_periods')}</button>`,
       ...periods.map((p) => `<button type="button" class="filter-chip ${state.periodId === p.Id ? 'is-on' : ''}" data-period="${p.Id}">${escapeHtml(p.Code)}</button>`),
     ].join('') : '';
 
@@ -139,7 +139,7 @@ export async function render(container, params, session) {
           </div>
           <div class="feed-photo" data-photo-for="${k.Id}">
             ${photo ? '<img alt="" />' : ''}
-            <button type="button" class="like-btn${like.likedByMe ? ' liked' : ''}" data-like-for="${k.Id}" aria-label="ถูกใจ" aria-pressed="${like.likedByMe}">
+            <button type="button" class="like-btn${like.likedByMe ? ' liked' : ''}" data-like-for="${k.Id}" aria-label="${escapeHtml(t('kf_like_aria'))}" aria-pressed="${like.likedByMe}">
               <span class="regular-heart">${HEART_OUTLINE}</span>
               <span class="solid-heart">${HEART_SOLID}</span>
               ${like.count > 0 ? `<span class="like-count">${like.count}</span>` : ''}
@@ -147,7 +147,7 @@ export async function render(container, params, session) {
           </div>
           <div class="feed-body">
             <h3 class="feed-title"><a href="#/kaizen/${k.Id}" style="color:inherit;text-decoration:none">${escapeHtml(k.Title)}</a></h3>
-            <p class="feed-text"><b>ปัญหา:</b> ${escapeHtml(k.ProblemDescription || '—')}</p>
+            <p class="feed-text"><b>${t('kf_problem_prefix')}</b> ${escapeHtml(k.ProblemDescription || '—')}</p>
             <div class="feed-date">${thaiDate(k.SubmittedAt ?? k.CreatedAt)}</div>
           </div>
         </div>
@@ -161,7 +161,7 @@ export async function render(container, params, session) {
         ${state.total === 0
           ? emptyState({ title: t('empty_feed') })
           : `<div class="feed-list">${cards}</div>
-             ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : `โหลดเพิ่ม (เหลืออีก ${state.total - state.rows.length})`}</button></div>` : ''}`}
+             ${state.hasMore ? `<div style="text-align:center;margin-top:var(--sp-5)"><button type="button" class="secondary" id="btn-load-more" ${state.loadingMore ? 'disabled' : ''}>${state.loadingMore ? t('common_loading') : escapeHtml(tf('kzlist_load_more', { n: state.total - state.rows.length }))}</button></div>` : ''}`}
       </div>
     `;
 
