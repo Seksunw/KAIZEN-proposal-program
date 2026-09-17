@@ -1,6 +1,6 @@
 // js/views/register.js — split layout เดียวกับ login.js (README.md ข้อ 2)
 import { signUp, getMasterData, uploadAvatar, updateProfile } from '../api.js?v=20260911z7';
-import { t, getLang } from '../i18n.js?v=20260911z7';
+import { t, tf, getLang } from '../i18n.js?v=20260911z7';
 import { navigate } from '../router.js?v=20260911z7';
 import { escapeHtml, translateError, criteriaTags, wireCriteriaTags, resizeImage, masterLabel } from '../ui.js?v=20260911z7';
 import { MAX_UPLOAD_MB } from '../config.js?v=20260911z7';
@@ -28,23 +28,23 @@ export async function render(container) {
       <div class="auth-brand">
         <img src="assets/suntory-wellness.jpg" alt="Suntory Wellness" />
         <div class="brand-sub">KAIZEN PROGRAM</div>
-        <p class="brand-line">เริ่มจากปัญหาหน้างานที่คุณเจอบ่อยที่สุด แล้วเสนอเป็นโครงการ KAIZEN</p>
-        <p class="muted" style="font-size:12.8px;margin-top:var(--sp-5)">ตัดสินจาก 7 เกณฑ์</p>
+        <p class="brand-line">${t('register_brand_line')}</p>
+        <p class="muted" style="font-size:12.8px;margin-top:var(--sp-5)">${t('auth_criteria_label')}</p>
         ${criteriaTags(getLang())}
       </div>
       <div class="auth-form-wrap">
         <div class="auth-card">
           <h1>${t('register_title')}</h1>
-          <p class="auth-sub">กรอกข้อมูลให้ครบ — ใช้สำหรับระบุตัวตนบนโครงการที่คุณเสนอ</p>
+          <p class="auth-sub">${t('register_sub')}</p>
           <form id="register-form">
             <div class="hstack" style="margin-bottom:var(--sp-5)">
               <div class="avatar is-quiet" id="avatar-preview" style="width:64px;height:64px;font-size:22px">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               </div>
               <div style="min-width:0">
-                <button type="button" id="btn-pick-avatar" class="secondary is-sm">เลือกรูปโปรไฟล์</button>
+                <button type="button" id="btn-pick-avatar" class="secondary is-sm">${t('register_pick_avatar')}</button>
                 <input type="file" id="f-avatar" accept="image/*" hidden />
-                <p class="field-hint" style="margin-top:4px">ไม่บังคับ — ข้ามไปตั้งค่าทีหลังก็ได้</p>
+                <p class="field-hint" style="margin-top:4px">${t('register_avatar_optional_hint')}</p>
               </div>
             </div>
             <div class="form-control">
@@ -60,7 +60,7 @@ export async function render(container) {
                 <input type="text" name="fullNameEn" id="f-full-name-en" placeholder=" " />
                 <label for="f-full-name-en"><span>${t('register_full_name_en')}</span></label>
               </div>
-              <span class="field-hint">ใส่ไว้เผื่อรายงาน/ประกาศผลภาษาอังกฤษ ไม่บังคับ</span>
+              <span class="field-hint">${t('register_full_name_en_hint')}</span>
             </div>
             <div class="field-row">
               <label>${t('register_department')}
@@ -117,7 +117,7 @@ export async function render(container) {
     const file = avatarInput.files[0];
     if (!file) return;
     if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-      errorBox.innerHTML = `<div class="error">ไฟล์ต้องไม่เกิน ${MAX_UPLOAD_MB}MB</div>`;
+      errorBox.innerHTML = `<div class="error">${escapeHtml(tf('kzform_file_too_large', { mb: MAX_UPLOAD_MB }))}</div>`;
       avatarInput.value = '';
       return;
     }
@@ -183,7 +183,7 @@ export async function render(container) {
       // enumeration) — ครอบด้วยข้อความกลางเดียวกันเสมอไม่ว่าจะซ้ำฟิลด์ไหน (Spec.md §4.8 finding M8)
       const isDuplicate = /duplicate key value|already registered|already exists/i.test(err.message || '');
       const msg = isDuplicate
-        ? 'ไม่สามารถสมัครด้วยข้อมูลนี้ได้ — กรุณาตรวจสอบอีเมล/รหัสพนักงาน หรือติดต่อผู้ดูแลระบบ'
+        ? t('register_err_duplicate')
         : (translateError(err.message) || err.message || t('common_error_generic'));
       errorBox.innerHTML = `<div class="error">${escapeHtml(msg)}</div>`;
     }

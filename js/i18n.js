@@ -516,6 +516,17 @@ const DICT = {
     pr_lang_thai: 'ไทย',
     pr_lang_english: 'English',
     pr_logout_btn: 'ออกจากระบบ',
+
+    // ---- login.js / register.js (shared auth-shell) ----
+    auth_criteria_label: 'ตัดสินจาก 7 เกณฑ์',
+
+    // ---- register.js ----
+    register_brand_line: 'เริ่มจากปัญหาหน้างานที่คุณเจอบ่อยที่สุด แล้วเสนอเป็นโครงการ KAIZEN',
+    register_sub: 'กรอกข้อมูลให้ครบ — ใช้สำหรับระบุตัวตนบนโครงการที่คุณเสนอ',
+    register_pick_avatar: 'เลือกรูปโปรไฟล์',
+    register_avatar_optional_hint: 'ไม่บังคับ — ข้ามไปตั้งค่าทีหลังก็ได้',
+    register_full_name_en_hint: 'ใส่ไว้เผื่อรายงาน/ประกาศผลภาษาอังกฤษ ไม่บังคับ',
+    register_err_duplicate: 'ไม่สามารถสมัครด้วยข้อมูลนี้ได้ — กรุณาตรวจสอบอีเมล/รหัสพนักงาน หรือติดต่อผู้ดูแลระบบ',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1033,6 +1044,17 @@ const DICT = {
     pr_lang_thai: 'ไทย',
     pr_lang_english: 'English',
     pr_logout_btn: 'Sign out',
+
+    // ---- login.js / register.js (shared auth-shell) ----
+    auth_criteria_label: 'Judged on 7 criteria',
+
+    // ---- register.js ----
+    register_brand_line: 'Start from the most common problem you face at work, then propose it as a KAIZEN project',
+    register_sub: "Fill in all fields — used to identify you on the projects you submit",
+    register_pick_avatar: 'Choose profile photo',
+    register_avatar_optional_hint: "Optional — you can skip this and set it later",
+    register_full_name_en_hint: 'For English reports/announcements — optional',
+    register_err_duplicate: 'Registration failed with this information — please check your email/employee ID, or contact an admin',
   },
 };
 
