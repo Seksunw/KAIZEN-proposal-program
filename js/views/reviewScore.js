@@ -45,6 +45,25 @@ export async function render(container, params, session) {
     return;
   }
 
+  // ★ เจอบั๊กจริงจากการทดสอบ deploy (2026-09-17): กรรมการที่ "ไม่ได้" ถูกผูกเข้ารอบนี้ (ไม่มี key
+  // ตัวเองใน period.committee_weights) ยังกด deep-link มาหน้านี้ตรงๆ ได้ (route คุมแค่ role
+  // 'committee' ไม่ได้เช็ครายรอบ) แล้วไปพังตอน getOrCreateMyScore() insert ชน RLS ของ
+  // committee_scores ดิบๆ ("new row violates row-level security policy...") — reviewQueue.js
+  // กันไว้แล้วที่หน้าคิว (เช็คเดียวกันนี้) แต่หน้านี้เข้าถึงตรงได้โดยไม่ผ่านคิว จึงต้องกันซ้ำอีกชั้น
+  // ด้วยข้อความที่อ่านออกแทน error ดิบจาก DB
+  if (!period || period.CommitteeWeights?.[session.user.id] == null) {
+    container.innerHTML = `
+      ${pageHeader({ title: 'ให้คะแนน KAIZEN' })}
+      <div class="page-body">${stateCard({
+        kind: 'warning',
+        title: 'คุณไม่ได้เป็นกรรมการของรอบนี้',
+        body: 'Admin ยังไม่ได้กำหนดให้คุณเป็นกรรมการของรอบประเมินนี้ — ติดต่อ Admin ถ้าควรได้รับสิทธิ์ให้คะแนนในรอบนี้',
+        actions: '<a href="#/review"><button type="button" class="secondary">กลับไปคิวตรวจ</button></a>',
+      })}</div>
+    `;
+    return;
+  }
+
   let score;
   try {
     score = await getOrCreateMyScore({ periodId: kaizen.PeriodId, kaizenId: kaizen.Id, committeeUserId: session.user.id });

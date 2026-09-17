@@ -38,6 +38,26 @@ export async function render(container, params, session) {
     return;
   }
 
+  // ★ เจอบั๊กจริงจากการทดสอบ deploy (2026-09-17): ผู้ใช้ role "committee" ที่ "ไม่ได้" ถูกผูกเป็น
+  // กรรมการของรอบนี้ (ไม่มี key ตัวเองใน committee_weights) ยังเห็นโครงการโผล่ในคิว "ยังไม่ให้คะแนน"
+  // อยู่ดี เพราะ query นี้พึ่ง RLS อย่างเดียวเพื่อกรอง แต่ policy k_read_feed (status<>'draft', เพิ่ม
+  // ไว้ให้หน้า "โครงการทั้งหมด" เห็นได้ 2026-09-15) ดันอนุญาตให้ทุกคน select แถว pending_review ได้
+  // ด้วยเหมือนกัน ทำให้ query ที่ตั้งใจจะเห็นเฉพาะกรรมการของรอบนั้นกลับเห็นหมดทุกคน — กดให้คะแนนแล้ว
+  // มาพังทีหลังตอน insert ชน RLS ของ committee_scores (ซึ่งเช็ค committee_weights จริง) ข้อมูล
+  // (weightPct) สำหรับเช็คนี้มีอยู่แล้วในไฟล์นี้ (ใช้แสดงผลอย่างเดียวเดิม) แค่ยังไม่เคยใช้กันเข้าคิว
+  const weightPct = openPeriod.CommitteeWeights?.[session.user.id] ?? null;
+  if (weightPct === null) {
+    container.innerHTML = `
+      ${pageHeader({ eyebrow: `รอบ ${openPeriod.Code}`, title: escapeHtml(openPeriod.NameTh) })}
+      <div class="page-body">${stateCard({
+        kind: 'warning',
+        title: 'คุณไม่ได้เป็นกรรมการของรอบนี้',
+        body: 'Admin ยังไม่ได้กำหนดให้คุณเป็นกรรมการของรอบประเมินนี้ — ติดต่อ Admin ถ้าควรได้รับสิทธิ์ให้คะแนนในรอบนี้',
+      })}</div>
+    `;
+    return;
+  }
+
   let queue = [];
   let myScores = [];
   let committeeRoles = [];
@@ -64,7 +84,6 @@ export async function render(container, params, session) {
   // periodKaizen อาจมีโครงการของตัวเอง (ถ้า account นี้เป็น employee ด้วย) ปนมาด้วยผ่าน
   // k_read_own — กรองด้วยสถานะที่กรรมการให้คะแนนได้เท่านั้น ไม่ใช่กรองด้วยเจ้าของ
   const totalScorable = periodKaizen.filter((k) => COMMITTEE_VISIBLE_STATUSES.includes(k.Status)).length;
-  const weightPct = openPeriod.CommitteeWeights?.[session.user.id] ?? null;
   const roleLabelTh = committeeRoles.find((r) => r.Code === session.profile?.CommitteeRole)?.LabelTh;
 
   function scoreState(kaizenId) {
