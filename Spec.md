@@ -850,6 +850,30 @@ delete from evaluation_periods where code in ('C3TEST-01', 'H3TEST-01', 'H1H2TES
 
 **ไฟล์ที่เปลี่ยน:** `js/ui.js` (translateError/roleLabel/statusBadge/thaiDate/thaiDateTime/masterLabel ใหม่), `js/i18n.js` (คีย์ใหม่ 3 คีย์: system_timezone_label, audit_today, audit_yesterday), `js/views/adminAudit.js`/`adminPeriodDetail.js`/`adminUsers.js`/`dashboard.js`/`kaizenDetail.js`/`kaizenFeed.js`/`kaizenForm.js`/`profile.js`/`register.js`/`reviewQueue.js`/`reviewScore.js` (ใช้ helper ใหม่แทน `.LabelTh`/locale hardcode เดิม), `scripts/check-i18n-coverage.mjs` + `scripts/i18n-baseline.json` (ใหม่) — bump shared version tag `20260911z5`→`20260911z6` ทุกไฟล์ตามกฎ CLAUDE.md
 
+### Round 14 — "ทำทั้งโปรเจคเลย": แปล TH/EN ให้ครบทุกไฟล์ `js/views/*.js` ที่เหลือ (2026-09-17)
+
+**บริบท:** หลัง Round 13 (วิธีที่ 2 — แก้ฟังก์ชันกลาง + guard script) ผู้ใช้ถามว่า "เสร็จทั้งหมดคืออะไร" หลังชี้แจงว่างานแปลเนื้อหารายหน้ายังเป็น backlog แยก ผู้ใช้สั่งชัดเจน **"ทำทั้งโปรเจคเลย"** — ขยายขอบเขตเป็นแปลทุกไฟล์ `js/views/*.js` ที่ยังเหลือ ไม่ใช่แค่ 5 ไฟล์ที่ทำไปแล้วตอนพิสูจน์แนวทาง (kaizenForm/dashboard/kaizenList/kaizenDetail/kaizenProgress)
+
+**วิธีทำ (เหมือนเดิมทุกไฟล์ ไม่มี refactor ใหญ่):** ต่อไฟล์ — (1) อ่านไฟล์เต็ม หาข้อความไทย hardcode ทั้งหมด (2) เพิ่มคีย์ `th`/`en` ใน `js/i18n.js` โดย **reuse คีย์เดิมก่อนเสมอถ้าข้อความตรงกัน** (เจอ reuse ได้หลายสิบจุดข้าม 15 ไฟล์ เช่น `kzlist_load_more`/`kzlist_filter_all`/`apd_col_department`/`kzform_aria_delete`/`common_cancel`) (3) เขียนไฟล์ view ใหม่ด้วย `t()`/`tf()` (4) `node --check` ทั้ง 2 ไฟล์ (5) รัน `node scripts/check-i18n-coverage.mjs` ยืนยันบรรทัดไทยดิบลดลง ไม่มีไฟล์ไหนแย่ลง (6) `--update` baseline แล้ว commit แยกต่อไฟล์
+
+**ไฟล์ที่แปลรอบนี้ (เรียงตามลำดับที่ทำ, ตัวเลข = จำนวนบรรทัดไทยดิบก่อน→หลัง ตาม guard script):**
+`reviewQueue.js` 22→0, `reviewScore.js` 38→2 (คอมเมนต์), `adminPeriodDetail.js` 61→4 (คอมเมนต์), `adminPeriods.js` 37→0, `adminMaster.js` 20→0, `adminUsers.js` 20→1 (คอมเมนต์), `adminAudit.js` 19→2 (คอมเมนต์), `profile.js` 17→2 (คอมเมนต์), `register.js` 9→1 (คอมเมนต์), `kaizenFeed.js` 6→2 (คอมเมนต์), `login.js` 4→0, `forbidden.js` 4→0, `notFound.js` 2→0 — `app.js` (5 บรรทัด) และ `forgotPassword.js` (1 บรรทัด) ตรวจแล้วเป็นคอมเมนต์ล้วน ไม่มีข้อความ user-facing ต้องแก้
+
+**บั๊กจริงที่เจอและแก้ระหว่างทาง (นอกเหนือจากการแปลตรงๆ):**
+- `adminAudit.js` — `ACTION_GROUPS` เดิมใช้ **ข้อความไทยเป็นทั้ง filter key และ label แสดงผล** พร้อมกัน (`submit_kaizen: 'ส่งงาน'`) ถ้าแปลแค่ label โดยไม่แยก key ออกมาจะทำให้ filter chip ที่เลือกไว้ค้างชื่อ key แบบ Thai ตลอดไป — แก้โดยแยกเป็น `ACTION_GROUPS` (code คงที่: `submit`/`score`/`period`/`decision`) + `GROUP_LABEL_KEYS` (map ไปคีย์ i18n) ให้ language-independent จริง
+- `adminAudit.js`/`adminPeriodDetail.js` — `KAIZEN_STATUS_LABELS[status]?.th`/`PERIOD_STATUS_LABELS[s]?.th` เรียก `.th` ตรงๆ ไม่ผ่านภาษาที่เลือกไว้เลย (stepper ของ adminPeriodDetail.js และประโยค audit log "เปลี่ยนสถานะเป็น...") — เพิ่ม local helper `L(labelObj)` (เหมือนที่ kaizenForm.js มีอยู่แล้ว) เลือก `.en`/`.th` ตาม `getLang()`
+- `adminAudit.js` — เวลาแถวละ log (`toLocaleTimeString('th-TH', ...)`) hardcode locale ไม่สลับตามภาษาเหมือนที่ `dayLabel()` ทำอยู่แล้ว — แก้ให้สลับเหมือนกัน
+- `adminPeriods.js` — ฟอร์ม "สร้างรอบใหม่" ใช้ค่าคงที่ `SYSTEM_TIMEZONE_LABEL` จาก `constants.js` ตรงๆ (`'เวลาไทย (ICT, UTC+7)'`) แทนคีย์ i18n `system_timezone_label` ที่มีอยู่แล้ว (ใช้ถูกต้องแล้วใน `adminPeriodDetail.js`) — เจอจากการทดสอบสดตั้งค่า EN แล้วเห็นวงเล็บ timezone ยังเป็นไทย ไม่ใช่จากการสแกนไฟล์ (guard script ไม่จับ เพราะ Thai อยู่ใน `constants.js` ไม่ใช่ในไฟล์ view เอง) แก้โดยลบ import ทิ้งแล้วใช้ `t('system_timezone_label')` แทน — เช็คทั้งโปรเจกต์แล้วไม่มีไฟล์อื่นเรียก `SYSTEM_TIMEZONE_LABEL` ตรงๆ แบบนี้อีก
+- **`index.html`** — `#mobile-drawer` (aria-label), `.eyebrow` (ข้อความ "เมนู"), `#btn-drawer-close` (aria-label "ปิดเมนู"), `#mobile-drawer-nav` (aria-label "เมนูเพิ่มเติม") เป็น markup คงที่ ไม่เคยผ่าน `t()` เลยเพราะ guard script สแกนแค่ `js/views/*.js`+`ui.js`+`app.js` ไม่รวม `index.html` — แก้โดยลบข้อความ/attribute ไทยออกจาก HTML แล้วให้ `js/app.js`'s `renderChrome()` ตั้งค่าด้วย `t()` ทุกครั้งที่ทำงาน (ซึ่งทำงานซ้ำอยู่แล้วตอนสลับภาษาผ่าน `kaizen:profile-updated` event จาก `profile.js`) เพิ่มคีย์ `mobile_drawer_close_aria`/`mobile_drawer_nav_aria` (ส่วน "เมนู" ใช้คีย์ `nav_more` เดิมที่มีอยู่แล้ว)
+
+**Version tag bump:** `i18n.js` ถูกแก้เนื้อหาซ้ำหลายสิบครั้งตลอด Round 13-14 โดยยังใช้ query tag เดิม `?v=20260911z7` ตลอด — เบราว์เซอร์ที่เคย cache `i18n.js` ไว้ตั้งแต่ช่วงต้นจะไม่เห็นคีย์ใหม่ที่เพิ่มเข้ามาทีหลังเลย (บั๊ก cache แบบเดียวกับที่ CLAUDE.md เตือนไว้) แก้โดย bump shared tag ทุกไฟล์ project-wide `20260911z7`→`20260911z8` (find/replace 24 ไฟล์) และ bump `index.html`'s `js/app.js?v=` จาก `j`→`k` (เนื้อหา `app.js` เปลี่ยนจริงจากโค้ด `renderChrome()` ใหม่)
+
+**ทดสอบยืนยัน:** local dev server, isolated browser context, ตั้ง EN แล้ว hard reload ล็อกอินด้วยบัญชี admin (ครบ 3 role) ไล่เช็คทุกหน้าที่แปลรอบนี้ผ่าน `document.getElementById('app').innerText` scan หาอักขระไทยที่หลุดมา (เจอเฉพาะข้อมูลจริงของผู้ใช้ เช่น ชื่อ-นามสกุล/ชื่อโครงการ/คำอธิบายปัญหาที่กรอกเป็นไทย ซึ่งถูกต้องแล้วที่ไม่แปล) ครบทั้ง dashboard/kaizen (list/detail/new)/review/feed/profile/admin (periods/period-detail/master/users/audit) เช็ค mobile-drawer aria-label ผ่าน accessibility snapshot ยืนยันเปลี่ยนเป็น "Menu"/"Close menu"/"More menu" ถูกต้อง ไม่มี console error แล้วสลับกลับ TH เช็ค regression บนหน้า `adminPeriodDetail.js` (ไฟล์ที่แก้เยอะสุด 61 บรรทัด) — ครบถ้วนไม่มีอะไรพัง
+
+**ยังไม่ทำ:** ยังไม่ push ไป `origin`/`deploy` สำหรับงานรอบนี้ (รอคำสั่งชัดเจนตามกติกาเดิม)
+
+**ไฟล์ที่เปลี่ยน:** `js/i18n.js` (คีย์ใหม่รวม ~230 คีย์ ทั้ง th/en), `js/app.js` (renderChrome() ตั้งค่า static chrome ใหม่), `index.html` (ลบ Thai attribute/text ออกจาก mobile-drawer, bump app.js tag), 13 ไฟล์ `js/views/*.js` ตามรายชื่อด้านบน — bump shared version tag `20260911z7`→`20260911z8` ทุกไฟล์
+
 ---
 
 ## 5. Data Contract — interface ระหว่าง component
