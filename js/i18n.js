@@ -502,6 +502,20 @@ const DICT = {
     aa_deleted_project: 'โครงการที่ถูกลบ',
     aa_deleted_period: 'รอบที่ถูกลบ',
     aa_project_generic: 'โครงการ',
+
+    // ---- profile.js ----
+    pr_page_title: 'โปรไฟล์',
+    pr_change_avatar_aria: 'เปลี่ยนรูปโปรไฟล์',
+    pr_stat_submitted: 'โครงการที่เสนอ',
+    pr_stat_published: 'ประกาศผลแล้ว',
+    pr_stat_latest_score: 'คะแนนล่าสุด',
+    pr_account_info_heading: 'ข้อมูลบัญชี',
+    pr_email_label: 'อีเมล',
+    pr_dept_plant_label: 'แผนก / โรงงาน',
+    pr_language_label: 'ภาษา',
+    pr_lang_thai: 'ไทย',
+    pr_lang_english: 'English',
+    pr_logout_btn: 'ออกจากระบบ',
   },
   en: {
     appName: 'KAIZEN Proposal Program',
@@ -1005,6 +1019,20 @@ const DICT = {
     aa_deleted_project: 'Deleted project',
     aa_deleted_period: 'Deleted period',
     aa_project_generic: 'Project',
+
+    // ---- profile.js ----
+    pr_page_title: 'Profile',
+    pr_change_avatar_aria: 'Change profile photo',
+    pr_stat_submitted: 'Projects submitted',
+    pr_stat_published: 'Published',
+    pr_stat_latest_score: 'Latest score',
+    pr_account_info_heading: 'Account info',
+    pr_email_label: 'Email',
+    pr_dept_plant_label: 'Department / Plant',
+    pr_language_label: 'Language',
+    pr_lang_thai: 'ไทย',
+    pr_lang_english: 'English',
+    pr_logout_btn: 'Sign out',
   },
 };
 
