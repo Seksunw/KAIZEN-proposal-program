@@ -1,8 +1,8 @@
 // js/views/adminMaster.js — filter-chip แทน select, ฟิลด์ Extra ตามชนิดแทน JSON ดิบ (MIGRATION.md ข้อ 13)
-import { getAllMasterData, createMasterDataRow, updateMasterDataRow } from '../api.js?v=20260911z11';
-import { t, tf } from '../i18n.js?v=20260911z11';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard } from '../ui.js?v=20260911z11';
-import { MASTER_DATA_TYPES } from '../constants.js?v=20260911z11';
+import { getAllMasterData, createMasterDataRow, updateMasterDataRow } from '../api.js?v=20260911z15';
+import { t, tf } from '../i18n.js?v=20260911z15';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard } from '../ui.js?v=20260911z15';
+import { MASTER_DATA_TYPES } from '../constants.js?v=20260911z15';
 
 function typeLabel(tp) {
   return t(`am_type_${tp}`);

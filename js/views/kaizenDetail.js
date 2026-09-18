@@ -1,8 +1,8 @@
 // js/views/kaizenDetail.js — รายละเอียด KAIZEN (MIGRATION.md ข้อ 5)
-import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData, translateTexts } from '../api.js?v=20260911z11';
-import { t, tf, getLang } from '../i18n.js?v=20260911z11';
-import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z11';
-import { CATEGORY_LABELS } from '../constants.js?v=20260911z11';
+import { getKaizenById, getAttachmentSignedUrl, getResults, getMasterData, translateTexts } from '../api.js?v=20260911z15';
+import { t, tf, getLang } from '../i18n.js?v=20260911z15';
+import { escapeHtml, escapeAttr, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z15';
+import { CATEGORY_LABELS } from '../constants.js?v=20260911z15';
 
 export async function render(container, params, session) {
   document.title = `KAIZEN · ${t('appName')}`;
@@ -158,7 +158,7 @@ export async function render(container, params, session) {
 
   if (otherPhotos.length > 0) {
     const grid = document.getElementById('other-photos');
-    grid.innerHTML = otherPhotos.map((a) => `<div class="attach-item" data-id="${a.Id}"><img alt="${escapeAttr(a.FileName)}" /></div>`).join('');
+    grid.innerHTML = otherPhotos.map((a) => `<div class="attach-item" data-id="${a.Id}"><img alt="${escapeAttr(a.FileName)}" style="border-radius:var(--radius-lg)" /></div>`).join('');
     for (const a of otherPhotos) {
       try {
         const url = await getAttachmentSignedUrl(a.StoragePath);
@@ -193,9 +193,12 @@ export async function render(container, params, session) {
 
 function photoSlotHtml(attachment, label, isAfter) {
   const phase = isAfter ? 'after' : 'before';
+  // ★ ผู้ใช้ขอ (2026-09-18, หน้านี้เท่านั้น) — มุมโค้งรูปให้เท่ากับ .card (var(--radius-lg) 14px)
+  // แทน var(--radius) 8px เดิม — inline style เจาะจงหน้านี้ ไม่แก้ .photo-slot ใน style.css
+  // เพราะ reviewScore.js ใช้ class เดียวกันแต่ผู้ใช้ไม่ได้ขอให้เปลี่ยนมุมโค้งหน้านั้น
   return `
     <div>
-      <div class="photo-slot" data-photo-slot="${phase}">
+      <div class="photo-slot" data-photo-slot="${phase}" style="border-radius:var(--radius-lg)">
         ${attachment ? '<img alt="" />' : t('kzdetail_no_photo')}
       </div>
       <div class="photo-caption">

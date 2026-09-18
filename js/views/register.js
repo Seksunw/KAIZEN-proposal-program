@@ -1,9 +1,9 @@
 // js/views/register.js — split layout เดียวกับ login.js (README.md ข้อ 2)
-import { signUp, getMasterData, uploadAvatar, updateProfile } from '../api.js?v=20260911z11';
-import { t, tf, getLang } from '../i18n.js?v=20260911z11';
-import { navigate } from '../router.js?v=20260911z11';
-import { escapeHtml, translateError, criteriaTags, wireCriteriaTags, resizeImage, masterLabel } from '../ui.js?v=20260911z11';
-import { MAX_UPLOAD_MB } from '../config.js?v=20260911z11';
+import { signUp, getMasterData, uploadAvatar, updateProfile } from '../api.js?v=20260911z15';
+import { t, tf, getLang } from '../i18n.js?v=20260911z15';
+import { navigate } from '../router.js?v=20260911z15';
+import { escapeHtml, translateError, criteriaTags, wireCriteriaTags, resizeImage, masterLabel } from '../ui.js?v=20260911z15';
+import { MAX_UPLOAD_MB } from '../config.js?v=20260911z15';
 
 const PASSWORD_MIN_LEN = 8;
 

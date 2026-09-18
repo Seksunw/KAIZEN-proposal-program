@@ -365,6 +365,22 @@ main#app { display: block; padding: 0 0 72px; }
    ไม่แตะ .section-head เดิมเพราะใช้ร่วมกันทั่วระบบ (kaizenList/reviewScore/หน้า admin ฯลฯ) */
 .section-head.is-borderless { border-bottom: none; padding-bottom: 10px; }
 
+/* ============ กล่องย่อ/ขยาย (2026-09-18) ============
+   ใช้กับ "น้ำหนักกรรมการ" ในหน้ารอบประเมิน — ปกติน้ำหนักถูกตั้งครบตั้งแต่ตอนสร้างรอบแล้ว หน้านี้
+   ส่วนใหญ่เข้ามาดูยอดส่ง/ตัดสินโครงการ จึงยุบไว้ก่อน กดปุ่มค่อยคลี่ออกมา — max-height ใช้ค่าเผื่อ
+   สูงพอสำหรับกรรมการ ~15 คน (transition ต้องมีค่าตัวเลขจริง ใช้ auto ไม่ได้) */
+.collapse-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.22s ease;
+}
+.collapse-body.is-open { max-height: 1600px; opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .collapse-body { transition: none; }
+}
+
 /* ============ surfaces ============ */
 .card,
 .panel {

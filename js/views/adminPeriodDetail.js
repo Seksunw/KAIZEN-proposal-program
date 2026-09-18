@@ -4,10 +4,11 @@ import {
   getPeriodById, updatePeriod, openPeriod, closePeriod, publishPeriod,
   getCommitteeCandidates, getKaizenByPeriod, getKaizenByPeriodPage, updateKaizen, getMasterData, getAllProfiles, supabase,
   getKaizenEditGrants, grantKaizenEditWindow, revokeKaizenEditGrant,
-} from '../api.js?v=20260911z11';
-import { t, tf, getLang } from '../i18n.js?v=20260911z11';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z11';
-import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z11';
+} from '../api.js?v=20260911z15';
+import { t, tf, getLang } from '../i18n.js?v=20260911z15';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z15';
+import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z15';
+import { computeStandardWeights, weightHeaderHtml, weightBodyHtml, wireWeightEditor } from '../committeeWeights.js?v=20260911z15';
 
 function L(labelObj) { return labelObj[getLang() === 'en' ? 'en' : 'th']; }
 
@@ -51,7 +52,8 @@ export async function render(container, params) {
   // ★ actionSaving กันกดซ้ำที่ปุ่มเปิด/ปิด/ประกาศผลรอบ — DB (row lock + state-machine) ป้องกัน
   // ข้อมูลพังอยู่แล้วถ้ากดซ้ำเร็วๆ แต่ผู้แพ้ race จะได้ error โผล่ทับหน้าที่เพิ่งเปลี่ยนสถานะไปแล้ว
   // อย่างงงๆ — ปุ่มนี้กันแค่ระดับ UX ไม่ให้กดซ้ำได้ตั้งแต่แรก (Spec.md §4.8 finding M12)
-  const state = { weights: { ...(period.CommitteeWeights ?? {}) }, error: '', actionError: '', saving: false, actionSaving: false };
+  // weightsExpanded — กล่องน้ำหนักกรรมการยุบไว้ก่อนเสมอตอนเปิดหน้า (ผู้ใช้ขอ 2026-09-18)
+  const state = { weights: { ...(period.CommitteeWeights ?? {}) }, weightsExpanded: false, error: '', actionError: '', saving: false, actionSaving: false };
 
   // ★ สิทธิ์แก้ไขชั่วคราว (kaizen_edit_grants) — เฉพาะโครงการ need_revision ในรอบที่ปิด/ประกาศผล
   // ไปแล้วเท่านั้นที่เจ้าของแก้ไขต่อไม่ได้ตามปกติ (Spec.md §4.8 backlog Low #7) grantForm ถือ state
@@ -95,11 +97,14 @@ export async function render(container, params) {
     await loadDecisionPage(0, true);
   } catch { /* ไม่บล็อกหน้า — ตารางล่างจะโชว์ "ยังไม่มีโครงการ" ถ้าโหลดไม่สำเร็จ ผู้ใช้กด reload ได้ */ }
 
-  function candidateInfo(id) {
-    const c = candidates.find((x) => x.Id === id);
-    if (!c) return { name: id, role: '' };
-    const roleLabel = c.CommitteeRole ? masterLabel(committeeRoles, c.CommitteeRole) : '';
-    return { name: `${c.FullName} (${c.EmployeeId})`, role: roleLabel };
+  // รอบร่างใหม่ที่ยังไม่มีใครถูกเพิ่มเลย ('draft' เท่านั้น — ไม่แตะรอบที่เปิด/ปิด/ประกาศผลไปแล้ว
+  // ซึ่งน้ำหนักที่ตั้งไว้อาจถูกใช้คำนวณผลจริงไปแล้ว) เติมค่ามาตรฐานให้ตั้งแต่เปิดหน้ามาเลย
+  // (ปกติรอบที่สร้างผ่านหน้า adminPeriodNew.js จะมีน้ำหนักมาแล้ว — เคสนี้ไว้รองรับรอบร่างเก่า
+  //  ที่สร้างไว้ก่อนมีหน้านั้น หรือรอบที่ถูกลบกรรมการออกจนหมด)
+  if (period.Status === 'draft' && Object.keys(state.weights).length === 0) {
+    state.weights = computeStandardWeights(candidates, committeeRoles);
+    // ค่าที่เพิ่งเติมให้เองยังไม่ถูกบันทึกลง DB — กางให้เห็นเลย ไม่ควรซ่อนไว้จนแอดมินไม่ทันสังเกต
+    state.weightsExpanded = true;
   }
 
   renderPage();
@@ -160,26 +165,25 @@ export async function render(container, params) {
     ];
     const canPublish = publishChecklist.every((c) => c.ok);
 
-    const weightRows = Object.entries(state.weights).map(([uid, pct]) => {
-      const info = candidateInfo(uid);
-      return `
-        <div class="member-row">
-          <div style="flex:1;min-width:160px">
-            <div style="font-size:13.5px;font-weight:600">${escapeHtml(info.name)}</div>
-            ${info.role ? `<div class="muted" style="font-size:11.5px">${escapeHtml(info.role)}</div>` : ''}
-          </div>
-          <input type="number" min="0" max="100" data-uid="${uid}" class="weight-input" value="${pct}" style="width:90px" />
-          <button type="button" class="icon-btn" data-remove-weight="${uid}" aria-label="${escapeHtml(t('kzform_aria_delete'))}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
-          </button>
-        </div>
-      `;
-    }).join('');
-
-    const availableCandidates = candidates.filter((c) => !(c.Id in state.weights));
-    const candidateOptions = availableCandidates
-      .map((c) => `<option value="${c.Id}">${escapeHtml(c.FullName)} (${escapeHtml(c.EmployeeId)})</option>`)
-      .join('');
+    // กล่องน้ำหนักกรรมการ — โมดูลร่วมกับหน้าสร้างรอบใหม่ (js/committeeWeights.js)
+    // ★ ผู้ใช้ขอ (2026-09-18) ให้ยุบไว้ก่อนในหน้านี้ — ปกติน้ำหนักถูกตั้งครบตั้งแต่ตอนสร้างรอบแล้ว
+    // คนที่เข้าหน้านี้ส่วนใหญ่มาดูยอดส่ง/ตัดสินโครงการ ไม่ได้มาแก้น้ำหนัก กดปุ่มค่อยคลี่ออกมา
+    const weightsEditable = ['draft', 'open', 'scoring'].includes(period.Status);
+    const weightHeader = weightHeaderHtml({
+      weights: state.weights,
+      actionsHtml: `
+        <button type="button" class="secondary is-sm" id="btn-toggle-weights" aria-expanded="${state.weightsExpanded}" aria-controls="weight-collapse">
+          ${state.weightsExpanded ? t('apd_weights_hide_btn') : (weightsEditable ? t('apd_weights_edit_btn') : t('apd_weights_view_btn'))}
+        </button>
+      `,
+    });
+    const weightBody = weightBodyHtml({
+      weights: state.weights,
+      candidates,
+      committeeRoles,
+      editable: weightsEditable,
+      showIncompleteWarning: period.Status !== 'draft',
+    });
 
     // ★ สิทธิ์แก้ไขชั่วคราว — โผล่เฉพาะ need_revision ในรอบที่ปิด/ประกาศผลไปแล้ว (periodLocked)
     // เท่านั้น (Spec.md §4.8 backlog Low #7) ต้องกดปุ่มเปิดฟอร์ม + กรอกเหตุผล + เลือกระยะเวลา +
@@ -309,26 +313,14 @@ export async function render(container, params) {
 
         <div class="two-col" style="margin-top:var(--sp-6)">
           <div>
-            <div class="section-head">
-              <h2>${t('apd_weights_heading')}</h2>
-              <span class="badge" data-status="${weightSum === 100 ? 'approved' : 'need_revision'}">${weightSum === 100 ? t('apd_weight_complete_badge') : escapeHtml(tf('apd_weight_sum_badge', { pct: weightSum }))}</span>
+            ${weightHeader}
+            <div class="collapse-body ${state.weightsExpanded ? 'is-open' : ''}" id="weight-collapse">
+              ${weightBody}
+              ${weightsEditable ? `
+                <button type="button" id="btn-save-weights" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('apd_save_weights_btn')}</button>
+              ` : ''}
+              <div id="weight-error"></div>
             </div>
-            <div id="weight-list">${weightRows || `<p class="muted">${t('apd_no_committee_yet')}</p>`}</div>
-            ${weightSum !== 100 && period.Status !== 'draft' ? `
-              <div class="warning" style="margin-top:var(--sp-3)">${t('apd_weight_warning')}</div>
-            ` : ''}
-            ${['draft', 'open', 'scoring'].includes(period.Status) ? `
-              <div class="member-row" style="margin-top:var(--sp-4)">
-                <select id="f-add-committee" style="flex:1">
-                  <option value="">${t('apd_select_committee_placeholder')}</option>
-                  ${candidateOptions}
-                </select>
-                <input type="number" id="f-add-weight" min="0" max="100" placeholder="%" style="width:90px" />
-                <button type="button" id="btn-add-weight" class="secondary">${t('apd_add_btn')}</button>
-              </div>
-              <button type="button" id="btn-save-weights" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('apd_save_weights_btn')}</button>
-            ` : ''}
-            <div id="weight-error"></div>
           </div>
 
           <div>
@@ -392,18 +384,23 @@ export async function render(container, params) {
     if (state.actionError) document.getElementById('action-error').innerHTML = `<div class="error" style="margin-top:var(--sp-2)">${escapeHtml(state.actionError)}</div>`;
     if (grantState.error) { const el = document.getElementById('grant-error'); if (el) el.innerHTML = `<div class="error" style="margin-top:var(--sp-2)">${escapeHtml(grantState.error)}</div>`; }
 
-    document.querySelectorAll('.weight-input').forEach((inp) => {
-      inp.addEventListener('input', (e) => { state.weights[e.target.dataset.uid] = Number(e.target.value); });
+    // ★ toggle แบบไม่ re-render ทั้งหน้า — สลับ class ตรงๆ เพื่อให้ CSS transition คลี่ออกมาจริง
+    // (ถ้า re-render หน้าใหม่ DOM จะถูกสร้างในสถานะเปิดอยู่แล้ว ไม่มี animation ให้เห็น)
+    document.getElementById('btn-toggle-weights')?.addEventListener('click', (e) => {
+      state.weightsExpanded = !state.weightsExpanded;
+      document.getElementById('weight-collapse')?.classList.toggle('is-open', state.weightsExpanded);
+      e.currentTarget.setAttribute('aria-expanded', String(state.weightsExpanded));
+      e.currentTarget.textContent = state.weightsExpanded
+        ? t('apd_weights_hide_btn')
+        : (weightsEditable ? t('apd_weights_edit_btn') : t('apd_weights_view_btn'));
     });
-    document.querySelectorAll('[data-remove-weight]').forEach((btn) => {
-      btn.addEventListener('click', () => { delete state.weights[btn.dataset.removeWeight]; renderPage(); });
-    });
-    document.getElementById('btn-add-weight')?.addEventListener('click', () => {
-      const uid = document.getElementById('f-add-committee').value;
-      const pct = Number(document.getElementById('f-add-weight').value || 0);
-      if (!uid) return;
-      state.weights[uid] = pct;
-      renderPage();
+
+    wireWeightEditor({
+      getWeights: () => state.weights,
+      setWeights: (w) => { state.weights = w; },
+      candidates,
+      committeeRoles,
+      rerender: renderPage,
     });
     document.getElementById('btn-save-weights')?.addEventListener('click', onSaveWeights);
     document.getElementById('btn-open')?.addEventListener('click', onOpen);

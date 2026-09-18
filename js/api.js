@@ -1,5 +1,5 @@
 // js/api.js — ทุก call ไป Supabase + snake_case⇄PascalCase ผ่านที่นี่เท่านั้น (§5.2)
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z11';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z15';
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -521,9 +521,12 @@ export async function submitScore(scoreId) {
 // ================================================================
 
 export async function getCommitteeCandidates() {
+  // ★ เพิ่ม committee_role (2026-09-18) — เดิมไม่ได้ select มาเลย ทำให้ candidateInfo()'s
+  // c.CommitteeRole ใน adminPeriodDetail.js เป็น undefined เสมอ (role โชว์ว่างทุกแถว) และทำ
+  // auto-fill น้ำหนักมาตรฐานตาม role ไม่ได้เลยถ้าไม่มีคอลัมน์นี้
   const { data, error } = await client
     .from('profiles')
-    .select('id, full_name, employee_id, roles, is_active')
+    .select('id, full_name, employee_id, roles, is_active, committee_role')
     .contains('roles', ['committee'])
     .eq('is_active', true);
   if (error) throw error;

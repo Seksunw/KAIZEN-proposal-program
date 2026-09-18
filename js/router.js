@@ -19,6 +19,10 @@ export const ROUTES = [
   { pattern: '#/admin/users',             view: 'views/adminUsers.js',    roles: ['admin'] },
   { pattern: '#/admin/master',            view: 'views/adminMaster.js',   roles: ['admin'] },
   { pattern: '#/admin/periods',           view: 'views/adminPeriods.js',  roles: ['admin'] },
+  // ★ ต้องอยู่ "ก่อน" #/admin/periods/:id เสมอ — matchRoute() คืน route แรกที่ match และ :id
+  //   จับได้ทุกค่ารวมถึงคำว่า "new" (จำนวน segment เท่ากัน) ถ้าสลับลำดับหน้านี้จะโหลดหน้า detail
+  //   โดยส่ง id = "new" แทน
+  { pattern: '#/admin/periods/new',       view: 'views/adminPeriodNew.js', roles: ['admin'] },
   { pattern: '#/admin/periods/:id',       view: 'views/adminPeriodDetail.js', roles: ['admin'] },
   { pattern: '#/admin/audit',             view: 'views/adminAudit.js',    roles: ['admin'] },
   { pattern: '#/403',                     view: 'views/forbidden.js',     roles: [], public: true },

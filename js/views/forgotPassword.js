@@ -1,7 +1,7 @@
 // js/views/forgotPassword.js — ขอลิงก์ตั้งรหัสผ่านใหม่ทางอีเมล (Spec.md §4.8 backlog Low #1)
-import { requestPasswordReset } from '../api.js?v=20260911z11';
-import { t } from '../i18n.js?v=20260911z11';
-import { escapeHtml } from '../ui.js?v=20260911z11';
+import { requestPasswordReset } from '../api.js?v=20260911z15';
+import { t } from '../i18n.js?v=20260911z15';
+import { escapeHtml } from '../ui.js?v=20260911z15';
 
 export async function render(container) {
   document.title = `${t('forgot_title')} · ${t('appName')}`;

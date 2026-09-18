@@ -6,11 +6,16 @@
 import {
   getKaizenById, getOrCreateMyScore, saveScoreDraft, submitScore, getPeriodById,
   getAttachmentSignedUrl, getMasterData, translateTexts,
-} from '../api.js?v=20260911z11';
-import { t, tf, getLang } from '../i18n.js?v=20260911z11';
-import { navigate } from '../router.js?v=20260911z11';
-import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z11';
-import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE } from '../constants.js?v=20260911z11';
+} from '../api.js?v=20260911z15';
+import { t, tf, getLang } from '../i18n.js?v=20260911z15';
+import { navigate } from '../router.js?v=20260911z15';
+import { escapeHtml, translateError, escapeAttr, pageHeader, stateCard, thaiDate, initials, openLightbox, masterLabel, translateWidgetHtml, wireTranslateWidget } from '../ui.js?v=20260911z15';
+import { CRITERIA, SCORE_LEVELS, MAX_TOTAL_SCORE, CATEGORY_LABELS, IMPACT_LABELS, SUPPORT_NEEDED_LABELS } from '../constants.js?v=20260911z15';
+
+// เลือกภาษาปัจจุบันจาก label object แบบ {th,en} — pattern เดียวกับ kaizenForm.js
+function L(labelObj) {
+  return labelObj[getLang() === 'en' ? 'en' : 'th'];
+}
 
 export async function render(container, params, session) {
   document.title = `${t('rvs_page_title')} · ${t('appName')}`;
@@ -129,9 +134,13 @@ export async function render(container, params, session) {
 
   function photoSlotHtml(attachment, label, isAfter) {
     const phase = isAfter ? 'after' : 'before';
+    // ★ ผู้ใช้ขอ (2026-09-18, หน้านี้เท่านั้น) — .photo-slot มี padding:16px ไว้เว้นระยะข้อความ
+    // "ยังไม่มีรูป" ตอนไม่มีรูป แต่ padding เดียวกันนี้ดันเว้นขอบรูปจริงด้วย ตัด padding ออกเฉพาะ
+    // ตอนมีรูปจริง (inline style เจาะจงหน้านี้ ไม่แก้ .photo-slot ใน style.css เพราะ kaizenDetail.js
+    // ใช้ class เดียวกันแต่ผู้ใช้ไม่ได้ขอให้เปลี่ยนพฤติกรรมหน้านั้น)
     return `
       <div>
-        <div class="photo-slot" data-photo-slot="${phase}">
+        <div class="photo-slot" data-photo-slot="${phase}"${attachment ? ' style="padding:0"' : ''}>
           ${attachment ? '<img alt="" />' : t('kzdetail_no_photo')}
         </div>
         <div class="photo-caption">
@@ -142,6 +151,12 @@ export async function render(container, params, session) {
     `;
   }
 
+  // join code[] เป็นข้อความป้ายกำกับตามภาษาปัจจุบัน คั่นด้วย comma — ใช้กับ Categories/Impacts/
+  // SupportNeeded ทั้งสามช่อง (list เดียวกันกับที่ kaizenForm.js ใช้ตอนกรอก)
+  function joinLabels(codes, labelsMap) {
+    return (codes ?? []).map((c) => (labelsMap[c] ? L(labelsMap[c]) : c)).join(', ') || '—';
+  }
+
   function renderProjectDetail() {
     return `
       ${!kaizen.IsCompleted ? `<div class="warning" style="margin-bottom:16px">${t('rvs_in_progress_notice')}</div>` : ''}
@@ -150,6 +165,10 @@ export async function render(container, params, session) {
         ${photoSlotHtml(afterPhoto, t('kzdetail_after'), true)}
       </div>
       ${otherPhotos.length > 0 ? `<div class="attach-grid" style="margin-top:var(--sp-2)" id="other-photos"></div>` : ''}
+
+      <h3 style="margin-top:var(--sp-6)">${t('kzform_categories_legend')}</h3>
+      <p style="font-size:15px;line-height:1.65">${escapeHtml(joinLabels(kaizen.Categories, CATEGORY_LABELS))}</p>
+      ${kaizen.Categories?.includes('other') && kaizen.CategoryOther ? `<p class="muted" style="font-size:13px;margin-top:-8px">${escapeHtml(t('kzform_category_other_label'))}: ${escapeHtml(kaizen.CategoryOther)}</p>` : ''}
 
       <h3 style="margin-top:var(--sp-6)">${t('kzdetail_problem_heading')}</h3>
       <p style="font-size:15px;line-height:1.65">${escapeHtml(kaizen.ProblemDescription || '—')}</p>
@@ -164,13 +183,20 @@ export async function render(container, params, session) {
           ${Number(kaizen.CostSavingPerMonth) > 0 ? `
             <div class="metric is-lg">${Number(kaizen.CostSavingPerMonth).toLocaleString('th-TH')}</div>
             <p class="muted" style="margin:2px 0 0">${t('kzdetail_baht_per_month')}${kaizen.CostSavingRank ? ` · Cost-saving rank ${kaizen.CostSavingRank}` : ''}</p>
+            ${kaizen.CostSavingBasis ? `<p style="font-size:13.5px;line-height:1.55;margin-top:var(--sp-3)"><strong>${escapeHtml(t('kzform_cost_basis_label'))}:</strong> ${escapeHtml(kaizen.CostSavingBasis)}</p>` : ''}
           ` : `<p class="muted" style="margin:0">${t('kzdetail_no_cost_saving_data')}</p>`}
         </div>
         <div class="card">
           <dl class="def-grid">
             <dt>${t('kzform_budget_label')}</dt><dd>${kaizen.BudgetBand ? escapeHtml(labelOf(budgetBands, kaizen.BudgetBand)) : '—'}</dd>
+            <dt>${t('kzlist_col_status')}</dt><dd>${kaizen.IsCompleted
+              ? `<span class="badge" data-status="approved">${t('apd_completed_label')}</span>`
+              : `<span class="badge" style="background:var(--danger-soft);color:var(--danger)">${t('apd_in_progress_label')}</span>`}</dd>
             <dt>${t('kzform_start_date')}</dt><dd>${kaizen.StartDate ? thaiDate(kaizen.StartDate) : '—'}</dd>
             <dt>${t('kzform_completion_date')}</dt><dd>${kaizen.CompletionDate ? thaiDate(kaizen.CompletionDate) : '—'}</dd>
+            <dt>${t('kzform_next_followup')}</dt><dd>${kaizen.NextFollowUpDate ? thaiDate(kaizen.NextFollowUpDate) : '—'}</dd>
+            <dt>${t('kzform_impacts_legend')}</dt><dd>${escapeHtml(joinLabels(kaizen.Impacts, IMPACT_LABELS))}</dd>
+            <dt>${t('kzform_support_legend')}</dt><dd>${escapeHtml(joinLabels(kaizen.SupportNeeded, SUPPORT_NEEDED_LABELS))}${kaizen.SupportNeeded?.includes('other') && kaizen.SupportOther ? ` (${escapeHtml(kaizen.SupportOther)})` : ''}</dd>
           </dl>
         </div>
       </div>

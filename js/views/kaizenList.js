@@ -1,7 +1,7 @@
 // js/views/kaizenList.js — รายการ KAIZEN ของฉัน (MIGRATION.md ข้อ 3)
-import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z11';
-import { t, tf } from '../i18n.js?v=20260911z11';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z11';
+import { getMyKaizenListPage, getMyKaizenStatusCounts, deleteKaizen } from '../api.js?v=20260911z15';
+import { t, tf } from '../i18n.js?v=20260911z15';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, todayInSystemTz, daysBetweenDateStrings } from '../ui.js?v=20260911z15';
 
 const PAGE_SIZE = 20;
 

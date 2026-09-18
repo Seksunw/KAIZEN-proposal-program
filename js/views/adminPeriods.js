@@ -1,11 +1,10 @@
 // js/views/adminPeriods.js — รายการรอบประเมิน + สร้างรอบใหม่ (MIGRATION.md ข้อ 10)
 import {
-  getPeriodsPage, createPeriod, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
+  getPeriodsPage, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
   getQuarterlyAwards, createQuarterlyAward, deleteQuarterlyAward,
-} from '../api.js?v=20260911z11';
-import { t, tf } from '../i18n.js?v=20260911z11';
-import { navigate } from '../router.js?v=20260911z11';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z11';
+} from '../api.js?v=20260911z15';
+import { t, tf } from '../i18n.js?v=20260911z15';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate } from '../ui.js?v=20260911z15';
 
 const PAGE_SIZE = 20;
 
@@ -35,7 +34,7 @@ export async function render(container) {
     // ★ kaizen list เต็มต่อรอบ (ใช้ resolve ชื่อ/เจ้าของโครงการตอนเปรียบเทียบ Top 3 เท่านั้น) โหลด
     // แบบ lazy เฉพาะรอบที่ถูกติ๊กเลือกจริง ไม่ใช่ทุกรอบเหมือนเดิม (cache กันโหลดซ้ำถ้าเลือกซ้ำ)
     kaizenByPeriod: new Map(),
-    error: {}, saving: false, deletingId: null,
+    deletingId: null,
     selectedForCompare: new Set(), comparing: false, compareError: '', compareTop3: null,
     publishLabel: '', publishing: false, publishError: '', deletingAwardId: null,
   };
@@ -128,7 +127,10 @@ export async function render(container) {
     ` : '';
 
     container.innerHTML = `
-      ${pageHeader({ title: t('nav_admin_periods') })}
+      ${pageHeader({
+        title: t('nav_admin_periods'),
+        actions: `<a href="#/admin/periods/new"><button type="button">+ ${t('ap_create_heading')}</button></a>`,
+      })}
       <div class="page-body">
         <div class="section-head"><h2>${t('ap_all_periods_heading')}</h2><span class="section-note">${escapeHtml(tf('ap_periods_count', { n: state.periodsTotal }))}</span></div>
         ${state.periodsTotal === 0 ? emptyState({ title: t('empty_periods') }) : `
@@ -148,28 +150,11 @@ export async function render(container) {
         ${top3Html}
         ${awardsHtml}
 
-        <div style="max-width:480px;margin-top:var(--sp-6)">
-          <div class="section-head"><h2>${t('ap_create_heading')}</h2></div>
-          <p class="field-hint">${t('ap_create_hint')}</p>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_code_label')}
-            <input type="text" id="f-code" />
-            <span class="field-hint">${t('ap_field_code_hint')}</span>
-          </label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_name_th_label')}<input type="text" id="f-name-th" /></label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_name_en_label')}<input type="text" id="f-name-en" /></label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_start_label')}<input type="date" id="f-start" /></label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_end_label')}<input type="date" id="f-end" /></label>
-          <label style="margin-top:var(--sp-5)">${t('ap_field_deadline_short_label')} (${t('system_timezone_label')})<input type="datetime-local" id="f-deadline" /></label>
-          <div id="create-error"></div>
-          <button type="button" id="btn-create" style="margin-top:var(--sp-5)" ${state.saving ? 'disabled' : ''}>${state.saving ? t('common_loading') : t('ap_create_btn')}</button>
-        </div>
       </div>
     `;
 
-    if (state.error.msg) document.getElementById('create-error').innerHTML = `<div class="error">${escapeHtml(state.error.msg)}</div>`;
     if (state.compareError) document.getElementById('compare-error').innerHTML = `<div class="error">${escapeHtml(state.compareError)}</div>`;
     if (state.publishError) document.getElementById('publish-error').innerHTML = `<div class="error">${escapeHtml(state.publishError)}</div>`;
-    document.getElementById('btn-create').addEventListener('click', onCreate);
     container.querySelectorAll('[data-delete]').forEach((btn) => {
       btn.addEventListener('click', () => onDelete(btn.dataset.delete));
     });
@@ -299,56 +284,6 @@ export async function render(container) {
       alert(translateError(err.message) || err.message || t('common_error_generic'));
     } finally {
       state.deletingId = null;
-      renderPage();
-    }
-  }
-
-  async function onCreate() {
-    const code = document.getElementById('f-code').value.trim();
-    const nameTh = document.getElementById('f-name-th').value.trim();
-    const nameEn = document.getElementById('f-name-en').value.trim();
-    const periodStart = document.getElementById('f-start').value;
-    const periodEnd = document.getElementById('f-end').value;
-    const deadline = document.getElementById('f-deadline').value;
-
-    const missing = [];
-    if (!code) missing.push(t('ap_field_code_label'));
-    if (!nameTh) missing.push(t('ap_field_name_th_label'));
-    if (!periodStart) missing.push(t('ap_field_start_label'));
-    if (!periodEnd) missing.push(t('ap_field_end_label'));
-    if (!deadline) missing.push(t('ap_field_deadline_short_label'));
-    if (missing.length > 0) {
-      state.error = { msg: tf('ap_err_fill_required', { fields: missing.join(', ') }) };
-      renderPage();
-      return;
-    }
-    // ★ เดิมไม่เช็คลำดับวันที่เลย (Spec.md §4.8 finding M14) — กันสร้างรอบที่วันสิ้นสุดมาก่อน
-    // วันเริ่ม หรือ deadline มาก่อนวันเริ่มรอบ ซึ่งดูผิดปกติแต่ผ่านได้แบบไม่มีคำเตือนใดๆ
-    if (periodEnd < periodStart) {
-      state.error = { msg: t('ap_err_end_before_start') };
-      renderPage();
-      return;
-    }
-    if (deadline.slice(0, 10) < periodStart) {
-      state.error = { msg: t('ap_err_deadline_before_start') };
-      renderPage();
-      return;
-    }
-
-    state.saving = true; state.error = {}; renderPage();
-    try {
-      const created = await createPeriod({
-        Code: code,
-        NameTh: nameTh,
-        NameEn: nameEn || null,
-        PeriodStart: periodStart,
-        PeriodEnd: periodEnd,
-        SubmissionDeadline: parseDatetimeLocalInSystemTz(deadline),
-      });
-      navigate(`#/admin/periods/${created.Id}`);
-    } catch (err) {
-      state.error = { msg: translateError(err.message) || err.message || t('common_error_generic') };
-      state.saving = false;
       renderPage();
     }
   }
