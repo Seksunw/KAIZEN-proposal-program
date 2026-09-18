@@ -2,10 +2,10 @@
 import {
   getPeriodsPage, createPeriod, getKaizenByPeriod, getKaizenCountByPeriod, deletePeriod, getResults, getAllProfiles,
   getQuarterlyAwards, createQuarterlyAward, deleteQuarterlyAward,
-} from '../api.js?v=20260911z10';
-import { t, tf } from '../i18n.js?v=20260911z10';
-import { navigate } from '../router.js?v=20260911z10';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z10';
+} from '../api.js?v=20260911z11';
+import { t, tf } from '../i18n.js?v=20260911z11';
+import { navigate } from '../router.js?v=20260911z11';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, emptyState, statusBadge, thaiDate, parseDatetimeLocalInSystemTz } from '../ui.js?v=20260911z11';
 
 const PAGE_SIZE = 20;
 

@@ -1,8 +1,8 @@
 // js/views/dashboard.js — ตาม design handoff README.md §3: period banner + task-list + 2 คอลัมน์
 // (แทน .stat-grid เดิมทั้งหมด — MIGRATION.md ข้อ 2)
-import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards } from '../api.js?v=20260911z10';
-import { t, tf } from '../i18n.js?v=20260911z10';
-import { thaiDate } from '../ui.js?v=20260911z10';
+import { getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getPeriods, getResults, getQuarterlyAwards, getMasterData, getAttachmentSignedUrl, getAvatarSignedUrl } from '../api.js?v=20260911z11';
+import { t, tf } from '../i18n.js?v=20260911z11';
+import { thaiDate, masterLabel, initials, hydrateAvatars } from '../ui.js?v=20260911z11';
 
 function escapeHtml(s) {
   const div = document.createElement('div');
@@ -89,6 +89,33 @@ export async function render(container, params, session) {
   const scoredIds = new Set(myScores.filter((s) => s.Status === 'submitted').map((s) => s.KaizenId));
   const pendingToScore = reviewQueue.filter((k) => !scoredIds.has(k.Id));
 
+  // การ์ดตัวอย่างในการ์ดหมุน "หน้าที่กรรมการ" (2026-09-18, ผู้ใช้ขอ) — โชว์สูงสุด 3 โครงการ
+  // ล่าสุดที่รอให้คะแนน (ถ้ามีน้อยกว่า/เกิน 3 ปรับ layout ให้พอดีจำนวนจริงใน renderPage())
+  let deckProjects = [];
+  if (pendingToScore.length > 0) {
+    let departments = [];
+    let plants = [];
+    try {
+      [departments, plants] = await Promise.all([getMasterData('department'), getMasterData('plant')]);
+    } catch { /* master_data โหลดไม่ได้ — ใช้ code ดิบแทน ไม่บล็อกหน้า */ }
+    const deckSource = [...pendingToScore]
+      .sort((a, b) => new Date(b.SubmittedAt ?? 0) - new Date(a.SubmittedAt ?? 0))
+      .slice(0, 3);
+    deckProjects = await Promise.all(deckSource.map(async (k) => {
+      const firstPhoto = [...(k.KaizenAttachments ?? [])].sort((a, b) => (a.SortOrder ?? 0) - (b.SortOrder ?? 0))[0] ?? null;
+      let photoUrl = null;
+      if (firstPhoto) {
+        try { photoUrl = await getAttachmentSignedUrl(firstPhoto.StoragePath); } catch { /* ไม่มีรูปก็ใช้ placeholder แทน ไม่บล็อกหน้า */ }
+      }
+      return {
+        ownerName: k.Owner?.FullName ?? '—',
+        department: masterLabel(departments, k.Department),
+        plant: masterLabel(plants, k.Plant),
+        photoUrl,
+      };
+    }));
+  }
+
   // ผลรอบล่าสุดที่ประกาศแล้ว ที่มีโครงการของฉันอยู่
   const publishedPeriods = periods.filter((p) => p.Status === 'published')
     .sort((a, b) => (a.PeriodStart < b.PeriodStart ? 1 : -1));
@@ -148,6 +175,8 @@ export async function render(container, params, session) {
         : tf('dashboard_committee_task_meta_no_weight', { done: scoredIds.size, total: reviewQueue.length }),
       buttonLabel: t('dashboard_open_review_btn'),
       href: '#/review',
+      isCommitteeDeck: true,
+      deckProjects,
     });
   }
 
@@ -212,7 +241,23 @@ export async function render(container, params, session) {
       </div>
     ` : '';
 
+    // ★ ผู้ใช้ขอ (2026-09-18) — การ์ดทักทายแยกจากการ์ดรอบประเมิน วางไว้เหนือกัน รูปก่อนข้อความ
+    // ชิดซ้าย (แรงบันดาลใจจาก reference "Hello, Vanessa" ของแอปอื่น) reuse i18n key
+    // dashboard_welcome ที่มีอยู่แล้วแต่ไม่เคยถูกเรียกใช้จริงมาก่อน (เจอจาก i18n coverage audit)
+    const greetingHtml = `
+      <div class="page-body" style="padding-bottom:0">
+        <div class="card" style="display:flex;align-items:center;gap:var(--sp-3)">
+          <div class="avatar" style="width:48px;height:48px;font-size:16px"${profile?.AvatarPath ? ` data-avatar-path="${escapeHtml(profile.AvatarPath)}"` : ''}>${escapeHtml(initials(profile?.FullName))}</div>
+          <div>
+            <div style="font-size:13px;color:var(--muted)">${t('dashboard_welcome')}</div>
+            <div style="font-weight:700;font-size:19px">${escapeHtml(profile?.FullName ?? '')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
     container.innerHTML = `
+      ${greetingHtml}
       ${bannerHtml}
       ${awardBannerHtml}
       <div class="page-body">
@@ -223,7 +268,31 @@ export async function render(container, params, session) {
         <div class="task-list">
           ${tasks.length === 0
             ? `<div class="empty-state"><div class="empty-title">${t('empty_no_tasks')}</div></div>`
-            : (tasksExpanded ? tasks : tasks.slice(0, TASK_PREVIEW_LIMIT)).map((task) => `
+            : (tasksExpanded ? tasks : tasks.slice(0, TASK_PREVIEW_LIMIT)).map((task) => task.isCommitteeDeck ? `
+              <div class="task-row ${task.variant} is-deck">
+                <div class="task-tags">${task.badge}</div>
+                <div class="task-title">${escapeHtml(task.title)}</div>
+                <div class="task-meta">${task.meta}</div>
+                <div class="deck-wrap is-count-${task.deckProjects.length}">
+                  ${task.deckProjects.map((p) => `
+                    <div class="deck-card">
+                      <div class="deck-content">
+                        ${p.photoUrl
+                          ? `<img src="${escapeHtml(p.photoUrl)}" alt="" loading="lazy" />`
+                          : `<div class="deck-photo-placeholder" aria-hidden="true"></div>`}
+                        <div class="deck-scrim"></div>
+                        <div class="deck-info">
+                          <div class="deck-submitter">${escapeHtml(p.ownerName)}</div>
+                          <div class="deck-place">${escapeHtml(p.department)} &middot; ${escapeHtml(p.plant)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                  <div class="deck-lines" aria-hidden="true"><div class="deck-line"></div><div class="deck-line"></div></div>
+                </div>
+                <a href="${task.href}"><button type="button" class="deck-cta">${task.buttonLabel}</button></a>
+              </div>
+            ` : `
               <div class="task-row ${task.variant}">
                 <span class="task-rail"></span>
                 <div class="task-main">
@@ -264,6 +333,8 @@ export async function render(container, params, session) {
       tasksExpanded = true;
       renderPage();
     });
+
+    hydrateAvatars(container, getAvatarSignedUrl);
   }
 
   renderPage();

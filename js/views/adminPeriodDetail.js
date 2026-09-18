@@ -4,10 +4,10 @@ import {
   getPeriodById, updatePeriod, openPeriod, closePeriod, publishPeriod,
   getCommitteeCandidates, getKaizenByPeriod, getKaizenByPeriodPage, updateKaizen, getMasterData, getAllProfiles, supabase,
   getKaizenEditGrants, grantKaizenEditWindow, revokeKaizenEditGrant,
-} from '../api.js?v=20260911z10';
-import { t, tf, getLang } from '../i18n.js?v=20260911z10';
-import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z10';
-import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z10';
+} from '../api.js?v=20260911z11';
+import { t, tf, getLang } from '../i18n.js?v=20260911z11';
+import { escapeHtml, translateError, pageHeader, skeletonRows, stateCard, statusBadge, thaiDate, thaiDateTime, masterLabel } from '../ui.js?v=20260911z11';
+import { PERIOD_STATUSES, PERIOD_STATUS_LABELS } from '../constants.js?v=20260911z11';
 
 function L(labelObj) { return labelObj[getLang() === 'en' ? 'en' : 'th']; }
 

@@ -6,10 +6,10 @@ import {
   getSession, onAuthStateChange, getMyProfile, signOut,
   getMyKaizenList, getOpenPeriod, getReviewQueue, getMyScoresForPeriod, getAllProfiles,
   getAvatarSignedUrl,
-} from './api.js?v=20260911z10';
-import { initRouter, navigate } from './router.js?v=20260911z10';
-import { initLang, t } from './i18n.js?v=20260911z10';
-import { escapeHtml, initials, roleLabel, hydrateAvatars } from './ui.js?v=20260911z10';
+} from './api.js?v=20260911z11';
+import { initRouter, navigate } from './router.js?v=20260911z11';
+import { initLang, t } from './i18n.js?v=20260911z11';
+import { escapeHtml, initials, roleLabel, hydrateAvatars } from './ui.js?v=20260911z11';
 
 const ICONS = {
   dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
@@ -103,11 +103,17 @@ function tabLink(hash, icon, label, count, extraClass = '') {
 }
 
 // ใช้ทั้ง #sidebar-user (desktop) และ #mobile-drawer-user (มือถือ) — idSuffix กัน id ชนกัน
-function userBoxHtml(session, roles, idSuffix = '') {
+// showPhoto: desktop sidebar ใช้ไอคอน ☰ (ผู้ใช้ขอ 2026-09-18), mobile drawer ใช้รูปจริงแบบเดิม
+// (ผู้ใช้ขอแยกกันคนละแบบ 2026-09-18 — ไม่กระทบ iPad เพราะ iPad ทุกรุ่น/แนวกว้างเกิน breakpoint
+// มือถือ 760px เสมอ เห็น desktop sidebar ไม่ใช่ mobile drawer)
+function userBoxHtml(session, roles, idSuffix = '', showPhoto = false) {
   const roleText = roles.map((r) => roleLabel(r)).join(', ');
+  const avatarHtml = showPhoto
+    ? `<div class="avatar is-sm"${session.profile?.AvatarPath ? ` data-avatar-path="${escapeHtml(session.profile.AvatarPath)}"` : ''}>${escapeHtml(initials(session.profile?.FullName))}</div>`
+    : `<span class="sidebar-user-icon" aria-hidden="true">${ICONS.more}</span>`;
   return `
     <a href="#/profile" class="sidebar-user-link">
-      <div class="avatar is-sm"${session.profile?.AvatarPath ? ` data-avatar-path="${escapeHtml(session.profile.AvatarPath)}"` : ''}>${escapeHtml(initials(session.profile?.FullName))}</div>
+      ${avatarHtml}
       <div class="sidebar-user-info">
         <div class="sidebar-user-name">${escapeHtml(session.profile?.FullName ?? '')}</div>
         <div class="sidebar-user-role">${escapeHtml(roleText)}</div>
@@ -197,8 +203,6 @@ function renderChrome(session) {
   drawer.hidden = false;
   drawerBackdrop.hidden = false;
   renderMobileChrome(session, roles, primaryItems, adminItems);
-
-  hydrateAvatars(document.body, getAvatarSignedUrl); // ครอบทั้ง sidebar + tabbar + drawer ทีเดียว
 }
 
 function renderMobileChrome(session, roles, primaryItems, adminItems) {
@@ -222,7 +226,7 @@ function renderMobileChrome(session, roles, primaryItems, adminItems) {
     tabLinks.splice(mid, 0, tabLink('#/kaizen/new', 'plus', t('nav_new_kaizen'), 0, 'tabbar-create'));
   }
 
-  const avatarHtml = `<span class="tabbar-avatar"${session.profile?.AvatarPath ? ` data-avatar-path="${escapeHtml(session.profile.AvatarPath)}"` : ''}>${escapeHtml(initials(session.profile?.FullName))}</span>`;
+  const avatarHtml = ICONS.more;
   document.getElementById('mobile-tabbar').innerHTML =
     tabLinks.join('') +
     `<button type="button" id="btn-drawer-toggle" class="tabbar-link" aria-expanded="false" aria-controls="mobile-drawer" aria-haspopup="dialog" aria-label="${t('nav_more')}">
@@ -231,8 +235,9 @@ function renderMobileChrome(session, roles, primaryItems, adminItems) {
   document.getElementById('btn-drawer-toggle').addEventListener('click', () => openDrawer());
 
   document.getElementById('mobile-drawer-nav').innerHTML = [...drawerExtraItems, ...adminItems].map((i) => navLink(i.hash, i.icon, i.label, i.count)).join('');
-  document.getElementById('mobile-drawer-user').innerHTML = userBoxHtml(session, roles, '-mobile');
+  document.getElementById('mobile-drawer-user').innerHTML = userBoxHtml(session, roles, '-mobile', true);
   wireUserBoxActions(session, '-mobile');
+  hydrateAvatars(document.getElementById('mobile-drawer-user'), getAvatarSignedUrl);
 }
 
 let drawerOpenerEl = null;

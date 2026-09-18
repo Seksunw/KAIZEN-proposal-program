@@ -4,10 +4,10 @@
 //      session ชั่วคราวที่ใช้ตั้งรหัสผ่านใหม่ได้ (case ปกติ)
 //   2) ลิงก์หมดอายุ/ถูกใช้ไปแล้ว/ไม่ถูกต้อง: app.js แปลง #error=... เป็น query ?error=... ให้
 //   3) เข้าตรงๆ โดยไม่เคยกดลิงก์อีเมลเลย: ไม่มี error query และไม่มี session ก็จะไม่มีสิทธิ์แก้
-import { updatePassword, signOut } from '../api.js?v=20260911z10';
-import { t } from '../i18n.js?v=20260911z10';
-import { navigate, getQuery } from '../router.js?v=20260911z10';
-import { escapeHtml, translateError, stateCard } from '../ui.js?v=20260911z10';
+import { updatePassword, signOut } from '../api.js?v=20260911z11';
+import { t } from '../i18n.js?v=20260911z11';
+import { navigate, getQuery } from '../router.js?v=20260911z11';
+import { escapeHtml, translateError, stateCard } from '../ui.js?v=20260911z11';
 
 const PASSWORD_MIN_LEN = 8;
 

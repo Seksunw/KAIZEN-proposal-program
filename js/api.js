@@ -1,5 +1,5 @@
 // js/api.js — ทุก call ไป Supabase + snake_case⇄PascalCase ผ่านที่นี่เท่านั้น (§5.2)
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z10';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260911z11';
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -456,12 +456,28 @@ export async function publishPeriod(periodId) {
 // ================================================================
 
 export async function getReviewQueue(periodId) {
-  // select ขยายเพิ่ม kaizen_attachments(id) เพื่อนับจำนวนรูปในการ์ดคิวตรวจ (UI เท่านั้น
-  // ไม่แก้ signature — MIGRATION.md ข้อ 7 อนุญาตเฉพาะจุดนี้)
+  // select ขยายจาก kaizen_attachments(id) (เดิมแค่นับจำนวนรูปในคิวตรวจ) เป็น kaizen_attachments(*)
+  // (2026-09-18) — ต้องใช้ storage_path ทำ signed URL รูปปกใน dashboard.js's committee task deck
+  // ชื่อเจ้าของแยกคนละคำขอเหมือน getFeedPage() ด้านล่าง เพราะ owner_id/responsible_user_id ต่างก็
+  // ชี้ไป profiles ทั้งคู่ ทำให้ PostgREST embed ตรงๆ กำกวม — RLS policy profiles_read_related
+  // (ผ่าน can_read_kaizen) อนุญาตกรรมการอ่านโปรไฟล์เจ้าของโครงการ pending_review ในรอบตัวเองอยู่แล้ว
   const { data, error } = await client
-    .from('kaizen_projects').select('*, kaizen_attachments(id)').eq('period_id', periodId).eq('status', 'pending_review');
+    .from('kaizen_projects').select('*, kaizen_attachments(*)').eq('period_id', periodId).eq('status', 'pending_review');
   if (error) throw error;
-  return dbToUI(data);
+  const rows = dbToUI(data);
+
+  const ownerIds = [...new Set(rows.map((k) => k.OwnerId))];
+  let owners = [];
+  if (ownerIds.length > 0) {
+    const { data: ownerRows, error: ownerErr } = await client
+      .from('profiles').select('id, full_name, avatar_path').in('id', ownerIds);
+    if (ownerErr) throw ownerErr;
+    owners = dbToUI(ownerRows);
+  }
+  const ownerById = new Map(owners.map((o) => [o.Id, o]));
+  for (const k of rows) k.Owner = ownerById.get(k.OwnerId) ?? null;
+
+  return rows;
 }
 
 export async function getMyScoresForPeriod(periodId, committeeUserId) {

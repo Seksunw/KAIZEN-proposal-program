@@ -1,8 +1,8 @@
 // js/views/login.js — split layout ตาม README.md ข้อ 1
-import { signIn } from '../api.js?v=20260911z10';
-import { t, getLang } from '../i18n.js?v=20260911z10';
-import { navigate, getQuery } from '../router.js?v=20260911z10';
-import { criteriaTags, wireCriteriaTags } from '../ui.js?v=20260911z10';
+import { signIn } from '../api.js?v=20260911z11';
+import { t, getLang } from '../i18n.js?v=20260911z11';
+import { navigate, getQuery } from '../router.js?v=20260911z11';
+import { criteriaTags, wireCriteriaTags } from '../ui.js?v=20260911z11';
 
 export async function render(container) {
   document.title = `${t('login_title')} · ${t('appName')}`;

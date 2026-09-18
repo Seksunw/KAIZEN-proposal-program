@@ -236,6 +236,12 @@ a:hover { color: var(--primary-hover); }
 .avatar.is-xl { width: 96px; height: 96px; font-size: 30px; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
 
+/* ไอคอน 3 ขีด (ICONS.more) แทน avatar เดิมของ #sidebar-user/#mobile-drawer-user (ผู้ใช้ขอ
+   2026-09-18) — ตั้งใจ "เข้าชุด" กับ #sidebar-nav .nav-icon เป๊ะ (ไม่มีพื้นหลัง/วงกลม ขนาด/สี
+   เดียวกัน) ไม่ใช้ class .avatar เดิมเพราะมันบังคับพื้นหลัง+วงกลมมาจาก .avatar เอง */
+.sidebar-user-icon { display: inline-flex; width: 18px; height: 18px; flex-shrink: 0; color: var(--muted); opacity: 0.85; }
+.sidebar-user-icon svg { width: 100%; height: 100%; }
+
 /* ============ profile.js — โปรไฟล์ของฉัน ============ */
 .profile-hero {
   display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -451,6 +457,156 @@ h3:first-child { margin-top: 0; }
 .task-row .task-meta { font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
 .task-row .task-tags { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 2px; }
 .task-row .task-tags > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* ============ task-row.is-deck: การ์ดหมุน "หน้าที่กรรมการ" (2026-09-18) ============
+   เทคนิคจาก Uiverse.io by ilkhoeri (ทำ prototype ไว้ก่อนที่ prototypes/kaizen-deck.html) —
+   custom property ต่อการ์ด (--deck-z1..3, --deck-t1..3) ใส่ phase-offset คนละค่าเข้า keyframe เดียวกัน
+   ทำให้การ์ดสลับตำแหน่งหมุนได้โดยไม่ชนกัน โดยไม่ต้องเขียน keyframes แยกต่อใบ
+   ปรับ layout ตามจำนวนโครงการที่รอให้คะแนนจริง (.is-count-1/2/3 คนละกลไกกัน) เพราะจำนวนนี้
+   ไม่คงที่ (พบจริงว่าบางช่วงเหลือแค่ 1 โครงการ) ไม่ใช่ทำสำหรับ 3 ใบตายตัวเหมือน prototype ตอนแรก */
+.task-row.is-deck {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
+  /* การ์ดกล่องขาวซ้อนการ์ดรูปถ่ายข้างในอีกทีดูหนักไป (ผู้ใช้ขอ) — กลืนไปพื้นหลังหน้าแทน
+     กล่องกรอบขาวเดิม (ไม่ใช่ transparent เฉยๆ เพราะยังกลืนกับ --bg ของหน้าตรงๆ ได้เหมือนกัน) */
+  background: var(--bg);
+  border-color: transparent;
+}
+.task-row.is-deck:hover { border-color: transparent; }
+/* align-self/z-index ต้องอยู่ที่ flex item จริง — flex item ของ .task-row.is-deck คือ <a> ที่ห่อ
+   ปุ่มไว้ ไม่ใช่ .deck-cta (<button>) ข้างในเอง ใส่ผิดที่ (align-self ก่อน แล้วก็ z-index) ทำให้
+   ไม่มีผลอะไรเลยเพราะ .deck-cta ไม่ใช่ตัวที่แข่ง stacking context กับ .deck-wrap ที่เป็นพี่น้องกัน —
+   <a> ต่างหากที่ต้องยก z-index ขึ้น ไม่งั้นการ์ด (positioned) จะวาดทับปุ่มเสมอไม่ว่า .deck-cta จะตั้ง
+   z-index เท่าไหร่ก็ตาม */
+.task-row.is-deck > a { align-self: center; position: relative; z-index: 5; }
+.task-row.is-deck .deck-cta { margin-top: calc(var(--sp-2) - 100px); }
+
+.deck-wrap {
+  --deck-card-w: 150px;
+  --deck-card-h: 197px;
+  --deck-rotate: 15deg;
+  --deck-shift-x: 48px;
+  --deck-shift-y: 17px;
+  --deck-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  /* กรอบการ์ด — เดิมฟ้าเรืองแสงเดียวกับ .welcome-blob เปลี่ยนเป็นดำตามคำขอ (2026-09-18) */
+  --deck-glow: #000;
+  /* เข้มกว่า --deck-glow บนการ์ด ใช้กับเส้นใต้การ์ดโดยเฉพาะ (ผู้ใช้ขอ 2026-09-18) */
+  --deck-glow-dark: rgb(2, 132, 199);
+  position: relative;
+  align-self: center;
+  width: calc(var(--deck-card-w) * 2);
+  /* +16px กันขอบล่างการ์ดหลังโดนตัด — rotate() บนกล่องไม่เป็นสี่เหลี่ยมจัตุรัสทำให้ bounding box
+     สูงกว่า card-h + shift-y เฉยๆ (ดูที่มาละเอียดใน prototypes/kaizen-deck.html) */
+  height: calc(var(--deck-card-h) + var(--deck-shift-y) + 16px);
+}
+/* ★ อย่าตัด height เหลือแค่ var(--deck-card-h) ตอน 1 ใบ (เคยทำแล้วพัง) — .deck-lines วางตำแหน่ง
+   โดยอิงระยะจาก "ขอบล่าง wrap" เป็นหลัก ถ้า wrap สูงเท่าการ์ดพอดี เส้นจะขยับเข้าไปทับข้อความ
+   แผนก/โรงงานในการ์ดแทนที่จะอยู่ใต้การ์ดเหมือนตอน 2-3 ใบ ต้องเผื่อ buffer เท่ากันทุกจำนวนใบ */
+/* เส้นเรืองแสงออกแบบมาให้กว้างเท่า wrap เต็ม (คลุมพัดของการ์ดที่กางออก) — เหลือการ์ดใบเดียว
+   ไม่กางพัด ยุบความกว้างเส้นให้เท่าการ์ดใบเดียวแทน (ผู้ใช้ยืนยันว่าต้องมีเหมือนกันทุกจำนวน) */
+.deck-wrap.is-count-1 .deck-lines { width: var(--deck-card-w); left: 50%; transform: translateX(-50%); }
+
+.deck-card {
+  position: absolute;
+  top: 0;
+  left: calc(var(--deck-card-w) / 2);
+  width: var(--deck-card-w);
+  height: var(--deck-card-h);
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow), 0 20px 40px -24px rgba(21, 25, 27, 0.4);
+  will-change: transform;
+}
+.deck-content { position: relative; width: 100%; height: 100%; background: var(--surface-3); }
+.deck-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.deck-photo-placeholder { position: absolute; inset: 0; background: var(--surface-3); }
+
+/* animate เฉพาะ transform (translate/rotate/scale ฟังก์ชันชุดเดียวกันทุก stage) — ถ้าปนกับ
+   top/left/right ที่สลับ auto บราวเซอร์ interpolate ไม่ได้ จะเห็นภาพกระตุกตอนสลับ */
+@keyframes deck-rotating {
+  0%, 6% { z-index: var(--deck-z1); transform: var(--deck-t1); }
+  33.33%, 39.33% { z-index: var(--deck-z2); transform: var(--deck-t2); }
+  66.66%, 72.66% { z-index: var(--deck-z3); transform: var(--deck-t3); }
+  100% { z-index: var(--deck-z1); transform: var(--deck-t1); }
+}
+.deck-wrap.is-count-2 .deck-card,
+.deck-wrap.is-count-3 .deck-card {
+  animation: deck-rotating 9s var(--deck-ease) infinite;
+}
+
+/* 1 โครงการ: การ์ดเดียวนิ่งไม่หมุน */
+.deck-wrap.is-count-1 .deck-card {
+  border-color: var(--deck-glow);
+  --deck-z1: 1; --deck-t1: translate(0, 0) rotate(0deg) scale(1);
+}
+
+/* 2 โครงการ: สลับหน้า-หลังกัน (หน้า 2 ช่วง จาก 3 ช่วงของ keyframe เดียวกัน ไม่เท่ากันเป๊ะ
+   แต่ยอมรับได้ — กรณีนี้เกิดไม่บ่อยเท่า 3 โครงการ ไม่คุ้มจะแยก keyframe ใหม่อีกชุด) */
+.deck-wrap.is-count-2 .deck-card:nth-child(1) {
+  border-color: var(--deck-glow);
+  --deck-z1: 2; --deck-t1: translate(0, 0) rotate(0deg) scale(1);
+  --deck-z2: 1; --deck-t2: translate(var(--deck-shift-x), var(--deck-shift-y)) rotate(var(--deck-rotate)) scale(0.92);
+  --deck-z3: 1; --deck-t3: var(--deck-t2);
+}
+.deck-wrap.is-count-2 .deck-card:nth-child(2) {
+  border-color: var(--deck-glow);
+  --deck-z1: 1; --deck-t1: translate(var(--deck-shift-x), var(--deck-shift-y)) rotate(var(--deck-rotate)) scale(0.92);
+  --deck-z2: 2; --deck-t2: translate(0, 0) rotate(0deg) scale(1);
+  --deck-z3: 2; --deck-t3: var(--deck-t2);
+}
+
+/* 3 โครงการ: หมุนเวียน 3 ตำแหน่ง (หน้า/หลัง-ซ้าย/หลัง-ขวา) คนละ phase ต่อใบ */
+.deck-wrap.is-count-3 .deck-card:nth-child(1) {
+  border-color: var(--deck-glow);
+  --deck-z1: 3; --deck-t1: translate(0, 0) rotate(0deg) scale(1);
+  --deck-z2: 1; --deck-t2: translate(calc(var(--deck-shift-x) * -1), var(--deck-shift-y)) rotate(calc(var(--deck-rotate) * -1)) scale(0.92);
+  --deck-z3: 2; --deck-t3: translate(var(--deck-shift-x), var(--deck-shift-y)) rotate(var(--deck-rotate)) scale(0.92);
+}
+.deck-wrap.is-count-3 .deck-card:nth-child(2) {
+  border-color: var(--deck-glow);
+  --deck-z1: 2; --deck-t1: translate(var(--deck-shift-x), var(--deck-shift-y)) rotate(var(--deck-rotate)) scale(0.92);
+  --deck-z2: 3; --deck-t2: translate(0, 0) rotate(0deg) scale(1);
+  --deck-z3: 1; --deck-t3: translate(calc(var(--deck-shift-x) * -1), var(--deck-shift-y)) rotate(calc(var(--deck-rotate) * -1)) scale(0.92);
+}
+.deck-wrap.is-count-3 .deck-card:nth-child(3) {
+  border-color: var(--deck-glow);
+  --deck-z1: 1; --deck-t1: translate(calc(var(--deck-shift-x) * -1), var(--deck-shift-y)) rotate(calc(var(--deck-rotate) * -1)) scale(0.92);
+  --deck-z2: 2; --deck-t2: translate(var(--deck-shift-x), var(--deck-shift-y)) rotate(var(--deck-rotate)) scale(0.92);
+  --deck-z3: 3; --deck-t3: translate(0, 0) rotate(0deg) scale(1);
+}
+
+.deck-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.25) 45%, rgba(0, 0, 0, 0) 70%);
+}
+.deck-info { position: absolute; left: 10px; right: 10px; bottom: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.deck-submitter { font-weight: 600; font-size: 13px; line-height: 1.25; color: #fff; overflow-wrap: anywhere; }
+.deck-place { font-size: 10px; color: rgba(255, 255, 255, 0.8); overflow-wrap: anywhere; }
+
+/* เส้นเรืองแสงใต้กองการ์ด — ล้ำขึ้นไปทับฐานการ์ดเล็กน้อยตามที่ผู้ใช้ขอ (prototype เดียวกัน) */
+.deck-lines { position: absolute; bottom: 46px; left: 0; width: 100%; display: flex; align-items: center; justify-content: center; z-index: 4; pointer-events: none; }
+.deck-lines::after { content: ""; position: absolute; inset: 0 0 -52px; background: var(--bg); z-index: 1; }
+.deck-line { position: relative; z-index: 2; width: 100%; display: flex; align-items: center; justify-content: center; }
+.deck-line::before,
+.deck-line::after {
+  content: "";
+  position: absolute;
+  background: linear-gradient(to right, transparent, var(--deck-line-color), transparent);
+  filter: var(--deck-line-blur);
+  width: var(--deck-line-w);
+  height: var(--deck-line-h);
+}
+.deck-line:nth-child(1)::before { --deck-line-blur: blur(10px); --deck-line-w: 100%; --deck-line-h: 5px; --deck-line-color: var(--deck-glow-dark); }
+.deck-line:nth-child(1)::after  { --deck-line-w: 100%; --deck-line-h: 1px; --deck-line-color: var(--deck-glow-dark); }
+.deck-line:nth-child(2)::before { --deck-line-blur: blur(10px); --deck-line-w: 50%;  --deck-line-h: 5px; --deck-line-color: var(--deck-glow-dark); }
+.deck-line:nth-child(2)::after  { --deck-line-w: 50%;  --deck-line-h: 1px; --deck-line-color: var(--deck-glow-dark); }
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-card { animation-duration: 0.001ms; animation-iteration-count: 1; }
+}
 
 /* ============ rows (แทน .data-table ในหน้าที่เป็นรายการ) ============ */
 .row-list { display: flex; flex-direction: column; }
@@ -1490,17 +1646,10 @@ button.icon-btn svg { width: 16px; height: 16px; display: block; }
     opacity: 1;
   }
   .tabbar-create .tabbar-icon svg { width: 60%; height: 60%; margin: 20% auto; display: block; }
-  /* avatar แทนไอคอนแฮมเบอร์เกอร์บนปุ่ม "เมนู" ตัวสุดท้าย (mirror รูปโปรไฟล์ท้ายแถบของ Instagram) */
-  .tabbar-avatar {
-    display: flex; align-items: center; justify-content: center;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-size: 10.5px; font-weight: 700;
-    overflow: hidden;
-  }
-  .tabbar-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+  /* เดิมปุ่มสุดท้ายโชว์ avatar รูป/ตัวอักษรย่อ (mirror รูปโปรไฟล์ท้ายแถบของ Instagram, .tabbar-avatar
+     class) — ผู้ใช้ขอเปลี่ยนเป็นไอคอน 3 ขีด (ICONS.more) ให้เข้าชุดกับ tab อื่นเป๊ะ (2026-09-18) —
+     ไม่ต้องมี wrapper/class พิเศษอีกต่อไป ใส่ตรงใน .tabbar-icon เหมือน tab อื่นๆ ทุกตัว ได้ขนาด/สี/
+     opacity เดียวกันโดยอัตโนมัติจาก .tabbar-icon/.tabbar-link ที่มีอยู่แล้ว */
   .tabbar-badge {
     position: absolute; top: -4px; right: -6px;
     min-width: 15px; height: 15px; padding: 0 3px;
@@ -1681,4 +1830,21 @@ button.icon-btn svg { width: 16px; height: 16px; display: block; }
   .kl-table .kl-badge { grid-row: 2; grid-column: 1; align-self: center; }
   .kl-table .kl-date { grid-row: 2; grid-column: 2; align-self: center; font-size: 12.5px; text-align: right; }
   .kl-table .kl-actions:not(:empty) { grid-row: 3; grid-column: 1 / -1; margin-top: 4px; }
+
+  /* ============ task-row.is-deck การ์ดหมุนหน้าที่กรรมการ — ปรับสเกลตามความกว้างจอ ============
+     150px*2=300px กว้างเกิน content width ของจอแคบสุด (.page-body 16px + .task-row 14-16px
+     ข้างละ) เดิม fix ไว้ที่ 110px ตายตัว (ปลอดภัยแต่เล็กเกินไปบนจอ 375-430px ที่มีที่เหลือเยอะ)
+     ผู้ใช้ขอให้ใหญ่ขึ้น (2026-09-18) — ใช้ clamp() ผูกกับ vw แทน โตตามจอจริงแต่ไม่เกิน 150px (=ค่า
+     desktop) และไม่ต่ำกว่า 110px (=ค่าที่เคยยืนยันว่าปลอดภัยแม้จอ 320px) ทุกค่าคำนวณสัดส่วนคงที่
+     จาก card-w (36vw) กัน bounding-box หลังหมุนเพี้ยนสัดส่วนไปจากที่ตรวจสอบไว้ */
+  .deck-wrap {
+    --deck-card-w: clamp(110px, 36vw, 150px);
+    --deck-card-h: clamp(144px, 47vw, 197px);
+    --deck-shift-x: clamp(35px, 11.5vw, 48px);
+    --deck-shift-y: clamp(12px, 4.1vw, 17px);
+  }
+  /* bottom/inset สัดส่วนกับ card-h เดิม (34/144 ≈ 46/197 ≈ .234, -38/144 ≈ -52/197 ≈ -.264) —
+     สเกลตามช่วงเดียวกับ card-h แทนค่าตายตัว กัน glow line ไปทับข้อความตอนการ์ดใหญ่ขึ้น */
+  .deck-lines { bottom: clamp(34px, 11vw, 46px); }
+  .deck-lines::after { inset: 0 0 clamp(-52px, -12.4vw, -38px); }
 }

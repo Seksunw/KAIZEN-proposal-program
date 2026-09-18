@@ -1,7 +1,7 @@
 // js/views/forbidden.js — MIGRATION.md ข้อ 15 (session + query ?from= จาก router.js)
-import { t, tf } from '../i18n.js?v=20260911z10';
-import { getQuery, ROUTES } from '../router.js?v=20260911z10';
-import { escapeHtml, pageHeader, stateCard, roleLabel } from '../ui.js?v=20260911z10';
+import { t, tf } from '../i18n.js?v=20260911z11';
+import { getQuery, ROUTES } from '../router.js?v=20260911z11';
+import { escapeHtml, pageHeader, stateCard, roleLabel } from '../ui.js?v=20260911z11';
 
 export async function render(container, params, session) {
   document.title = `${t('forbidden_title')} · ${t('appName')}`;
