@@ -475,7 +475,8 @@ h3:first-child { margin-top: 0; }
 .task-row .task-tags > * { min-width: 0; overflow-wrap: anywhere; }
 
 /* ============ task-row.is-deck: การ์ดหมุน "หน้าที่กรรมการ" (2026-09-18) ============
-   เทคนิคจาก Uiverse.io by ilkhoeri (ทำ prototype ไว้ก่อนที่ prototypes/kaizen-deck.html) —
+   เทคนิคจาก Uiverse.io by ilkhoeri (เคยทำ prototype แยกไว้ดูก่อน ลบทิ้งแล้วหลังย้ายเข้า
+   production — ดู Spec.md Round 16/17 ถ้าต้องการประวัติ) —
    custom property ต่อการ์ด (--deck-z1..3, --deck-t1..3) ใส่ phase-offset คนละค่าเข้า keyframe เดียวกัน
    ทำให้การ์ดสลับตำแหน่งหมุนได้โดยไม่ชนกัน โดยไม่ต้องเขียน keyframes แยกต่อใบ
    ปรับ layout ตามจำนวนโครงการที่รอให้คะแนนจริง (.is-count-1/2/3 คนละกลไกกัน) เพราะจำนวนนี้
@@ -512,8 +513,10 @@ h3:first-child { margin-top: 0; }
   position: relative;
   align-self: center;
   width: calc(var(--deck-card-w) * 2);
-  /* +16px กันขอบล่างการ์ดหลังโดนตัด — rotate() บนกล่องไม่เป็นสี่เหลี่ยมจัตุรัสทำให้ bounding box
-     สูงกว่า card-h + shift-y เฉยๆ (ดูที่มาละเอียดใน prototypes/kaizen-deck.html) */
+  /* +16px กันขอบล่างการ์ดหลังโดนตัด — การ์ดที่ถูก rotate() ไม่ได้กินพื้นที่แค่ W×H เดิม: กล่อง
+     W×H ที่หมุน θ มี axis-aligned bounding box สูง W·sin(θ) + H·cos(θ) (คูณ scale ที่ใช้ด้วย)
+     ที่ค่าปัจจุบัน (150×197, 15deg, scale .92) สูงเกิน card-h + shift-y อยู่ ~9px — เผื่อ 16px
+     กันเศษปัดเศษด้วย เคยตัดเหลือ card-h เฉยๆ แล้วขอบล่างการ์ดหลังโดนตัดจริงมาแล้ว */
   height: calc(var(--deck-card-h) + var(--deck-shift-y) + 16px);
 }
 /* ★ อย่าตัด height เหลือแค่ var(--deck-card-h) ตอน 1 ใบ (เคยทำแล้วพัง) — .deck-lines วางตำแหน่ง
